@@ -1,244 +1,130 @@
-# BlogSeq - Markdown Export with Images for Logseq 🪵
+# BlogSeq - Professional Markdown Export with Bundled Assets for Logseq 🪵
 
-> Transform your Logseq knowledge graph into clean, portable Markdown with referenced images included in the export.
+> Transform your Logseq pages into clean, portable Markdown with **all referenced images and assets automatically bundled** - ready for any static site generator, blog platform, or documentation tool.
 
-<!-- ![BlogSeq Banner](screenshots/banner.png) -->
+⚠️ **DB Version Only** | Pre-Alpha Release
 
-⚠️ Only works with DB Version
+## 🚀 The Export Flow
 
-⚠️ Pre Alpha Release - Expect breaking changes and bugs.
-
-## 🎯 Why BlogSeq?
-
-- **🚀 One-Click Export** - Transform any page into clean Markdown instantly
-- **📸 Image Management** - All referenced images automatically included in zip exports.
-- **⚡ Real-Time Preview** - Markdown preview to see exactly what you'll get before exporting
-- **🎨 Clean Output** - No proprietary syntax, just standard Markdown
-- **📦 Portable Archives** - ZIP exports with organized asset folders
-- **🔧Customizable** - Control asset path and other aspects of the export process
-
-Perfect for:
-- 📚 Publishing blog posts from your notes
-- 📖 Creating documentation from knowledge bases
-- 🤝 Sharing research with colleagues
-
-## ✨ Features
-
-### Core Export Capabilities
-
-#### 📄 Markdown Preview 
-- Preview your markdown export in real-time
-- See exactly what you'll get before exporting
-- Preview images inline with your content
-![Export Preview](screenshots/export-preview.png)
-
-#### 📄 Smart Markdown Export
-- Preserves your document structure and formatting
-- Converts Logseq blocks to proper Markdown headers (`#` through `######`)
-- Handles nested lists, quotes, and code blocks
-![Raw Markdown Export](screenshots/raw.png)
-
-#### 🖼️ Comprehensive Asset Handling
-- Automatically detects all referenced images and files
-- Organizes assets in a clean folder structure
-- Updates all links to use relative paths
-- Supports common media formats
-![Asset Management](screenshots/asset-management.png)
-##### 📦 Assets in ZIP
-![Assets in ZIP](screenshots/zip.png)
-![Assets in ZIP](screenshots/output.png)
-
-
-#### 📊 YAML Frontmatter Generation
-- Exports page properties as standard YAML frontmatter
-- Perfect for static site generators (Jekyll, Hugo, Gatsby)
-- Includes tags, dates, and custom properties
-- Compatible with Obsidian and other tools
-![YAML Frontmatter](screenshots/markdown.png)
-
-#### 🔗 Intelligent Reference Resolution
-- Resolves `((block references))` to actual content
-- Converts `[[page links]]` to readable text or links
-- Handles complex nested references
-- Optional UUID resolution for internal links
-
-### Export Options
-![Settings Panel](screenshots/settings-panel.png)
-
-| Option | Description | Use Case |
-|--------|-------------|----------|
-| **Include Page Name** | Adds page title as H1 header | Blog posts, documentation |
-| **Flatten Nested Blocks** | Converts nested blocks to paragraphs | Cleaner article format |
-| **Preserve Block References** | Resolves `((uuid))` references | Maintain connections |
-| **Include Properties** | Generates YAML frontmatter | Static site generators |
-| **Remove Logseq Syntax** | Strips proprietary markup | Universal compatibility |
-| **Include Tags** | Preserves #hashtags | Categorization |
-
-## 🚀 Getting Started
-
-### Installation
-
-#### Method 1: Logseq Marketplace (Recommended)
-1. Open Logseq Settings → Plugins
-2. Search for "BlogSeq"
-3. Click Install
-4. Restart Logseq
-
-#### Method 2: Manual Installation
-1. Download the latest release from [GitHub Releases](https://github.com/briansunter/blogseq/releases)
-2. Extract the ZIP file
-3. In Logseq: Settings → Enable Developer Mode
-4. Click "Load unpacked plugin"
-5. Select the extracted folder
-
-### Basic Usage
-
-#### Quick Export (Toolbar)
-
-1. Navigate to any page
-2. Click the BlogSeq icon in the toolbar
-3. Configure your export settings
-4. Click "Export" or "Download ZIP"
-
-#### Slash Command
-
-1. Type `/Export page to markdown` on any page
-2. Press Enter to open the export dialog
-
-#### Page Menu
-
-1. Right-click any page in the sidebar
-2. Select "Export to Markdown"
-
-## 📖 User Guide
-
-### Exporting Your First Page
-
-1. **Open a page** you want to export
-2. **Click the BlogSeq icon** in the toolbar
-3. **Preview appears automatically** - review your content
-4. **Configure settings** using the checkboxes:
-   - ✅ Include page name as header
-   - ✅ Include properties as frontmatter
-   - ✅ Preserve block references
-5. **Export options**:
-   - 📄 **Copy to Clipboard** - Paste anywhere
-   - 💾 **Download Markdown** - Save as .md file
-   - 📦 **Download ZIP** - Includes all assets
+1. **Write in Logseq** - Use blocks, references, images, and properties as normal
+2. **BlogSeq Resolves Everything** - Automatically finds and bundles all referenced images (even in asset properties), resolves block/page references, and converts to clean Markdown
+3. **Export with Assets** - Get a ZIP with your Markdown + all images in an organized `/assets/` folder
+4. **Use Anywhere** - Compatible with Jekyll, Hugo, Gatsby, Obsidian, or any Markdown tool
 
 ![Export Flow](screenshots/export-flow.gif)
 
-### Working with Assets
+## ✨ Key Features
 
-BlogSeq automatically handles all your media:
+### 🖼️ **Automatic Asset Bundling**
+BlogSeq's killer feature - it finds and bundles **ALL** referenced images automatically:
+- Detects images in blocks, properties, and even nested references
+- Resolves UUID-based asset references to actual files
+- Creates organized `/assets/` folder with all media
+- Updates all links to relative paths
 
+![Assets in ZIP](screenshots/zip.png)
+
+### 📊 **YAML Frontmatter for Static Sites**
+Converts Logseq properties into standard YAML frontmatter - perfect for Jekyll, Hugo, Gatsby:
+
+**Logseq Properties:**
+![Logseq Properties](screenshots/logseq-properties.png)
+
+**↓ Becomes Clean YAML Frontmatter:**
+![YAML Frontmatter](screenshots/markdown.png)
+
+### 🔗 **Complete Reference Resolution**
+- Resolves `((block references))` to actual content
+- Converts `[[page links]]` to readable text
+- Handles nested and complex references
+- Even resolves images referenced by UUID in properties
+
+### ⚡ **Real-Time Preview**
+See exactly what you'll get before exporting:
+![Export Preview](screenshots/export-preview.png)
+
+### Export Options
+Customize your export with simple checkboxes:
+- **Page Name as Header** - Add title as H1
+- **Flatten Blocks** - Clean paragraph format
+- **Include Properties** - YAML frontmatter for static sites
+- **Preserve References** - Resolve block/page links
+- **Clean Syntax** - Remove Logseq-specific markup
+
+![Settings Panel](screenshots/settings-panel.png)
+
+## 🚀 Quick Start
+
+### Installation
+
+**From Marketplace** (Recommended)
+1. Settings → Plugins → Search "BlogSeq" → Install
+
+**Manual Installation**
+1. Download from [Releases](https://github.com/briansunter/blogseq/releases)
+2. Settings → Enable Developer Mode → Load unpacked plugin
+
+### Usage
+
+Three ways to export:
+1. **Toolbar** - Click BlogSeq icon
+2. **Slash Command** - Type `/Export page to markdown`
+3. **Right-Click** - Any page → "Export to Markdown"
+
+## 📖 How It Works
+
+### Export Options
+- **📄 Copy to Clipboard** - Quick paste anywhere
+- **💾 Download Markdown** - Single .md file  
+- **📦 Download ZIP** - Markdown + all assets bundled
+
+### Asset Magic 🪄
+BlogSeq automatically converts:
 ```markdown
-<!-- Original Logseq -->
-[[1234-abcd-block-reference-asset]]
-[[image]]
-
-<!-- Exported Markdown -->
-![My Image](assets/image_1234567890.png)
+[[uuid-reference-to-image]] → ![Image](assets/image.png)
+((block-with-image))       → Content with ![Image](assets/pic.jpg)
+property:: [[asset-uuid]]  → property: assets/document.pdf
 ```
 
-All assets are:
-- ✅ Automatically detected
-- ✅ Copied with correct names
-- ✅ Organized in `/assets/` folder (customizable)
-- ✅ Links updated to relative paths
-
-### Advanced Features
-
-#### Batch Export (Coming Soon)
-- Export multiple pages at once
-- Filter by tags or properties
-- Custom folder structure
+All images and assets are bundled in the ZIP export - no broken links!
 
 ## ⚙️ Configuration
 
-### Global Settings
+Settings → Plugin Settings → BlogSeq
 
-Access via Logseq Settings → Plugin Settings → BlogSeq
-
-```json
-{
-  "defaultIncludePageName": true,
-  "defaultFlattenNested": false,
-  "defaultPreserveBlockRefs": true,
-  "defaultIncludeProperties": true,
-  "assetPath": "assets/",
-  "autoPreview": true
-}
-```
+- `assetPath`: Customize asset folder name (default: `"assets/"`)
+- `autoPreview`: Show preview on open (default: `true`)
+- Set default export options for all exports
 
 ## 🛠️ Development
 
-### Prerequisites
-- Node.js 18+
-- pnpm 6+
-- Logseq Desktop
-
-### Setup
 ```bash
-# Clone the repository
 git clone https://github.com/briansunter/blogseq.git
 cd blogseq
-
-# Install dependencies
 pnpm install
-
-# Start development
-pnpm dev
-
-# Build for production
-pnpm build
+pnpm dev     # Development with HMR
+pnpm build   # Production build
 ```
 
-### Tech Stack
-- ⚛️ React 18 + TypeScript
-- ⚡ Vite for lightning-fast builds
-- 🎨 TailwindCSS for styling
-- 📝 react-markdown for preview
-- 📦 JSZip for archive creation
-
-### Project Structure
-```
-blogseq/
-├── src/
-│   ├── main.tsx           # Plugin entry point
-│   ├── App.tsx            # Main UI component
-│   ├── markdownExporter.ts # Core export logic
-│   └── components/        # UI components
-├── dist/                  # Build output
-└── package.json          # Project config
-```
+**Tech Stack:** React 18 • TypeScript • Vite • TailwindCSS • JSZip
 
 ## 🤝 Contributing
 
-We love contributions! 
+Contributions welcome! [Open an issue](https://github.com/briansunter/blogseq/issues) or submit a PR.
 
 ## 📜 License
 
 MIT © [Brian Sunter](https://github.com/briansunter)
 
-## 🙏 Acknowledgments
+## 💬 Links
 
-- The amazing [Logseq](https://logseq.com) team for creating an incredible tool
-- The Logseq plugin community for inspiration and support
-- All contributors and users who make BlogSeq better
+- [Report Issues](https://github.com/briansunter/blogseq/issues)
+- [Request Features](https://github.com/briansunter/blogseq/discussions)
+- [Follow @briansunter](https://twitter.com/briansunter)
 
-## 💬 Support & Community
-
-- 🐛 [Report Issues](https://github.com/briansunter/blogseq/issues)
-- 💡 [Request Features](https://github.com/briansunter/blogseq/discussions)
-- 🐦 [Follow on Twitter](https://twitter.com/briansunter)
-
+---
 
 <p align="center">
+  <a href="https://github.com/briansunter/blogseq">⭐ Star on GitHub</a> •
   Made with ❤️ for the Logseq community
-</p>
-
-<p align="center">
-  <a href="https://github.com/briansunter/blogseq">⭐ Star us on GitHub</a> •
-  <a href="https://twitter.com/intent/tweet?text=Check%20out%20BlogSeq%20-%20Professional%20Markdown%20Export%20for%20Logseq!&url=https://github.com/briansunter/blogseq">Share on Twitter</a>
 </p>

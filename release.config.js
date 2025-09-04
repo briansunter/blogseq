@@ -7,7 +7,21 @@ module.exports = {
         preset: "conventionalcommits",
       },
     ],
-    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        writerOpts: {
+          commitsSort: ["subject", "scope"],
+          transform: (commit) => {
+            // Shorten commit hash for display
+            if (commit.hash) {
+              commit.shortHash = commit.hash.substring(0, 7);
+            }
+            return commit;
+          }
+        }
+      }
+    ],
     "@semantic-release/changelog",
     [
       "@semantic-release/npm",

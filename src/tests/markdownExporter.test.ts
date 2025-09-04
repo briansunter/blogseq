@@ -414,6 +414,38 @@ describe('MarkdownExporter', () => {
       await exporter.exportCurrentPage({ includeProperties: true });
       expect(mockAPI.DB.datascriptQuery).toHaveBeenCalled();
     });
+
+    it('should handle direct asset blocks (asset as the block itself)', async () => {
+      const page = createMockPage();
+      const assetBlock = createMockBlock({ 
+        uuid: '68b5604a-2344-41fd-b509-858d8df23a3b',
+        content: 'NextJS Framework'
+      });
+      
+      // Mock detectAsset to recognize this block as an asset
+      mockAPI.DB.datascriptQuery.mockImplementation((query: string) => {
+        if (query.includes('68b5604a-2344-41fd-b509-858d8df23a3b')) {
+          return Promise.resolve([
+            ['png', { ':block/title': 'NextJS Framework', 'title': 'NextJS Framework' }]
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+      
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [assetBlock]);
+      mockGraphResponse(mockAPI, '/graph/path');
+      
+      const result = await exporter.exportCurrentPage();
+      
+      // Should contain image markdown instead of just the title
+      expect(result).toContain('![NextJS Framework](assets/68b5604a-2344-41fd-b509-858d8df23a3b.png)');
+      expect(result).not.toContain('NextJS Framework\n\n'); // Should not output as plain text
+      
+      // Asset should be tracked
+      const assets = exporter.getReferencedAssets();
+      expect(assets.has('68b5604a-2344-41fd-b509-858d8df23a3b')).toBe(true);
+    });
   });
 
   describe('Frontmatter & Properties', () => {

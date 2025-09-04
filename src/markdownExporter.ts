@@ -268,6 +268,16 @@ export class MarkdownExporter {
     if (block.uuid && this.processedBlocks.has(block.uuid)) return "";
     if (block.uuid) this.processedBlocks.add(block.uuid);
     
+    // Check if this block itself is an asset
+    if (block.uuid) {
+      const assetInfo = await this.detectAsset(block.uuid);
+      if (assetInfo) {
+        const assetPath = options.assetPath ?? 'assets/';
+        const markdown = this.createAssetLink(block.uuid, assetInfo, assetPath);
+        return markdown + '\n\n' + await this.processChildren(block, depth, options);
+      }
+    }
+    
     let content = block.content || "";
     
     if (MarkdownHelpers.isPropertyOnlyBlock(content)) {
