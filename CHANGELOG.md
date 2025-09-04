@@ -1,3 +1,10 @@
+## [1.0.1](https://github.com/briansunter/blogseq/compare/v1.0.0...v1.0.1) (2025-09-04)
+
+
+### Bug Fixes
+
+* release ([eaa8695](https://github.com/briansunter/blogseq/commit/eaa8695d26c7d4fe766880e44b2e247cfabd7198))
+
 # 1.0.0 (2025-09-04)
 
 
