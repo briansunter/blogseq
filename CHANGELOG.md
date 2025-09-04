@@ -1,6 +1,18 @@
 # 1.0.0 (2025-09-04)
 
 
+### Bug Fixes
+
+* release ([6d80198](https://github.com/briansunter/blogseq/commit/6d80198e7d62bc93a2d4459f5e450db54925adf8))
+
+
+### Features
+
+* initial commit ([1f8ab8c](https://github.com/briansunter/blogseq/commit/1f8ab8c8f31ef9ef6e558d89bba1e6a534b0ed9b))
+
+# 1.0.0 (2025-09-04)
+
+
 ### Features
 
 * initial commit ([1f8ab8c](https://github.com/briansunter/blogseq/commit/1f8ab8c8f31ef9ef6e558d89bba1e6a534b0ed9b))
