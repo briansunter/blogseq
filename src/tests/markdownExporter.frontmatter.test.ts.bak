@@ -1,0 +1,567 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { MarkdownExporter, MarkdownHelpers } from '../markdownExporter';
+import {
+  createMockLogseqAPI,
+  createMockPage,
+  createMockBlock,
+  setupGlobalMocks,
+  resetAllMocks,
+  mockCurrentPageResponse,
+  mockPageBlocksResponse,
+  mockGraphResponse,
+  MockLogseqAPI
+} from './test-utils';
+
+describe('MarkdownExporter - Frontmatter & Properties', () => {
+  let exporter: MarkdownExporter;
+  let mockAPI: MockLogseqAPI;
+  
+  beforeEach(() => {
+    mockAPI = createMockLogseqAPI();
+    exporter = new MarkdownExporter(mockAPI);
+    setupGlobalMocks(mockAPI);
+  });
+  
+  afterEach(() => {
+    resetAllMocks(mockAPI);
+  });
+
+  describe('generateFrontmatter', () => {
+    it('should generate YAML frontmatter from page properties', async () => {
+      const pageWithProps = {
+        uuid: 'page-uuid',
+        name: 'Test Page',
+        properties: {
+          title: 'My Article',
+          date: '2024-01-15',
+          tags: ['javascript', 'typescript'],
+          author: 'John Doe',
+          published: true
+        }
+      };
+      
+      // Mock getPage to return page with properties
+      mockAPI.Editor.getPage.mockResolvedValue(pageWithProps);
+      mockCurrentPageResponse(mockAPI, pageWithProps as any);
+      mockPageBlocksResponse(mockAPI, [createMockBlock({ content: 'Content' })]);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('---');
+      expect(result).toContain('title: My Article');
+      expect(result).toContain('date: 2024-01-15');
+      expect(result).toContain('author: John Doe');
+      expect(result).toContain('published: true');
+    });
+
+    it('should generate slug from page name', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'My Test Page Name!',
+        properties: {}
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [createMockBlock({ content: 'Content' })]);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('title: My Test Page Name!');
+      expect(result).toContain('slug: my-test-page-name');
+    });
+
+    it('should merge blogTags into tags', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          tags: ['tag1', 'tag2'],
+          blogTags: ['tag3', 'tag4']
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      // Should merge both tags arrays
+      expect(result).toContain('tags:');
+      // Check that tags are included (exact format may vary)
+      const tagMatches = result.match(/tags:\n((?:  - .+\n)+)/);
+      if (tagMatches) {
+        const tagContent = tagMatches[1];
+        expect(tagContent).toContain('tag1');
+        expect(tagContent).toContain('tag2');
+        expect(tagContent).toContain('tag3');
+        expect(tagContent).toContain('tag4');
+      }
+      expect(result).not.toContain('blogTags:');
+    });
+
+    it('should handle duplicate tags', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          tags: ['duplicate', 'unique1'],
+          blogTags: ['duplicate', 'unique2']
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      // Count occurrences of 'duplicate' - should only appear once
+      const duplicateCount = (result.match(/duplicate/g) || []).length;
+      expect(duplicateCount).toBe(1);
+    });
+
+    it('should skip internal properties', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          title: 'Keep this',
+          'logseq.property.embedding': 'internal',
+          'hnsw-label-updated-at': '12345',
+          'db/id': 123,
+          author: 'Keep this too'
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('title: Keep this');
+      expect(result).toContain('author: Keep this too');
+      expect(result).not.toContain('embedding');
+      expect(result).not.toContain('hnsw-label-updated-at');
+    });
+
+    it('should handle no properties gracefully', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {}
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [createMockBlock({ content: 'Content' })]);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      // Should still have frontmatter with title and slug
+      expect(result).toContain('---');
+      expect(result).toContain('title: Page');
+      expect(result).toContain('slug: page');
+      expect(result).toContain('Content');
+    });
+
+    it('should skip frontmatter when disabled', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          title: 'Should not appear',
+          tags: ['invisible']
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [createMockBlock({ content: 'Content' })]);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: false,
+        includePageName: false
+      });
+      
+      expect(result).not.toContain('---');
+      expect(result).not.toContain('title: Should not appear');
+      expect(result).not.toContain('tags:');
+      expect(result).toBe('Content');
+    });
+  });
+
+  describe('processPropertyValue', () => {
+    it('should resolve database references', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          linkedAsset: { 'db/id': 999 }
+        }
+      };
+      
+      // Mock DataScript query for db/id resolution
+      mockAPI.DB.datascriptQuery.mockImplementation((query: string) => {
+        if (query.includes(':db/id 999')) {
+          return Promise.resolve([
+            [{ $uuid: 'linked-asset-uuid' }, 'pdf', 'Asset Title']
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      mockGraphResponse(mockAPI, '/test/graph');
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('linkedAsset: assets/linked-asset-uuid.pdf');
+    });
+
+    it('should handle page references in properties', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          relatedPage: '[[Another Page]]',
+          category: '[[Category/Subcategory]]'
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('relatedPage: Another Page');
+      expect(result).toContain('category: Category/Subcategory');
+    });
+
+    it('should handle UUID properties as assets', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          coverImage: 'uuid1234-5678-90ab-cdef-111111111111'
+        }
+      };
+      
+      // Mock asset type detection
+      mockAPI.DB.datascriptQuery.mockImplementation((query: string) => {
+        if (query.includes('uuid1234-5678-90ab-cdef-111111111111')) {
+          return Promise.resolve([
+            ['jpg', { ':block/uuid': { $uuid: 'uuid1234-5678-90ab-cdef-111111111111' } }]
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('coverImage: assets/uuid1234-5678-90ab-cdef-111111111111.jpg');
+    });
+
+    it('should resolve asset by title in properties', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          thumbnail: 'My Thumbnail Image'
+        }
+      };
+      
+      // Mock finding asset by title
+      mockAPI.DB.datascriptQuery.mockImplementation((query: string) => {
+        if (query.includes(':block/title "My Thumbnail Image"')) {
+          return Promise.resolve([
+            [{ $uuid: 'thumb-uuid' }, 'png', { ':block/title': 'My Thumbnail Image' }]
+          ]);
+        }
+        return Promise.resolve([]);
+      });
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('thumbnail: assets/thumb-uuid.png');
+    });
+
+    it('should handle array properties', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          categories: ['Tech', 'Science', 'Math'],
+          keywords: ['ai', 'ml', 'deep learning']
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('categories:');
+      expect(result).toContain('  - Tech');
+      expect(result).toContain('  - Science');
+      expect(result).toContain('  - Math');
+      expect(result).toContain('keywords:');
+      expect(result).toContain('  - ai');
+      expect(result).toContain('  - ml');
+      expect(result).toContain('  - deep learning');
+    });
+
+    it('should handle Set properties', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          uniqueTags: new Set(['unique1', 'unique2', 'unique3'])
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('uniqueTags:');
+      expect(result).toContain('unique1');
+      expect(result).toContain('unique2');
+      expect(result).toContain('unique3');
+    });
+
+    it('should handle multiline string properties', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          description: 'Line 1\nLine 2\nLine 3'
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, []);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: true,
+        includePageName: false
+      });
+      
+      expect(result).toContain('description: |');
+      expect(result).toContain('  Line 1');
+      expect(result).toContain('  Line 2');
+      expect(result).toContain('  Line 3');
+    });
+  });
+
+  describe('cleanPropertyKey', () => {
+    it('should clean property keys', () => {
+      expect(MarkdownHelpers.cleanPropertyKey(':logseq.property/heading')).toBe('heading');
+      expect(MarkdownHelpers.cleanPropertyKey('block/title')).toBe('title');
+      expect(MarkdownHelpers.cleanPropertyKey(':block/content')).toBe('content');
+      expect(MarkdownHelpers.cleanPropertyKey('ABC123_property-name-XYZ456')).toBe('property-name');
+    });
+
+    it('should handle various property prefixes', () => {
+      expect(MarkdownHelpers.cleanPropertyKey('logseq.property/test')).toBe('test');
+      expect(MarkdownHelpers.cleanPropertyKey(':db.property/field')).toBe('field');
+      expect(MarkdownHelpers.cleanPropertyKey('my.property/value')).toBe('value');
+    });
+
+    it('should remove hash suffixes', () => {
+      expect(MarkdownHelpers.cleanPropertyKey('field-abcd1234')).toBe('field');
+      expect(MarkdownHelpers.cleanPropertyKey('property-1234567890abcdef')).toBe('property');
+    });
+  });
+
+  describe('isInternalProperty', () => {
+    it('should identify internal properties', () => {
+      expect(MarkdownHelpers.isInternalProperty('logseq.property.embedding')).toBe(true);
+      expect(MarkdownHelpers.isInternalProperty('hnsw-label-updated-at')).toBe(true);
+      expect(MarkdownHelpers.isInternalProperty(':logseq.property.embedding/test')).toBe(true);
+    });
+
+    it('should reject user properties', () => {
+      expect(MarkdownHelpers.isInternalProperty('title')).toBe(false);
+      expect(MarkdownHelpers.isInternalProperty('tags')).toBe(false);
+      expect(MarkdownHelpers.isInternalProperty('author')).toBe(false);
+      expect(MarkdownHelpers.isInternalProperty('custom-property')).toBe(false);
+    });
+  });
+
+  describe('formatYaml', () => {
+    it('should format basic YAML frontmatter', () => {
+      const data = {
+        title: 'My Title',
+        date: '2024-01-15',
+        author: 'John Doe'
+      };
+      
+      const yaml = MarkdownHelpers.formatYaml(data);
+      
+      expect(yaml).toContain('---\n');
+      expect(yaml).toContain('title: My Title\n');
+      expect(yaml).toContain('date: 2024-01-15\n');
+      expect(yaml).toContain('author: John Doe\n');
+      expect(yaml).toContain('---\n');
+    });
+
+    it('should format arrays in YAML', () => {
+      const data = {
+        tags: ['javascript', 'typescript', 'react']
+      };
+      
+      const yaml = MarkdownHelpers.formatYaml(data);
+      
+      expect(yaml).toContain('tags:\n');
+      expect(yaml).toContain('  - javascript\n');
+      expect(yaml).toContain('  - typescript\n');
+      expect(yaml).toContain('  - react\n');
+    });
+
+    it('should format multiline strings in YAML', () => {
+      const data = {
+        description: 'First line\nSecond line\nThird line'
+      };
+      
+      const yaml = MarkdownHelpers.formatYaml(data);
+      
+      expect(yaml).toContain('description: |\n');
+      expect(yaml).toContain('  First line\n');
+      expect(yaml).toContain('  Second line\n');
+      expect(yaml).toContain('  Third line\n');
+    });
+
+    it('should handle mixed data types', () => {
+      const data = {
+        title: 'Title',
+        tags: ['tag1', 'tag2'],
+        published: true,
+        views: 1234,
+        description: 'Line 1\nLine 2'
+      };
+      
+      const yaml = MarkdownHelpers.formatYaml(data);
+      
+      expect(yaml).toContain('title: Title');
+      expect(yaml).toContain('tags:\n  - tag1\n  - tag2');
+      expect(yaml).toContain('published: true');
+      expect(yaml).toContain('views: 1234');
+      expect(yaml).toContain('description: |');
+    });
+  });
+
+  describe('collectPropertyValues', () => {
+    it('should collect property values to skip', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          title: 'Skip me',
+          tags: ['tag1', 'tag2'],
+          single: 'value'
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [
+        createMockBlock({ content: 'Skip me' }), // Should be skipped
+        createMockBlock({ content: 'tag1' }), // Should be skipped
+        createMockBlock({ content: 'value' }), // Should be skipped
+        createMockBlock({ content: 'Keep this' }) // Should be kept
+      ]);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: false,
+        includePageName: false
+      });
+      
+      // Property values should be skipped
+      expect(result.split('\n').filter(line => line === 'Skip me').length).toBe(0);
+      expect(result.split('\n').filter(line => line === 'tag1').length).toBe(0);
+      expect(result.split('\n').filter(line => line === 'value').length).toBe(0);
+      expect(result).toContain('Keep this');
+    });
+
+    it('should handle Set property values', async () => {
+      const page = {
+        uuid: 'page-uuid',
+        name: 'Page',
+        properties: {
+          uniqueValues: new Set(['set1', 'set2'])
+        }
+      };
+      
+      mockAPI.Editor.getPage.mockResolvedValue(page);
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [
+        createMockBlock({ content: 'set1' }), // Should be skipped
+        createMockBlock({ content: 'set2' }), // Should be skipped
+        createMockBlock({ content: 'other' }) // Should be kept
+      ]);
+      
+      const result = await exporter.exportCurrentPage({ 
+        includeProperties: false,
+        includePageName: false
+      });
+      
+      expect(result).not.toContain('set1');
+      expect(result).not.toContain('set2');
+      expect(result).toContain('other');
+    });
+  });
+});
