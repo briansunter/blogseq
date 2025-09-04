@@ -5,6 +5,13 @@
 
 * initial commit ([1f8ab8c](https://github.com/briansunter/blogseq/commit/1f8ab8c8f31ef9ef6e558d89bba1e6a534b0ed9b))
 
+# 1.0.0 (2025-09-04)
+
+
+### Features
+
+* initial commit ([1f8ab8c](https://github.com/briansunter/blogseq/commit/1f8ab8c8f31ef9ef6e558d89bba1e6a534b0ed9b))
+
 ## [2.1.1](https://github.com/pengx17/logseq-plugin-template-react/compare/v2.1.0...v2.1.1) (2022-03-24)
 
 
