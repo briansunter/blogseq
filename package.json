@@ -1,5 +1,6 @@
 {
   "name": "blogseq",
+  "author": "Brian Sunter",
   "version": "1.0.0",
   "main": "dist/index.html",
   "repository": {
