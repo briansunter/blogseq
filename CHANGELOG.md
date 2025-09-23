@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/briansunter/blogseq/compare/v1.0.1...v1.0.2) (2025-09-23)
+
+
+### fix
+
+* direct asset ([2aa1a93](https://github.com/briansunter/blogseq/commit/2aa1a9373d4e3a70162130162c316bd95afe3f4f))
+
 ## [1.0.1](https://github.com/briansunter/blogseq/compare/v1.0.0...v1.0.1) (2025-09-04)
 
 
