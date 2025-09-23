@@ -467,11 +467,17 @@ export class MarkdownExporter {
   }
   
   private createAssetLink(uuid: string, info: { type: string; entity?: LogseqEntity }, assetPath: string): string {
-    const title = info.entity?.title || info.entity?.name || `asset-${uuid.substring(0, 8)}`;
+    // Try different property locations for title
+    let title = info.entity?.title ||
+                info.entity?.['block/title'] ||
+                info.entity?.[':block/title'] ||
+                info.entity?.name ||
+                `asset-${uuid.substring(0, 8)}`;
+
     const titleStr = typeof title === 'string' ? title : String(title);
     const path = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
     const exportPath = `${path}${uuid}.${info.type}`;
-    
+
     // Track asset
     this.referencedAssets.set(uuid, {
       uuid,
@@ -480,12 +486,12 @@ export class MarkdownExporter {
       originalPath: `${this.graphPath}/assets/${uuid}.${info.type}`,
       exportPath
     });
-    
+
     // Create markdown link
     const isImage = MarkdownHelpers.isImageAsset(info.type);
     const markdown = `${isImage ? '!' : ''}[${titleStr}](${exportPath})`;
     this.blockRefCache.set(uuid, markdown);
-    
+
     return markdown;
   }
   
