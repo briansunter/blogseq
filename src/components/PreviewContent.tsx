@@ -45,13 +45,12 @@ export const PreviewContent: React.FC<PreviewContentProps> = ({
               }
             }
             return (
-              <div className="my-4 flex justify-center">
-                <img 
-                  src={imageSrc} 
+              <div className="my-6">
+                <img
+                  src={imageSrc}
                   alt={alt || 'Image'}
-                  {...props} 
-                  className="max-w-full h-auto rounded shadow-lg border border-gray-800" 
-                  style={{ maxHeight: '400px', objectFit: 'contain' }}
+                  {...props}
+                  className="w-full h-auto rounded shadow-lg border border-gray-800"
                 />
               </div>
             );
