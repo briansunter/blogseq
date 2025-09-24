@@ -65,10 +65,10 @@ export const useExport = (settings: ExportSettings) => {
   }, [preview]);
 
   const downloadAsZip = useCallback(async () => {
-    if (preview) {
-      await exporter.downloadAsZip(preview, undefined, settings.assetPath);
-    }
-  }, [preview, settings.assetPath]);
+    // Re-export to ensure assets are tracked properly
+    const markdown = await exporter.exportCurrentPage(settings);
+    await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
+  }, [settings]);
 
   return {
     isExporting,

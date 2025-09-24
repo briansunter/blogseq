@@ -863,7 +863,7 @@ export class MarkdownExporter {
   async downloadMarkdown(content: string, filename?: string): Promise<void> {
     const currentPage = await this.logseqAPI.getCurrentPage();
     const pageName = currentPage?.name || "export";
-    const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, "_")}.md`;
+    const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, "-")}.md`;
     
     const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
     const url = this.fileAPI.createObjectURL(blob);
@@ -895,27 +895,36 @@ export class MarkdownExporter {
   async downloadAsZip(content: string, filename?: string, assetPath = 'assets/'): Promise<void> {
     const currentPage = await this.logseqAPI.getCurrentPage();
     const pageName = currentPage?.name || "export";
-    const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, "_")}`;
-    
+    const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, "-")}`;
+
     const zip = new JSZip();
     zip.file(`${safeFileName}.md`, content);
-    
+
     let successCount = 0;
     const failedAssets: string[] = [];
-    
+
+    console.log(`Starting ZIP export with ${this.referencedAssets.size} assets`);
+
     if (this.referencedAssets.size > 0) {
-      const folderName = assetPath.endsWith('/') ? assetPath.slice(0, -1) : assetPath;
-      const assetsFolder = zip.folder(folderName);
-      
+      // Clean up the asset path - remove ../ and any leading/trailing slashes
+      let folderName = assetPath.replace(/\.\.\//g, '').replace(/^\/+|\/+$/g, '');
+      // Default to 'assets' if empty
+      folderName = folderName || 'assets';
+      console.log(`Creating folder: ${folderName}`);
+
       for (const [uuid, assetInfo] of this.referencedAssets) {
         try {
           const assetUrl = `file://${assetInfo.originalPath}`;
+          console.log(`Fetching asset: ${assetInfo.title} from ${assetUrl}`);
           const response = await this.fileAPI.fetch(assetUrl);
-          
+
           if (response.ok) {
             const assetBlob = await response.blob();
-            assetsFolder?.file(`${uuid}.${assetInfo.type}`, assetBlob);
+            // Add file directly with full path (folder/filename)
+            const assetFileName = `${folderName}/${uuid}.${assetInfo.type}`;
+            zip.file(assetFileName, assetBlob);
             successCount++;
+            console.log(`✅ Added asset to ZIP: ${assetInfo.title} as ${assetFileName}`);
             this.debug(`✅ Added asset: ${assetInfo.title}`);
           } else {
             throw new Error(`Failed to fetch: ${response.status}`);
