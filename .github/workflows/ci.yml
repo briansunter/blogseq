@@ -50,10 +50,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run tests
-        run: pnpm test --run
-
-      - name: Generate coverage report
+      - name: Run tests with coverage
         run: pnpm test:coverage
 
       - name: Upload coverage to Codecov
