@@ -19,9 +19,30 @@ globalMockLogseq.addPropertyDefinition(":user.property/tags", "tags");
 globalMockLogseq.addPropertyDefinition(":user.property/date", "date");
 globalMockLogseq.addPropertyDefinition(":user.property/blogTags", "blogTags");
 
+// Create a proxy that exposes MockLogseqAPI methods at the top level
+// while maintaining namespace methods for compatibility
+const logseqProxy = new Proxy(globalMockLogseq, {
+  get(target, prop) {
+    // First check if it's a direct method on the mock
+    if (prop in target) {
+      const value = (target as any)[prop];
+      // Bind methods to maintain 'this' context
+      if (typeof value === 'function') {
+        return value.bind(target);
+      }
+      return value;
+    }
+    // Return undefined for missing properties
+    return undefined;
+  },
+});
+
 // Install globally before stories load
-(global as any).logseq = globalMockLogseq;
-(window as any).logseq = globalMockLogseq;
+(global as any).logseq = logseqProxy;
+(window as any).logseq = logseqProxy;
+
+// Export for use in story setup functions
+export { globalMockLogseq };
 
 const preview: Preview = {
   parameters: {

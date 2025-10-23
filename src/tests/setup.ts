@@ -22,7 +22,9 @@ interface GlobalWithLogseq {
   },
   UI: {
     showMsg: vi.fn()
-  }
+  },
+  on: vi.fn(),
+  off: vi.fn()
 };
 
 // Mock fetch for asset tests

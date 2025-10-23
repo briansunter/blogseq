@@ -28,6 +28,11 @@ interface TimingSimulation {
 }
 
 /**
+ * Event handler type
+ */
+type EventHandler = (...args: unknown[]) => void | Promise<void>;
+
+/**
  * Internal state for the mock Logseq API
  */
 export interface MockLogseqState {
@@ -57,6 +62,7 @@ export class MockLogseqAPI implements LogseqAPI {
   private timingSimulations: Map<keyof LogseqAPI, TimingSimulation> = new Map();
   private queryHistory: Array<{ query: string; result: unknown[][]; timestamp: number }> = [];
   private seedState: MockLogseqState | null = null;
+  private eventHandlers: Map<string, EventHandler[]> = new Map();
 
   // Call tracking for spies
   public calls = {
@@ -356,6 +362,75 @@ export class MockLogseqAPI implements LogseqAPI {
     this.state.messages.push({ message, type });
   }
 
+  // Event handler methods
+
+  /**
+   * Register an event handler
+   */
+  on(eventName: string, handler: EventHandler): void {
+    if (!this.eventHandlers.has(eventName)) {
+      this.eventHandlers.set(eventName, []);
+    }
+    this.eventHandlers.get(eventName)!.push(handler);
+  }
+
+  /**
+   * Unregister an event handler
+   */
+  off(eventName: string, handler: EventHandler): void {
+    const handlers = this.eventHandlers.get(eventName);
+    if (!handlers) return;
+
+    const index = handlers.indexOf(handler);
+    if (index >= 0) {
+      handlers.splice(index, 1);
+    }
+  }
+
+  /**
+   * Emit an event to all registered handlers
+   * Useful for testing event-driven code
+   */
+  async emit(eventName: string, ...args: unknown[]): Promise<void> {
+    const handlers = this.eventHandlers.get(eventName);
+    if (!handlers) return;
+
+    for (const handler of handlers) {
+      try {
+        await handler(...args);
+      } catch (error) {
+        // Log but don't throw - event handlers shouldn't crash other handlers
+        console.error(`Error in event handler for "${eventName}":`, error);
+      }
+    }
+  }
+
+  /**
+   * Get all handlers for an event (for testing/debugging)
+   */
+  getHandlers(eventName: string): EventHandler[] {
+    return [...(this.eventHandlers.get(eventName) || [])];
+  }
+
+  /**
+   * Get count of handlers for an event
+   */
+  getHandlerCount(eventName: string): number {
+    return this.eventHandlers.get(eventName)?.length ?? 0;
+  }
+
+  /**
+   * Clear all handlers for an event or all events
+   */
+  clearHandlers(eventName?: string): this {
+    if (eventName) {
+      this.eventHandlers.delete(eventName);
+    } else {
+      this.eventHandlers.clear();
+    }
+    return this;
+  }
+
   // State management methods
 
   /**
@@ -504,6 +579,7 @@ export class MockLogseqAPI implements LogseqAPI {
     this.errorSimulations.clear();
     this.timingSimulations.clear();
     this.queryHistory = [];
+    this.clearHandlers();
     return this;
   }
 
