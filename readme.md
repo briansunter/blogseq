@@ -156,4 +156,4 @@ MIT © [Brian Sunter](https://github.com/briansunter)
 <p align="center">
   <a href="https://github.com/briansunter/blogseq">⭐ Star on GitHub</a> •
   Made with ❤️ for the Logseq community
-</p># Test PR Checks
+</p>
