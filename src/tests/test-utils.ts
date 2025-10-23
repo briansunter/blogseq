@@ -299,14 +299,11 @@ export const setupAssetMocking = (mockAPI: MockLogseqAPI, assets: AssetSetup[]):
       }
     } as unknown as PageEntity;
 
-    // Add to mock instance state - this automatically sets up DataScript query patterns
+    // Add to mock instance state
     if (mockInstance) {
       mockInstance.addAsset(asset.uuid, asset.type, entity);
     }
   });
-
-  // No need to set up additional mock implementations - the initial delegation is sufficient
-  // The addAsset method has already registered the query patterns
 };
 
 /**

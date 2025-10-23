@@ -129,6 +129,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includePageName: false,
         includeProperties: false,
         preserveBlockRefs: true,
+        removeLogseqSyntax: false,
         resolvePlainUuids: false
       });
 
@@ -756,6 +757,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includePageName: false,
         includeProperties: false,
         preserveBlockRefs: true,
+        removeLogseqSyntax: false,
         resolvePlainUuids: false
       });
 

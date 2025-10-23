@@ -354,7 +354,7 @@ export class MarkdownExporter {
       }
     );
 
-    // Handle plain UUIDs only if resolvePlainUuids is enabled
+    // Handle plain UUIDs only if resolvePlainUuids is enabled (defaults to true if not specified)
     if (options?.resolvePlainUuids !== false) {
       result = await this.replaceAsync(result, /\b([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\b/gi,
         async (match, uuid, offset) => {

@@ -16,6 +16,8 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "lint:fix": "eslint src --ext .ts,.tsx --fix",
     "test": "vitest",
     "test:unit": "vitest src/tests/unit",
     "test:component": "vitest src/tests/component",
@@ -23,6 +25,8 @@
     "test:e2e": "vitest src/tests/e2e",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
+    "check-all": "pnpm typecheck && pnpm lint && pnpm test",
+    "fix-all": "pnpm lint:fix && pnpm test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "preinstall": "npx only-allow pnpm"
