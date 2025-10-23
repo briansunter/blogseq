@@ -64,7 +64,7 @@ export const useBatchExport = () => {
             results.push({
               pageName,
               success: false,
-              error: error instanceof Error ? error.message : "Unknown error",
+              error: error instanceof Error ? error.message : String(error),
             });
           }
 

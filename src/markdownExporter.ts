@@ -240,7 +240,7 @@ export class MarkdownExporter {
     }
     
     if (!pageBlocks || pageBlocks.length === 0) {
-      return markdown + "_No content found on this page._";
+      return markdown.trim() || "";
     }
     
     // Pre-cache references
@@ -248,14 +248,15 @@ export class MarkdownExporter {
     
     // Process blocks
     const propertyValues = await this.collectPropertyValues(currentPage.uuid);
-    
+
     for (const block of pageBlocks) {
+      if (!block) continue;
       const content = block.content?.trim();
       if (content && propertyValues.has(content)) {
         this.debug(`Skipping property value: "${content}"`);
         continue;
       }
-      
+
       markdown += await this.processBlock(block, 0, opts);
     }
     
@@ -286,7 +287,7 @@ export class MarkdownExporter {
     
     // Process content
     if (options.preserveBlockRefs) {
-      content = await this.resolveReferences(content, options.assetPath ?? 'assets/');
+      content = await this.resolveReferences(content, options.assetPath ?? 'assets/', options);
     }
     
     if (options.removeLogseqSyntax) {
@@ -306,11 +307,16 @@ export class MarkdownExporter {
     if (headingLevel !== null && content && options.flattenNested) {
       const heading = '#'.repeat(headingLevel) + ' ' + content;
       return heading + '\n\n' + await this.processChildren(block, depth, options);
-    } else if (options.flattenNested || depth === 0) {
+    } else if (options.flattenNested) {
       const markdown = content ? `${content}\n\n` : "";
       return markdown + await this.processChildren(block, depth, options);
+    } else if (depth === 0) {
+      // Top-level blocks are paragraphs, but children start list formatting at depth 1
+      const markdown = content ? `${content}\n\n` : "";
+      return markdown + await this.processChildren(block, depth + 1, options);
     } else {
-      const indent = "  ".repeat(depth);
+      // List formatting: depth-1 gives correct indentation (depth=1 → no indent, depth=2 → 2 spaces, etc.)
+      const indent = "  ".repeat(depth - 1);
       const markdown = content ? `${indent}- ${content}\n` : "";
       return markdown + await this.processChildren(block, depth + 1, options);
     }
@@ -318,19 +324,19 @@ export class MarkdownExporter {
   
   private async processChildren(block: BlockEntity, depth: number, options: ExportOptions): Promise<string> {
     if (!block.children?.length) return "";
-    
+
     const results = await Promise.all(
-      (block.children as BlockEntity[]).map(child => 
-        this.processBlock(child, depth + (options.flattenNested ? 1 : 0), options)
+      (block.children as BlockEntity[]).map(child =>
+        this.processBlock(child, depth, options)
       )
     );
-    
+
     return results.join('');
   }
   
-  private async resolveReferences(content: string, assetPath: string): Promise<string> {
+  private async resolveReferences(content: string, assetPath: string, options?: ExportOptions): Promise<string> {
     let result = content;
-    
+
     // Handle [[uuid]] page refs
     result = await this.replaceAsync(result, /\[\[([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\]\]/gi,
       async (_, uuid) => {
@@ -338,7 +344,7 @@ export class MarkdownExporter {
         return resolved ?? `[[${uuid}]]`;
       }
     );
-    
+
     // Handle ((uuid)) block refs
     result = await this.replaceAsync(result, /\(\(([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)\)/gi,
       async (_, uuid) => {
@@ -347,36 +353,39 @@ export class MarkdownExporter {
         return resolved ?? `[Unresolved: ${uuidStr.substring(0, 8)}...]`;
       }
     );
-    
-    // Handle plain UUIDs
-    result = await this.replaceAsync(result, /\b([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\b/gi,
-      async (match, uuid, offset) => {
-        const matchStr = String(match);
-        const uuidStr = String(uuid);
-        const offsetNum = Number(offset);
-        const preceding = result[offsetNum - 1];
-        if (['/', '-', '_'].includes(preceding)) return matchStr;
-        
-        const resolved = await this.resolveUuid(uuidStr, assetPath);
-        return resolved ?? matchStr;
-      }
-    );
-    
+
+    // Handle plain UUIDs only if resolvePlainUuids is enabled
+    if (options?.resolvePlainUuids !== false) {
+      result = await this.replaceAsync(result, /\b([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\b/gi,
+        async (match, uuid, offset) => {
+          const matchStr = String(match);
+          const uuidStr = String(uuid);
+          const offsetNum = Number(offset);
+          const preceding = result[offsetNum - 1];
+          if (['/', '-', '_'].includes(preceding)) return matchStr;
+
+          const resolved = await this.resolveUuid(uuidStr, assetPath);
+          return resolved ?? matchStr;
+        }
+      );
+    }
+
     return result;
   }
   
   private async resolveUuid(uuid: string, assetPath: string): Promise<string | null> {
-    // Check cache
+    // Check cache - return any cached value
     const cached = this.blockRefCache.get(uuid);
-    if (cached?.startsWith('![') || cached?.includes(`](${assetPath}`)) {
+    if (cached !== undefined) {
       return cached;
     }
-    
+
     // Check if it's an asset
     const assetInfo = await this.detectAsset(uuid);
     if (assetInfo) {
       return this.createAssetLink(uuid, assetInfo, assetPath);
     }
+
     
     // Try as page
     try {
@@ -394,9 +403,9 @@ export class MarkdownExporter {
     try {
       const block = await this.logseqAPI.getBlock(uuid, { includeChildren: false });
       if (block?.content) {
-        let content = await this.resolveReferences(block.content, assetPath);
-        content = MarkdownHelpers.cleanLogseqSyntax(content, { 
-          includeTags: false, includeProperties: false, removeLogseqSyntax: true 
+        let content = await this.resolveReferences(block.content, assetPath, { resolvePlainUuids: true });
+        content = MarkdownHelpers.cleanLogseqSyntax(content, {
+          includeTags: false, includeProperties: false, removeLogseqSyntax: true
         });
         this.blockRefCache.set(uuid, content);
         return content;
@@ -412,11 +421,11 @@ export class MarkdownExporter {
     // Try DataScript query
     try {
       const query = `[:find ?type (pull ?e [*])
-                      :where 
+                      :where
                       [?e :block/uuid #uuid "${uuid}"]
                       [?e :logseq.property.asset/type ?type]]`;
       const result = await this.logseqAPI.datascriptQuery(query);
-      
+
       if (result?.[0]) {
         const [type, entity] = result[0];
         if (typeof type === 'string') {
@@ -521,9 +530,9 @@ export class MarkdownExporter {
   
   private async cacheBlockReferences(blocks: BlockEntity[], visited = new Set<string>()): Promise<void> {
     const uuidPattern = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi;
-    
+
     for (const block of blocks) {
-      if (block.uuid && !visited.has(block.uuid)) {
+      if (block && block.uuid && !visited.has(block.uuid)) {
         visited.add(block.uuid);
         this.blockRefCache.set(block.uuid, block.content || "");
         
@@ -644,7 +653,7 @@ export class MarkdownExporter {
         const tags: string[] = [];
         
         for (const [key, value] of Object.entries(props)) {
-          if (!value) continue;
+          if (value === null || value === undefined) continue;
           
           // Get clean name from property map
           const cleanKey = propertyMap.get(key) || propertyMap.get(`:${key}`);
@@ -664,7 +673,8 @@ export class MarkdownExporter {
         
         // Process other properties
         for (const [key, value] of Object.entries(props)) {
-          if (!value || MarkdownHelpers.isSystemProperty(key)) continue;
+          // Allow false and 0 values, but skip null/undefined and system properties
+          if ((value === null || value === undefined) || MarkdownHelpers.isSystemProperty(key)) continue;
           
           // Get clean name from property map
           const cleanKey = propertyMap.get(key) || propertyMap.get(`:${key}`);
@@ -674,7 +684,7 @@ export class MarkdownExporter {
           }
           
           // Skip tags-related properties we already processed
-          if (cleanKey === 'blogTags' || (cleanKey === 'tags' && frontmatter.tags)) {
+          if (cleanKey === 'blogTags' || cleanKey === 'tags') {
             continue;
           }
           
@@ -702,16 +712,38 @@ export class MarkdownExporter {
       
       // Handle [[Page]] refs
       if (trimmed.startsWith('[[') && trimmed.endsWith(']]')) {
-        return trimmed.slice(2, -2);
+        const inner = trimmed.slice(2, -2);
+
+        // Check if the inner content is a UUID that might be an asset
+        if (MarkdownHelpers.isUuid(inner)) {
+          const assetInfo = await this.detectAsset(inner);
+          if (assetInfo) {
+            const path = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
+            const exportPath = `${path}${inner}.${assetInfo.type}`;
+
+            // Track asset
+            this.referencedAssets.set(inner, {
+              uuid: inner,
+              title: typeof assetInfo.entity?.title === 'string' ? assetInfo.entity.title : inner,
+              type: assetInfo.type,
+              originalPath: `${this.graphPath}/assets/${inner}.${assetInfo.type}`,
+              exportPath
+            });
+
+            return exportPath;
+          }
+        }
+
+        return inner;
       }
-      
+
       // Handle UUIDs
       if (MarkdownHelpers.isUuid(trimmed)) {
         const assetInfo = await this.detectAsset(trimmed);
         if (assetInfo) {
           const path = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
           const exportPath = `${path}${trimmed}.${assetInfo.type}`;
-          
+
           // Track asset
           this.referencedAssets.set(trimmed, {
             uuid: trimmed,
@@ -720,7 +752,7 @@ export class MarkdownExporter {
             originalPath: `${this.graphPath}/assets/${trimmed}.${assetInfo.type}`,
             exportPath
           });
-          
+
           return exportPath;
         }
       }

@@ -1,0 +1,886 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { MarkdownExporter, DEFAULT_OPTIONS } from '../../../markdownExporter';
+import type { BlockEntity, PageEntity } from '@logseq/libs/dist/LSPlugin';
+import {
+  createMockLogseqAPI,
+  createMockPage,
+  createMockBlock,
+  setupGlobalMocks,
+  resetAllMocks,
+  mockCurrentPageResponse,
+  mockPageBlocksResponse,
+  mockGraphResponse,
+  type MockLogseqAPI,
+  type MockFileAPI,
+  type MockDOMHelpers
+} from '../../test-utils';
+import { vi } from 'vitest';
+
+describe('MarkdownExporter - Asset Detection and Tracking', () => {
+  let exporter: MarkdownExporter;
+  let mockAPI: MockLogseqAPI;
+  let mockFileAPI: MockFileAPI;
+  let mockDOMHelpers: MockDOMHelpers;
+
+  beforeEach(() => {
+    mockAPI = createMockLogseqAPI();
+
+    mockFileAPI = {
+      fetch: vi.fn(),
+      saveAs: vi.fn(),
+      createObjectURL: vi.fn(() => 'blob://test-url'),
+      revokeObjectURL: vi.fn(),
+      writeToClipboard: vi.fn()
+    };
+
+    mockDOMHelpers = {
+      createElement: vi.fn(),
+      appendChild: vi.fn(),
+      removeChild: vi.fn()
+    };
+
+    exporter = new MarkdownExporter(mockAPI, mockFileAPI, mockDOMHelpers);
+    setupGlobalMocks(mockAPI);
+  });
+
+  afterEach(() => {
+    resetAllMocks(mockAPI);
+    vi.clearAllMocks();
+  });
+
+  describe('detectAsset - DataScript Query Detection', () => {
+    it('should detect asset via DataScript query with type', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'abcd1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        console.log('datascriptQuery called:', query.substring(0, 150).replace(/\n/g, ' '));
+        if (query.includes(assetUuid) && query.includes(':logseq.property.asset/type')) {
+          console.log('Returning asset data for:', assetUuid);
+          return [['png', { ':block/uuid': { $uuid: assetUuid }, ':block/title': 'Image' }]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true,
+        debug: true
+      });
+
+      console.log('Export result:', result);
+      const assets = exporter.getReferencedAssets();
+      console.log('Referenced assets:', Array.from(assets.keys()));
+      expect(assets.has(assetUuid)).toBe(true);
+      expect(assets.get(assetUuid)?.type).toBe('png');
+    });
+
+    it('should detect image asset types (png, jpg, jpeg, gif, webp, svg, bmp)', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const imageTypes = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'bmp'];
+
+      for (const type of imageTypes) {
+        const assetUuid = `image-${type}-1234-5678-90ab-cdef-123456789abc`;
+
+        mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+          if (query.includes(assetUuid)) {
+            return [[type, { ':block/uuid': { $uuid: assetUuid } }]];
+          }
+          return [];
+        });
+
+        mockCurrentPageResponse(mockAPI, page);
+        mockPageBlocksResponse(mockAPI, [createMockBlock({ uuid: 'block', content: assetUuid })]);
+        mockGraphResponse(mockAPI, '/test/graph');
+
+        await exporter.exportCurrentPage({
+          ...DEFAULT_OPTIONS,
+          includePageName: false,
+          includeProperties: false,
+          resolvePlainUuids: true
+        });
+
+        const result = await exporter.exportCurrentPage({
+          ...DEFAULT_OPTIONS,
+          includePageName: false,
+          includeProperties: false,
+          resolvePlainUuids: true
+        });
+
+        // Should create image markdown with !
+        expect(result).toContain(`![`);
+      }
+    });
+
+    it('should detect non-image asset types (pdf, doc, etc)', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const docTypes = ['pdf', 'doc', 'docx', 'txt', 'zip'];
+
+      for (const type of docTypes) {
+        const assetUuid = `doc-${type}-1234-5678-90ab-cdef-123456789abc`;
+
+        mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+          if (query.includes(assetUuid)) {
+            return [[type, { ':block/uuid': { $uuid: assetUuid }, ':block/title': 'Document' }]];
+          }
+          return [];
+        });
+
+        mockCurrentPageResponse(mockAPI, page);
+        mockPageBlocksResponse(mockAPI, [createMockBlock({ uuid: 'block', content: assetUuid })]);
+        mockGraphResponse(mockAPI, '/test/graph');
+
+        const result = await exporter.exportCurrentPage({
+          ...DEFAULT_OPTIONS,
+          includePageName: false,
+          includeProperties: false,
+          resolvePlainUuids: true
+        });
+
+        // Should create regular link without !
+        expect(result).toContain(`[Document](assets/${assetUuid}.${type})`);
+        expect(result).not.toContain(`![Document]`);
+      }
+    });
+
+    it('should return null when DataScript query returns empty result', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const uuid = 'not-asset-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: uuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockResolvedValue([]);
+      mockAPI.Editor.getPage.mockResolvedValue(null);
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.has(uuid)).toBe(false);
+    });
+
+    it('should handle DataScript query errors gracefully', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const uuid = 'error-asset-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: uuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockRejectedValue(new Error('Query failed'));
+      mockAPI.Editor.getPage.mockResolvedValue(null);
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+
+      await expect(
+        exporter.exportCurrentPage({
+          ...DEFAULT_OPTIONS,
+          includePageName: false,
+          includeProperties: false,
+          resolvePlainUuids: true
+        })
+      ).resolves.toBeTruthy();
+    });
+  });
+
+  describe('detectAsset - Page Properties Detection', () => {
+    it('should detect asset via page properties', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'page-prop-asset-1234-5678-90ab-cdef';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(':logseq.property.asset/type') && query.includes(assetUuid)) {
+          // First query (DataScript) fails
+          return [];
+        }
+        if (query.includes(':find ?type') && query.includes(assetUuid)) {
+          // findAssetType query succeeds
+          return [['pdf']];
+        }
+        return [];
+      });
+
+      mockAPI.Editor.getPage.mockResolvedValue({
+        uuid: assetUuid,
+        name: 'Page Asset',
+        properties: {}
+      } as PageEntity);
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.has(assetUuid)).toBe(true);
+    });
+
+    it('should fallback to page check when DataScript fails', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'fallback-asset-1234-5678-90ab-cdef';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: `[[${assetUuid}]]`
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        // DataScript query for asset type
+        if (query.includes(':logseq.property.asset/type')) {
+          return [];
+        }
+        // findAssetType query
+        if (query.includes(':find ?type')) {
+          return [['jpg']];
+        }
+        return [];
+      });
+
+      mockAPI.Editor.getPage.mockResolvedValue({
+        uuid: assetUuid,
+        name: 'Fallback Asset'
+      } as PageEntity);
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        preserveBlockRefs: true
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.has(assetUuid)).toBe(true);
+    });
+
+    it('should return null when page has no asset type', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const uuid = 'not-asset-page-1234-5678-90ab-cdef';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: uuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockResolvedValue([]);
+      mockAPI.Editor.getPage.mockResolvedValue({
+        uuid,
+        name: 'Regular Page'
+      } as PageEntity);
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.has(uuid)).toBe(false);
+    });
+  });
+
+  describe('createAssetLink - Asset Link Generation', () => {
+    it('should create image markdown link with ! prefix', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'image-link-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['png', { ':block/uuid': { $uuid: assetUuid }, ':block/title': 'My Image' }]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      expect(result).toContain(`![My Image](assets/${assetUuid}.png)`);
+    });
+
+    it('should create non-image markdown link without ! prefix', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'doc-link-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['pdf', { ':block/uuid': { $uuid: assetUuid }, ':block/title': 'My Doc' }]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      expect(result).toContain(`[My Doc](assets/${assetUuid}.pdf)`);
+      expect(result).not.toContain('![My Doc]');
+    });
+
+    it('should use title from :block/title property', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'title-block-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['jpg', { ':block/title': 'Title from :block/title' }]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      expect(result).toContain('Title from :block/title');
+    });
+
+    it('should use title from block/title property', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'title-alt-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['png', { 'block/title': 'Alternative Title' }]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      expect(result).toContain('Alternative Title');
+    });
+
+    it('should use name property as fallback', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'name-fallback-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['png', { name: 'Name Property' }]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      expect(result).toContain('Name Property');
+    });
+
+    it('should use UUID-based fallback when no title available', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'no-title-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['jpg', {}]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      expect(result).toContain(`asset-${assetUuid.substring(0, 8)}`);
+    });
+
+    it('should respect custom assetPath', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'custom-path-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['png', { ':block/title': 'Image' }]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        assetPath: 'images/',
+        resolvePlainUuids: true
+      });
+
+      expect(result).toContain(`images/${assetUuid}.png`);
+    });
+
+    it('should add trailing slash to assetPath if missing', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'trailing-slash-1234-5678-90ab-cdef';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['jpg', {}]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        assetPath: 'media',
+        resolvePlainUuids: true
+      });
+
+      expect(result).toContain(`media/${assetUuid}.jpg`);
+    });
+  });
+
+  describe('Asset Tracking and Storage', () => {
+    it('should track asset in referencedAssets map', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'track-asset-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['png', { ':block/title': 'Tracked Asset' }]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.has(assetUuid)).toBe(true);
+
+      const assetInfo = assets.get(assetUuid);
+      expect(assetInfo?.uuid).toBe(assetUuid);
+      expect(assetInfo?.type).toBe('png');
+      expect(assetInfo?.title).toBe('Tracked Asset');
+      expect(assetInfo?.exportPath).toBe(`assets/${assetUuid}.png`);
+      expect(assetInfo?.originalPath).toContain(`/test/graph/assets/${assetUuid}.png`);
+    });
+
+    it('should track multiple assets from different blocks', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const uuid1 = 'asset-1-1234-5678-90ab-cdef-123456789abc';
+      const uuid2 = 'asset-2-1234-5678-90ab-cdef-123456789abc';
+      const uuid3 = 'asset-3-1234-5678-90ab-cdef-123456789abc';
+
+      const blocks = [
+        createMockBlock({ uuid: 'block-1', content: uuid1 }),
+        createMockBlock({ uuid: 'block-2', content: uuid2 }),
+        createMockBlock({ uuid: 'block-3', content: uuid3 })
+      ];
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(uuid1)) return [['png', {}]];
+        if (query.includes(uuid2)) return [['jpg', {}]];
+        if (query.includes(uuid3)) return [['pdf', {}]];
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, blocks);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.size).toBe(3);
+      expect(assets.has(uuid1)).toBe(true);
+      expect(assets.has(uuid2)).toBe(true);
+      expect(assets.has(uuid3)).toBe(true);
+    });
+
+    it('should clear asset map between exports', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const uuid1 = 'first-export-1234-5678-90ab-cdef';
+      const uuid2 = 'second-export-1234-5678-90ab-cdef';
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(uuid1)) return [['png', {}]];
+        if (query.includes(uuid2)) return [['jpg', {}]];
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [createMockBlock({ uuid: 'b1', content: uuid1 })]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      let assets = exporter.getReferencedAssets();
+      expect(assets.has(uuid1)).toBe(true);
+      expect(assets.size).toBe(1);
+
+      // Second export
+      mockPageBlocksResponse(mockAPI, [createMockBlock({ uuid: 'b2', content: uuid2 })]);
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      assets = exporter.getReferencedAssets();
+      expect(assets.has(uuid1)).toBe(false);
+      expect(assets.has(uuid2)).toBe(true);
+      expect(assets.size).toBe(1);
+    });
+  });
+
+  describe('trackAssets - Inline Asset Detection', () => {
+    it('should track assets from markdown image syntax', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'inline-img-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: `![My Image](../assets/${assetUuid}.png)`
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.has(assetUuid)).toBe(true);
+      expect(assets.get(assetUuid)?.type).toBe('png');
+      expect(assets.get(assetUuid)?.title).toBe('My Image');
+    });
+
+    it('should track assets from markdown link syntax', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'inline-doc-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: `[Document](../assets/${assetUuid}.pdf)`
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.has(assetUuid)).toBe(true);
+      expect(assets.get(assetUuid)?.type).toBe('pdf');
+      expect(assets.get(assetUuid)?.title).toBe('Document');
+    });
+
+    it('should update asset paths to use configured assetPath', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'path-update-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: `![Image](../assets/${assetUuid}.jpg)`
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        assetPath: 'custom-assets/'
+      });
+
+      expect(result).toContain(`custom-assets/${assetUuid}.jpg`);
+    });
+
+    it('should extract asset extension from path', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const extensions = ['png', 'jpg', 'pdf', 'webp', 'svg'];
+
+      for (const ext of extensions) {
+        const assetUuid = `ext-test-${ext}-1234-5678-90ab-cdef`;
+        const block = createMockBlock({
+          uuid: `block-${ext}`,
+          content: `![](../assets/${assetUuid}.${ext})`
+        });
+
+        mockCurrentPageResponse(mockAPI, page);
+        mockPageBlocksResponse(mockAPI, [block]);
+        mockGraphResponse(mockAPI, '/test/graph');
+
+        await exporter.exportCurrentPage({
+          ...DEFAULT_OPTIONS,
+          includePageName: false,
+          includeProperties: false
+        });
+
+        const assets = exporter.getReferencedAssets();
+        expect(assets.get(assetUuid)?.type).toBe(ext);
+      }
+    });
+
+    it('should use UUID prefix as fallback title when title is empty', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'no-title-inline-1234-5678-90ab-cdef';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: `![](../assets/${assetUuid}.png)`
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.get(assetUuid)?.title).toBe(`asset-${assetUuid.substring(0, 8)}`);
+    });
+
+    it('should not duplicate assets already tracked', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'dup-check-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: `![First](../assets/${assetUuid}.png) and ![Second](../assets/${assetUuid}.png)`
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false
+      });
+
+      const assets = exporter.getReferencedAssets();
+      expect(assets.size).toBe(1);
+      expect(assets.has(assetUuid)).toBe(true);
+    });
+  });
+
+  describe('Edge Cases and Error Handling', () => {
+    it('should handle invalid UUID format in asset path', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: '![](../assets/not-a-valid-uuid.png)'
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false
+      });
+
+      expect(result).toContain('![](assets/not-a-valid-uuid.png)');
+    });
+
+    it('should handle assets with no extension', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'no-ext-1234-5678-90ab-cdef-123456789abc';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: `![](../assets/${assetUuid})`
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false
+      });
+
+      expect(result).toContain(`assets/${assetUuid}`);
+    });
+
+    it('should handle graph path without trailing slash', async () => {
+      const page = createMockPage({ name: 'Test' });
+      const assetUuid = 'graph-path-test-1234-5678-90ab-cdef';
+      const block = createMockBlock({
+        uuid: 'block-1',
+        content: assetUuid
+      });
+
+      mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes(assetUuid)) {
+          return [['png', {}]];
+        }
+        return [];
+      });
+
+      mockCurrentPageResponse(mockAPI, page);
+      mockPageBlocksResponse(mockAPI, [block]);
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+        resolvePlainUuids: true
+      });
+
+      const assets = exporter.getReferencedAssets();
+      const asset = assets.get(assetUuid);
+      expect(asset?.originalPath).toContain('/test/graph/assets/');
+    });
+  });
+});

@@ -1,5 +1,8 @@
 import { vi, type Mock } from 'vitest';
 import type { BlockEntity, PageEntity } from '@logseq/libs/dist/LSPlugin';
+import { MockLogseqAPI as SDKMockLogseqAPI } from '../testing/mock-logseq-sdk/MockLogseqAPI';
+import { MockFileAPI as SDKMockFileAPI } from '../testing/mock-logseq-sdk/MockFileAPI';
+import { MockDOMHelpers as SDKMockDOMHelpers } from '../testing/mock-logseq-sdk/MockDOMHelpers';
 
 export type MockLogseqAPI = {
   getCurrentPage: Mock;
@@ -29,32 +32,44 @@ export type MockDOMHelpers = {
   removeChild: Mock;
 }
 
+/**
+ * Creates a backward-compatible mock API wrapper around the new MockLogseqAPI
+ * This maintains compatibility with existing tests while using the new mock system
+ */
 export const createMockLogseqAPI = (): MockLogseqAPI => {
+  const mockInstance = new SDKMockLogseqAPI();
+
+  // Create mock wrappers that delegate to the instance methods
+  const getCurrentPageMock = vi.fn(() => mockInstance.getCurrentPage());
+  const getPageMock = vi.fn((uuid: string) => mockInstance.getPage(uuid));
+  const getBlockMock = vi.fn((uuid: string) => mockInstance.getBlock(uuid));
+  const getPageBlocksTreeMock = vi.fn((uuid: string) => mockInstance.getPageBlocksTree(uuid));
+  const getCurrentGraphMock = vi.fn(() => mockInstance.getCurrentGraph());
+  const datascriptQueryMock = vi.fn((query: string) => mockInstance.datascriptQuery(query));
+  const showMsgMock = vi.fn((msg: string, type: 'success' | 'error' | 'warning') => mockInstance.showMsg(msg, type));
+
   const api = {
-    getCurrentPage: vi.fn(),
-    getPage: vi.fn(),
-    getBlock: vi.fn(),
-    getPageBlocksTree: vi.fn(),
-    getCurrentGraph: vi.fn(),
-    datascriptQuery: vi.fn(),
-    showMsg: vi.fn(),
-    Editor: {} as MockLogseqAPI['Editor'],
-    App: {} as MockLogseqAPI['App'],
-    DB: {} as MockLogseqAPI['DB'],
-    UI: {} as MockLogseqAPI['UI']
+    getCurrentPage: getCurrentPageMock,
+    getPage: getPageMock,
+    getBlock: getBlockMock,
+    getPageBlocksTree: getPageBlocksTreeMock,
+    getCurrentGraph: getCurrentGraphMock,
+    datascriptQuery: datascriptQueryMock,
+    showMsg: showMsgMock,
+    Editor: {
+      getCurrentPage: getCurrentPageMock,
+      getPage: getPageMock,
+      getBlock: getBlockMock,
+      getPageBlocksTree: getPageBlocksTreeMock
+    },
+    App: { getCurrentGraph: getCurrentGraphMock },
+    DB: { datascriptQuery: datascriptQueryMock },
+    UI: { showMsg: showMsgMock }
   };
-  
-  // Set up the namespaced references
-  api.Editor = { 
-    getCurrentPage: api.getCurrentPage, 
-    getPage: api.getPage, 
-    getBlock: api.getBlock, 
-    getPageBlocksTree: api.getPageBlocksTree 
-  };
-  api.App = { getCurrentGraph: api.getCurrentGraph };
-  api.DB = { datascriptQuery: api.datascriptQuery };
-  api.UI = { showMsg: api.showMsg };
-  
+
+  // Store the underlying instance for state management
+  (api as any)._mockInstance = mockInstance;
+
   return api;
 };
 
@@ -144,11 +159,20 @@ export const setupGlobalMocks = (mockAPI: MockLogseqAPI): void => {
 
 export const resetAllMocks = (mockAPI: MockLogseqAPI): void => {
   vi.clearAllMocks();
+
+  // Reset the underlying mock instance state
+  const mockInstance = (mockAPI as any)._mockInstance as SDKMockLogseqAPI;
+  if (mockInstance) {
+    mockInstance.reset();
+  }
+
   Object.values(mockAPI.Editor).forEach(m => m.mockReset());
   Object.values(mockAPI.App).forEach(m => m.mockReset());
   Object.values(mockAPI.DB).forEach(m => m.mockReset());
   Object.values(mockAPI.UI).forEach(m => m.mockReset());
-  (global.fetch as Mock).mockReset();
+  if (global.fetch && typeof global.fetch === 'function') {
+    (global.fetch as Mock).mockReset?.();
+  }
 };
 
 export const expectMarkdownHeading = (content: string, level: number, text: string): void => 
@@ -158,27 +182,74 @@ export const expectAssetPath = (content: string, assetPath: string, filename: st
   expect(content).toContain(`${assetPath}${filename}`);
 
 export const mockCurrentPageResponse = (mockAPI: MockLogseqAPI, page: PageEntity | null): void => {
+  const mockInstance = (mockAPI as any)._mockInstance as SDKMockLogseqAPI;
+  if (mockInstance && page) {
+    mockInstance.setCurrentPage(page);
+    mockInstance.addPage(page);
+  }
   mockAPI.Editor.getCurrentPage.mockResolvedValue(page);
 };
 
 export const mockPageBlocksResponse = (mockAPI: MockLogseqAPI, blocks: BlockEntity[]): void => {
+  const mockInstance = (mockAPI as any)._mockInstance as SDKMockLogseqAPI;
+  if (mockInstance) {
+    // Track visited blocks to prevent infinite recursion with circular references
+    const visited = new Set<string>();
+
+    // Add blocks to the mock instance state (filter out null/undefined)
+    blocks.forEach(block => {
+      if (block) {
+        mockInstance.addBlock(block);
+        if (block.uuid) visited.add(block.uuid);
+        if (block.children) {
+          const addChildrenRecursive = (children: BlockEntity[]) => {
+            children.forEach(child => {
+              if (child && child.uuid && !visited.has(child.uuid)) {
+                visited.add(child.uuid);
+                mockInstance.addBlock(child);
+                if (child.children) {
+                  addChildrenRecursive(child.children as BlockEntity[]);
+                }
+              }
+            });
+          };
+          addChildrenRecursive(block.children as BlockEntity[]);
+        }
+      }
+    });
+  }
   mockAPI.Editor.getPageBlocksTree.mockResolvedValue(blocks);
 };
 
 export const mockGraphResponse = (mockAPI: MockLogseqAPI, path: string | null): void => {
+  const mockInstance = (mockAPI as any)._mockInstance as SDKMockLogseqAPI;
+  if (mockInstance) {
+    mockInstance.setCurrentGraph(path ? { path } : null);
+  }
   mockAPI.App.getCurrentGraph.mockResolvedValue(path ? { path } : null);
 };
 
 export const mockAssetQuery = (mockAPI: MockLogseqAPI, uuid: string, type: string | null = null): void => {
-  mockAPI.DB.datascriptQuery.mockImplementation((query: string) => 
-    query.includes(uuid) && query.includes(':logseq.property.asset/type') 
-      ? Promise.resolve(type ? [[uuid, type, 'Asset']] : [])
+  const mockInstance = (mockAPI as any)._mockInstance as SDKMockLogseqAPI;
+  if (mockInstance && type) {
+    // Use the underlying mock instance to add the asset
+    const entity = { uuid, name: 'Asset', ':block/title': 'Asset' };
+    mockInstance.addAsset(uuid, type, entity as any);
+  }
+
+  mockAPI.DB.datascriptQuery.mockImplementation((query: string) =>
+    query.includes(uuid) && query.includes(':logseq.property.asset/type')
+      ? Promise.resolve(type ? [[type, { ':block/uuid': { $uuid: uuid }, ':block/title': 'Asset' }]] : [])
       : Promise.resolve([])
   );
 };
 
 export const mockBlockReference = (mockAPI: MockLogseqAPI, uuid: string, block: BlockEntity | null): void => {
-  mockAPI.Editor.getBlock.mockImplementation((id: string) => 
+  const mockInstance = (mockAPI as any)._mockInstance as SDKMockLogseqAPI;
+  if (mockInstance && block) {
+    mockInstance.addBlock(block);
+  }
+  mockAPI.Editor.getBlock.mockImplementation((id: string) =>
     id === uuid ? Promise.resolve(block) : Promise.resolve(null)
   );
 };
@@ -186,9 +257,98 @@ export const mockBlockReference = (mockAPI: MockLogseqAPI, uuid: string, block: 
 export const mockFetchResponse = (status: number, arrayBuffer?: ArrayBuffer): void => {
   const ab = arrayBuffer ?? new ArrayBuffer(0);
   (global.fetch as Mock).mockResolvedValue({
-    ok: status === 200, 
+    ok: status === 200,
     status,
     arrayBuffer: vi.fn().mockResolvedValue(ab),
     blob: vi.fn().mockResolvedValue(new Blob([ab]))
+  });
+};
+
+/**
+ * Setup comprehensive asset mocking for tests
+ *
+ * This helper configures both the MockLogseqAPI and DataScript queries to properly
+ * handle asset detection. It ensures that:
+ * 1. Assets are registered in the mock API state
+ * 2. DataScript queries return asset data in the correct format: [[type, entity]]
+ * 3. Asset entities have proper UUID and title properties
+ *
+ * @param mockAPI - The mock Logseq API instance
+ * @param assets - Array of asset configurations to set up
+ */
+export interface AssetSetup {
+  uuid: string;
+  type: string;
+  title?: string;
+  assetPath?: string;
+}
+
+export const setupAssetMocking = (mockAPI: MockLogseqAPI, assets: AssetSetup[]): void => {
+  const mockInstance = (mockAPI as any)._mockInstance as SDKMockLogseqAPI;
+
+  assets.forEach(asset => {
+    // Create asset entity with proper structure
+    const entity = {
+      uuid: asset.uuid,
+      name: asset.title || `asset-${asset.uuid.substring(0, 8)}`,
+      ':block/uuid': { $uuid: asset.uuid },
+      ':block/title': asset.title || `asset-${asset.uuid.substring(0, 8)}`,
+      'block/title': asset.title || `asset-${asset.uuid.substring(0, 8)}`,
+      properties: {
+        'logseq.property.asset/type': asset.type
+      }
+    } as unknown as PageEntity;
+
+    // Add to mock instance state - this automatically sets up DataScript query patterns
+    if (mockInstance) {
+      mockInstance.addAsset(asset.uuid, asset.type, entity);
+    }
+  });
+
+  // No need to set up additional mock implementations - the initial delegation is sufficient
+  // The addAsset method has already registered the query patterns
+};
+
+/**
+ * Setup asset file fetching for ZIP exports
+ *
+ * Mocks the file:// protocol fetch responses needed when exporting assets to ZIP.
+ * When MarkdownExporter tries to fetch asset files, it uses file:// URLs based on
+ * the graph path and asset UUIDs.
+ *
+ * @param mockFileAPI - The mock file API instance with fetch method
+ * @param graphPath - The graph path (e.g., '/test/graph')
+ * @param assets - Array of assets to set up fetch responses for
+ */
+export const setupAssetFileFetching = (
+  mockFileAPI: MockFileAPI,
+  graphPath: string,
+  assets: AssetSetup[]
+): void => {
+  // Build a map of all asset URLs to their blob data
+  const assetUrlMap = new Map<string, Blob>();
+
+  assets.forEach(asset => {
+    const fileUrl = `file://${graphPath}/assets/${asset.uuid}.${asset.type}`;
+    const assetData = `Binary asset data for ${asset.uuid}`;
+    assetUrlMap.set(fileUrl, new Blob([assetData], { type: `application/${asset.type}` }));
+  });
+
+  // Mock fetch to handle all asset URLs
+  mockFileAPI.fetch.mockImplementation(async (url: string) => {
+    const blob = assetUrlMap.get(url);
+    if (blob) {
+      return {
+        ok: true,
+        status: 200,
+        blob: () => Promise.resolve(blob)
+      } as Response;
+    }
+    // Default fallback for unknown URLs
+    return {
+      ok: false,
+      status: 404,
+      blob: () => Promise.resolve(new Blob([]))
+    } as Response;
   });
 };

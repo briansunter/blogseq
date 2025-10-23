@@ -45,30 +45,46 @@ export const useAssets = () => {
               const blob = xhr.response as Blob;
               const mimeType = `image/${ext === 'jpg' ? 'jpeg' : ext}`;
               const typedBlob = new Blob([blob], { type: mimeType });
-              
+
               const clipboardItem = new ClipboardItem({ [mimeType]: typedBlob });
               await navigator.clipboard.write([clipboardItem]);
               logseq.UI.showMsg(`Image copied to clipboard!`, "success");
             } catch {
-              await navigator.clipboard.writeText(asset.fullPath);
-              logseq.UI.showMsg(`Path copied: ${asset.fileName}`, "info");
+              try {
+                await navigator.clipboard.writeText(asset.fullPath);
+                logseq.UI.showMsg(`Path copied: ${asset.fileName}`, "info");
+              } catch {
+                // Silently fail if clipboard is unavailable
+              }
             }
           }
         };
         
         xhr.onerror = async function() {
-          await navigator.clipboard.writeText(asset.fullPath);
-          logseq.UI.showMsg(`Path copied: ${asset.fullPath}`, "info");
+          try {
+            await navigator.clipboard.writeText(asset.fullPath);
+            logseq.UI.showMsg(`Path copied: ${asset.fullPath}`, "info");
+          } catch {
+            // Silently fail if clipboard is unavailable
+          }
         };
         
         xhr.send();
       } else {
-        await navigator.clipboard.writeText(asset.fullPath);
-        logseq.UI.showMsg(`Path copied: ${asset.fileName}`, "success");
+        try {
+          await navigator.clipboard.writeText(asset.fullPath);
+          logseq.UI.showMsg(`Path copied: ${asset.fileName}`, "success");
+        } catch {
+          // Silently fail if clipboard is unavailable
+        }
       }
     } catch (error) {
-      await navigator.clipboard.writeText(asset.fullPath);
-      logseq.UI.showMsg(`Path copied: ${asset.fullPath}`, "info");
+      try {
+        await navigator.clipboard.writeText(asset.fullPath);
+        logseq.UI.showMsg(`Path copied: ${asset.fullPath}`, "info");
+      } catch {
+        // Silently fail if clipboard is unavailable
+      }
     }
   }, []);
 

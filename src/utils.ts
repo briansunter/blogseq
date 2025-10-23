@@ -1,7 +1,7 @@
 import { LSPluginUserEvents } from "@logseq/libs/dist/LSPlugin.user";
 import { useSyncExternalStore } from "react";
 
-let _visible = logseq.isMainUIVisible;
+let _visible = (typeof logseq !== 'undefined' && logseq.isMainUIVisible) ?? false;
 
 function subscribeLogseqEvent<T extends LSPluginUserEvents>(
   eventName: T,

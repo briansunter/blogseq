@@ -3,12 +3,17 @@ import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react({ fastRefresh: false })],
   test: {
     globals: true,
     environment: 'happy-dom',
     setupFiles: './src/tests/setup.ts',
-    include: ['src/**/*.test.{ts,tsx}'],
+    include: [
+      'src/tests/unit/**/*.test.{ts,tsx}',
+      'src/tests/component/**/*.test.{ts,tsx}',
+      'src/tests/integration/**/*.test.{ts,tsx}',
+      'src/tests/e2e/**/*.test.{ts,tsx}'
+    ],
     exclude: [
       'node_modules',
       'dist',
@@ -25,6 +30,7 @@ export default defineConfig({
         'node_modules/**',
         'dist/**',
         'src/tests/**',
+        'src/testing/**',
         '*.config.ts',
         '*.config.js',
         'src/main.tsx',
@@ -32,14 +38,13 @@ export default defineConfig({
         'src/types/**',
         '**/mocks/**',
         '**/*.d.ts',
-        'src/components/**',
         'src/utils/theme.ts'
       ],
       thresholds: {
-        statements: 55,
-        branches: 55,
-        functions: 55,
-        lines: 55,
+        statements: 85,
+        branches: 85,
+        functions: 85,
+        lines: 85,
         perFile: false,
         autoUpdate: false
       },
