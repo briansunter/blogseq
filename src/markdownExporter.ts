@@ -468,11 +468,11 @@ export class MarkdownExporter {
   
   private createAssetLink(uuid: string, info: { type: string; entity?: LogseqEntity }, assetPath: string): string {
     // Try different property locations for title
-    let title = info.entity?.title ||
-                info.entity?.['block/title'] ||
-                info.entity?.[':block/title'] ||
-                info.entity?.name ||
-                `asset-${uuid.substring(0, 8)}`;
+    const title = info.entity?.title ||
+                  info.entity?.['block/title'] ||
+                  info.entity?.[':block/title'] ||
+                  info.entity?.name ||
+                  `asset-${uuid.substring(0, 8)}`;
 
     const titleStr = typeof title === 'string' ? title : String(title);
     const path = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
@@ -912,6 +912,8 @@ export class MarkdownExporter {
       folderName = folderName || 'assets';
       console.log(`Creating folder: ${folderName}`);
 
+      const assetsFolder = zip.folder(folderName);
+
       for (const [uuid, assetInfo] of this.referencedAssets) {
         try {
           const assetUrl = `file://${assetInfo.originalPath}`;
@@ -920,11 +922,11 @@ export class MarkdownExporter {
 
           if (response.ok) {
             const assetBlob = await response.blob();
-            // Add file directly with full path (folder/filename)
-            const assetFileName = `${folderName}/${uuid}.${assetInfo.type}`;
-            zip.file(assetFileName, assetBlob);
+            // Add file to assets folder
+            const assetFileName = `${uuid}.${assetInfo.type}`;
+            assetsFolder?.file(assetFileName, assetBlob);
             successCount++;
-            console.log(`✅ Added asset to ZIP: ${assetInfo.title} as ${assetFileName}`);
+            console.log(`✅ Added asset to ZIP: ${assetInfo.title} as ${folderName}/${assetFileName}`);
             this.debug(`✅ Added asset: ${assetInfo.title}`);
           } else {
             throw new Error(`Failed to fetch: ${response.status}`);
