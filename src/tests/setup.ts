@@ -28,10 +28,14 @@ interface GlobalWithLogseq {
 // Mock fetch for asset tests
 global.fetch = vi.fn();
 
-// Mock navigator.clipboard
-Object.defineProperty(navigator, 'clipboard', {
-  value: {
-    writeText: vi.fn(),
-  },
-  writable: true,
-});
+// Mock navigator.clipboard - use configurable: true to allow tests to override
+if (!navigator.clipboard) {
+  Object.defineProperty(navigator, 'clipboard', {
+    value: {
+      writeText: vi.fn(),
+      write: vi.fn(),
+    },
+    writable: true,
+    configurable: true,
+  });
+}

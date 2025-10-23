@@ -1,5 +1,5 @@
 import { LSPluginUserEvents } from "@logseq/libs/dist/LSPlugin.user";
-import React from "react";
+import { useSyncExternalStore } from "react";
 
 let _visible = logseq.isMainUIVisible;
 
@@ -21,5 +21,5 @@ const subscribeToUIVisible = (onChange: () => void) =>
   });
 
 export const useAppVisible = () => {
-  return React.useSyncExternalStore(subscribeToUIVisible, () => _visible);
+  return useSyncExternalStore(subscribeToUIVisible, () => _visible);
 };

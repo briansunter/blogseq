@@ -54,6 +54,8 @@
     "eslint-plugin-react": "7.37.5",
     "eslint-plugin-react-hooks": "4.6.2",
     "happy-dom": "^18.0.1",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.2.6",
     "postcss": "8.5.6",
     "semantic-release": "21.1.2",
     "tailwindcss": "3.4.17",
@@ -65,5 +67,14 @@
   "logseq": {
     "id": "_briansunter-blogseq",
     "icon": "./logo.svg"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.json": [
+      "prettier --write"
+    ]
   }
 }
