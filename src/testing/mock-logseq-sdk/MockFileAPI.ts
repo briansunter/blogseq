@@ -113,7 +113,6 @@ export class MockFileAPI implements FileAPI {
    * Simulate a fetch error for a specific URL
    */
   setFetchError(url: string, error: Error = new Error("Fetch failed")): this {
-    const originalFetch = this.fetch.bind(this);
     this.fileResponses.set(url, {
       ok: false,
       status: 500,

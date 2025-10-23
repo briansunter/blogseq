@@ -217,7 +217,7 @@ export const SampleDataScriptResults = {
     [":user.property/blogTags", "blogTags"],
   ],
 
-  pageProperties: (uuid: string) => [
+  pageProperties: () => [
     [":user.property/author", "author"],
     [":user.property/tags", "tags"],
   ],

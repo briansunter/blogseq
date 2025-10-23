@@ -138,7 +138,7 @@ export class MockLogseqAPI implements LogseqAPI {
         if (!page || !page.properties) return [];
 
         const results: [string, string][] = [];
-        for (const [key, _value] of Object.entries(page.properties)) {
+        for (const [key] of Object.entries(page.properties)) {
           const cleanKey = key.startsWith(":") ? key : `:${key}`;
           const title = state.propertyDefinitions.get(cleanKey);
           if (title) {
@@ -277,6 +277,7 @@ export class MockLogseqAPI implements LogseqAPI {
 
       // If includeChildren is false, return block without children
       if (opts?.includeChildren === false) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { children, ...blockWithoutChildren } = block;
         return { ...blockWithoutChildren, children: [] };
       }

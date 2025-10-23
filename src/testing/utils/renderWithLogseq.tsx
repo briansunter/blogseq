@@ -3,6 +3,7 @@
  * Provides a custom render function that sets up all necessary providers
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { render, RenderOptions, RenderResult } from '@testing-library/react';
 import { ToastProvider } from '../../components/Toast';

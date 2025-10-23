@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from "@storybook/react";
-import React from "react";
 import App from "../App";
 import { PageBuilder, BlockBuilder } from "../testing/mock-logseq-sdk";
 import type { MockLogseqAPI } from "../testing/mock-logseq-sdk";

@@ -5,6 +5,7 @@
  * It's not meant to be a real test, but rather a reference for developers.
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach } from 'vitest';
 import { MarkdownExporter } from '../../markdownExporter';
 import {

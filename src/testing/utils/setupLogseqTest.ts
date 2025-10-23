@@ -3,6 +3,7 @@
  * Provides utilities for setting up Logseq context in unit tests
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { MockLogseqAPI } from '../mock-logseq-sdk';
 import type { PageEntity, BlockEntity } from '@logseq/libs/dist/LSPlugin';
 

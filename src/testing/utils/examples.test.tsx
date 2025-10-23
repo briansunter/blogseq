@@ -4,14 +4,12 @@
  */
 
 import React from 'react';
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, afterEach } from 'vitest';
 import {
   // React testing
   renderWithLogseq,
   cleanupLogseqMocks,
   screen,
-  waitFor,
-  userEvent,
 
   // Non-React testing
   setupLogseqTest,

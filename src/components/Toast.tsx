@@ -1,4 +1,4 @@
-import React, { useState, useCallback, ReactNode, createContext, FC, JSX, useContext } from "react";
+import React, { useState, useCallback, ReactNode, createContext, FC, useContext } from "react";
 
 interface Toast {
   id: string;

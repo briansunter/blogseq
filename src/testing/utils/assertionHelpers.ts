@@ -3,6 +3,7 @@
  * Provides domain-specific assertions with clear error messages
  */
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { expect } from 'vitest';
 import type { BlockEntity } from '@logseq/libs/dist/LSPlugin';
 import type { MockLogseqAPI } from '../mock-logseq-sdk';
