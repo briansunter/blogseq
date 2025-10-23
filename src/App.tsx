@@ -10,7 +10,7 @@ import { ExportSettings, PreviewMode } from "./types";
 import { getExportSettings, updateExportSetting } from "./settings";
 import { useExport } from "./hooks/useExport";
 import { useAssets } from "./hooks/useAssets";
-import { useBatchExport } from "./hooks/useBatchExport";
+// import { useBatchExport } from "./hooks/useBatchExport"; // Available for future UI
 
 function App() {
   return (
@@ -44,7 +44,8 @@ function AppContent() {
   } = useExport(settings);
 
   const { downloadAsset, copyAssetPath } = useAssets();
-  const { isBatchExporting, batchProgress, batchTotal, exportPagesToZip } = useBatchExport();
+  // Batch export hook available for future UI implementation
+  // const { isBatchExporting, batchProgress, batchTotal, exportPagesToZip } = useBatchExport();
 
   const loadCurrentPage = useCallback(async () => {
     try {

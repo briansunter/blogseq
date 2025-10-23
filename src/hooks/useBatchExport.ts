@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { BlockEntity } from "@logseq/libs/dist/LSPlugin";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
 
@@ -7,6 +8,10 @@ export interface BatchExportResult {
   success: boolean;
   markdown?: string;
   error?: string;
+}
+
+interface BlockNode extends BlockEntity {
+  children?: BlockNode[];
 }
 
 export const useBatchExport = () => {
@@ -30,8 +35,8 @@ export const useBatchExport = () => {
           const pageName = pageNames[i];
 
           try {
-            // Get page by name
-            const page = (await logseq.Editor.getPage(pageName)) as any;
+            // Get page by name (accepts string or UUID)
+            const page = await logseq.Editor.getPage(pageName as Parameters<typeof logseq.Editor.getPage>[0]);
 
             if (!page) {
               results.push({
@@ -47,7 +52,7 @@ export const useBatchExport = () => {
             const tree = await logseq.Editor.getPageBlocksTree(page.uuid);
 
             // Convert blocks to markdown (simplified version without MarkdownExporter)
-            const markdown = convertBlocksToMarkdown(tree, pageName);
+            const markdown = convertBlocksToMarkdown(tree as BlockNode[], pageName);
 
             zip.file(`${pageName}.md`, markdown);
             results.push({
@@ -89,19 +94,18 @@ export const useBatchExport = () => {
 };
 
 // Simplified block to markdown conversion
-function convertBlocksToMarkdown(blocks: any[], pageName: string): string {
+function convertBlocksToMarkdown(blocks: BlockNode[], pageName: string): string {
   const lines: string[] = [`# ${pageName}`, ""];
 
-  const processBlock = (block: any, depth = 1) => {
+  const processBlock = (block: BlockNode, depth = 1): void => {
     if (!block.content) return;
 
-    const indent = "  ".repeat(Math.max(0, depth - 1));
     const prefix = depth === 1 ? "- " : "  ".repeat(depth - 1) + "- ";
 
-    lines.push(prefix + block.content);
+    lines.push(prefix + (typeof block.content === 'string' ? block.content : String(block.content)));
 
     if (block.children && Array.isArray(block.children)) {
-      block.children.forEach((child: any) => processBlock(child, depth + 1));
+      block.children.forEach((child: BlockNode) => processBlock(child, depth + 1));
     }
   };
 
