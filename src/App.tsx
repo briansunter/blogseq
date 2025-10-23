@@ -1,5 +1,7 @@
 import React, { useRef, useState, useEffect, useCallback } from "react";
 import { useAppVisible } from "./utils";
+import { ErrorBoundary } from "./components/ErrorBoundary";
+import { ToastProvider, useToast } from "./components/Toast";
 import { ExportHeader } from "./components/ExportHeader";
 import { SettingsBar } from "./components/SettingsBar";
 import { PreviewControls } from "./components/PreviewControls";
@@ -8,28 +10,41 @@ import { ExportSettings, PreviewMode } from "./types";
 import { getExportSettings, updateExportSetting } from "./settings";
 import { useExport } from "./hooks/useExport";
 import { useAssets } from "./hooks/useAssets";
+import { useBatchExport } from "./hooks/useBatchExport";
 
 function App() {
+  return (
+    <ErrorBoundary>
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
+    </ErrorBoundary>
+  );
+}
+
+function AppContent() {
   const innerRef = useRef<HTMLDivElement>(null);
   const visible = useAppVisible();
+  const { showSuccess, showError, showWarning } = useToast();
   const [currentPageName, setCurrentPageName] = useState<string>("");
   const [showPreview, setShowPreview] = useState(false);
   const [previewMode, setPreviewMode] = useState<PreviewMode>("rendered");
   const [settings, setSettings] = useState<ExportSettings>(getExportSettings());
-  
-  const { 
-    isExporting, 
-    preview, 
-    assets, 
-    graphPath, 
-    handleExport, 
+
+  const {
+    isExporting,
+    preview,
+    assets,
+    graphPath,
+    handleExport,
     quickExport,
     downloadMarkdown,
     copyToClipboard,
     downloadAsZip
   } = useExport(settings);
-  
+
   const { downloadAsset, copyAssetPath } = useAssets();
+  const { isBatchExporting, batchProgress, batchTotal, exportPagesToZip } = useBatchExport();
 
   const loadCurrentPage = useCallback(async () => {
     try {
@@ -52,13 +67,14 @@ function App() {
     const result = await handleExport();
     if (result.success) {
       setShowPreview(true);
+      showSuccess("Export successful!");
     } else if (result.error === "NO_ACTIVE_PAGE") {
-      logseq.UI.showMsg("⚠️ Please open a page first before exporting", "warning");
+      showWarning("Please open a page first before exporting");
       setTimeout(() => window.logseq.hideMainUI(), 2000);
     } else {
-      logseq.UI.showMsg("Export failed. Check console for details.", "error");
+      showError(result.error || "Export failed. Check console for details.");
     }
-  }, [handleExport]);
+  }, [handleExport, showSuccess, showWarning, showError]);
 
   const handleSettingChange = useCallback((key: keyof ExportSettings) => {
     const newValue = !settings[key];
