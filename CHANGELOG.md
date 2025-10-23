@@ -1,3 +1,16 @@
+## [1.0.3](https://github.com/briansunter/blogseq/compare/v1.0.2...v1.0.3) (2025-10-23)
+
+
+* hyphenate ([d60628a](https://github.com/briansunter/blogseq/commit/d60628ac43d7304d8e21f6b5b7b5641ee2227423))
+* image width ([dbc3bd9](https://github.com/briansunter/blogseq/commit/dbc3bd90aa4c77f05f44f3479115e9c054549938))
+* image references ([de5cd84](https://github.com/briansunter/blogseq/commit/de5cd84aad5a209fa1335ca876d510babdf1e17d))
+
+
+### fix
+
+* fix all tests and verify CI/CD pipeline (#3) ([8a0cf29](https://github.com/briansunter/blogseq/commit/8a0cf29a2090d22f5ed23a56a46352918ea743bc)), closes [#3](https://github.com/briansunter/blogseq/issues/3)
+* update upload-artifact action to v4 (v3 is deprecated) ([6c03197](https://github.com/briansunter/blogseq/commit/6c031975f3fb22ce04a0b95c9afe8fe4e8b78225))
+
 ## [1.0.2](https://github.com/briansunter/blogseq/compare/v1.0.1...v1.0.2) (2025-09-23)
 
 
