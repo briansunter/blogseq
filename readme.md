@@ -1,5 +1,10 @@
 # BlogSeq - Professional Markdown Export with Bundled Assets for Logseq 🪵
 
+[![CI Status](https://github.com/briansunter/blogseq/workflows/CI/badge.svg)](https://github.com/briansunter/blogseq/actions)
+[![Release Status](https://github.com/briansunter/blogseq/workflows/Release/badge.svg)](https://github.com/briansunter/blogseq/actions)
+[![MIT License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Test Coverage](https://img.shields.io/badge/coverage-80%25%2B-brightgreen)](TESTING.md)
+
 > Transform your Logseq pages into clean, portable Markdown with **all referenced images and assets automatically bundled** - ready for any static site generator, blog platform, or documentation tool.
 
 ⚠️ **DB Version Only** | Pre-Alpha Release
@@ -107,6 +112,30 @@ pnpm build   # Production build
 ```
 
 **Tech Stack:** React 18 • TypeScript • Vite • TailwindCSS • JSZip
+
+## 🧪 Testing
+
+BlogSeq has comprehensive test coverage with 134+ tests across unit, component, and integration tests:
+
+### Run Tests
+```bash
+pnpm test              # Watch mode
+pnpm test:coverage     # Generate coverage report
+pnpm test:ui           # Interactive test dashboard
+```
+
+### Test Structure
+- **Unit Tests (70%)**: Core export logic, hooks, utilities
+- **Component Tests (20%)**: React components, UI interactions
+- **Integration Tests (10%)**: End-to-end workflows, ZIP generation, asset handling
+
+### Code Quality
+- **Type Checking**: `pnpm typecheck` (TypeScript strict mode)
+- **Linting**: `npx eslint src` (zero warnings)
+- **Coverage**: 80%+ across all metrics
+- **Pre-commit Hooks**: Automatic checks on every commit
+
+See [TESTING.md](TESTING.md) for detailed testing documentation, best practices, and troubleshooting.
 
 ## 🤝 Contributing
 

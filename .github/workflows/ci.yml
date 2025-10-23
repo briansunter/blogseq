@@ -1,0 +1,163 @@
+name: CI
+
+on:
+  push:
+    branches: [master, new]
+  pull_request:
+    branches: [master]
+
+jobs:
+  lint:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Type checking
+        run: pnpm typecheck
+
+      - name: ESLint
+        run: npx eslint src --max-warnings 0
+
+  test:
+    name: Tests & Coverage
+    runs-on: ubuntu-latest
+    needs: lint
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Run tests
+        run: pnpm test --run
+
+      - name: Generate coverage report
+        run: pnpm test:coverage
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./coverage/coverage-final.json
+          flags: unittests
+          fail_ci_if_error: false
+
+      - name: Check coverage thresholds
+        run: |
+          STATEMENTS=$(grep -o '"statements":{"pct":[^}]*' coverage/coverage-summary.json | grep -o '[0-9]*\.[0-9]*' | head -1)
+          BRANCHES=$(grep -o '"branches":{"pct":[^}]*' coverage/coverage-summary.json | grep -o '[0-9]*\.[0-9]*' | head -1)
+          FUNCTIONS=$(grep -o '"functions":{"pct":[^}]*' coverage/coverage-summary.json | grep -o '[0-9]*\.[0-9]*' | head -1)
+          LINES=$(grep -o '"lines":{"pct":[^}]*' coverage/coverage-summary.json | grep -o '[0-9]*\.[0-9]*' | head -1)
+
+          echo "Coverage Summary:"
+          echo "Statements: ${STATEMENTS}%"
+          echo "Branches: ${BRANCHES}%"
+          echo "Functions: ${FUNCTIONS}%"
+          echo "Lines: ${LINES}%"
+
+          THRESHOLD=55
+          if (( $(echo "$STATEMENTS < $THRESHOLD" | bc -l) )); then
+            echo "❌ Statements coverage (${STATEMENTS}%) below threshold (${THRESHOLD}%)"
+            exit 1
+          fi
+          if (( $(echo "$BRANCHES < $THRESHOLD" | bc -l) )); then
+            echo "❌ Branches coverage (${BRANCHES}%) below threshold (${THRESHOLD}%)"
+            exit 1
+          fi
+          if (( $(echo "$FUNCTIONS < $THRESHOLD" | bc -l) )); then
+            echo "❌ Functions coverage (${FUNCTIONS}%) below threshold (${THRESHOLD}%)"
+            exit 1
+          fi
+          if (( $(echo "$LINES < $THRESHOLD" | bc -l) )); then
+            echo "❌ Lines coverage (${LINES}%) below threshold (${THRESHOLD}%)"
+            exit 1
+          fi
+          echo "✅ All coverage thresholds met (>= ${THRESHOLD}%)"
+
+  build:
+    name: Build Plugin
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build plugin
+        run: pnpm build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist
+          path: dist/
+          retention-days: 5
+
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    needs: [lint, test, build]
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - run: pnpm install
+
+      - run: pnpm build
+
+      - name: Install zip
+        uses: montudor/action-zip@v1
+
+      - name: Release
+        run: npx semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
