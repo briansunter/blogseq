@@ -1,3 +1,32 @@
+# [1.1.0](https://github.com/briansunter/blogseq/compare/v1.0.3...v1.1.0) (2025-10-25)
+
+
+* storybook ([9950371](https://github.com/briansunter/blogseq/commit/9950371450a80e5cfdabba264872e5cb0e4a0bbc))
+* clean ([1da7f47](https://github.com/briansunter/blogseq/commit/1da7f4790a9bdd508edb56270c2f2acc9a1cf4c8))
+
+
+### feat
+
+* add check-all and fix-all npm scripts for comprehensive testing ([2b9a435](https://github.com/briansunter/blogseq/commit/2b9a43584ac717661837f2160e13372b57fefd0a))
+* fix storybook integration and TypeScript type errors ([0ad48ab](https://github.com/briansunter/blogseq/commit/0ad48abcd07b2ea4f9008af0cdc83bd37f1518a3))
+
+
+### fix
+
+* improve test reliability and error handling (+9 tests) ([f7ef878](https://github.com/briansunter/blogseq/commit/f7ef878c900ae6273d65a9bcad6650b0e3c02ef5))
+* resolve ESLint warnings for CI/CD compatibility ([5bd7908](https://github.com/briansunter/blogseq/commit/5bd79083dd790c0ddec1eb46c91cb0f5be21c7f2))
+
+
+### refactor
+
+* clean up test suite - keep passing tests only ([d189c17](https://github.com/briansunter/blogseq/commit/d189c17d71ff332659ee31dccbce0a4eeab87812))
+
+
+### test
+
+* test PR checks are running (#4) ([3aaf6cc](https://github.com/briansunter/blogseq/commit/3aaf6cc18173e10df827c8c0b9558728ab4f0a66)), closes [#4](https://github.com/briansunter/blogseq/issues/4)
+* verify all tests and linting pass (#5) ([549cbc0](https://github.com/briansunter/blogseq/commit/549cbc0b9ae018860cd3a723c313af2efa1f7774)), closes [#5](https://github.com/briansunter/blogseq/issues/5)
+
 ## [1.0.3](https://github.com/briansunter/blogseq/compare/v1.0.2...v1.0.3) (2025-10-23)
 
 
