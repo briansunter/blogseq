@@ -60,6 +60,8 @@ export const Default: Story = {
         mockAPI.addPage(page);
         mockAPI.setCurrentPage(page);
         blocks.forEach(block => mockAPI.addBlock(block));
+        // Set the page's blocks tree
+        mockAPI.setPageBlocksTree(page.uuid, blocks);
       },
     },
   },
@@ -107,6 +109,7 @@ export const RichContent: Story = {
         mockAPI.addPage(page);
         mockAPI.setCurrentPage(page);
         blocks.forEach(block => mockAPI.addBlock(block));
+        mockAPI.setPageBlocksTree(page.uuid, blocks);
       },
     },
   },
@@ -144,6 +147,7 @@ export const NestedBlocks: Story = {
         mockAPI.setCurrentPage(page);
         mockAPI.addBlock(parentBlock);
         childBlocks.forEach(block => mockAPI.addBlock(block));
+        // Set the page's blocks tree with parent and children
         mockAPI.setPageBlocksTree(page.uuid, [parentBlock, ...childBlocks]);
       },
     },
@@ -183,6 +187,7 @@ export const WithBlockReferences: Story = {
         mockAPI.addPage(page);
         mockAPI.setCurrentPage(page);
         blocks.forEach(block => mockAPI.addBlock(block));
+        mockAPI.setPageBlocksTree(page.uuid, blocks);
       },
     },
   },
@@ -221,6 +226,7 @@ export const WithFrontmatter: Story = {
         mockAPI.addPage(page);
         mockAPI.setCurrentPage(page);
         blocks.forEach(block => mockAPI.addBlock(block));
+        mockAPI.setPageBlocksTree(page.uuid, blocks);
       },
     },
   },
@@ -239,6 +245,8 @@ export const EmptyPage: Story = {
 
         mockAPI.addPage(page);
         mockAPI.setCurrentPage(page);
+        // Empty page - no blocks to set
+        mockAPI.setPageBlocksTree(page.uuid, []);
       },
     },
   },
@@ -335,6 +343,7 @@ export const LongPage: Story = {
         mockAPI.addPage(page);
         mockAPI.setCurrentPage(page);
         blocks.forEach(block => mockAPI.addBlock(block));
+        mockAPI.setPageBlocksTree(page.uuid, blocks);
       },
     },
   },
@@ -368,6 +377,7 @@ export const SpecialCharacters: Story = {
         mockAPI.addPage(page);
         mockAPI.setCurrentPage(page);
         blocks.forEach(block => mockAPI.addBlock(block));
+        mockAPI.setPageBlocksTree(page.uuid, blocks);
       },
     },
   },

@@ -23,7 +23,33 @@ globalMockLogseq.addPropertyDefinition(":user.property/blogTags", "blogTags");
 // while maintaining namespace methods for compatibility
 const logseqProxy = new Proxy(globalMockLogseq, {
   get(target, prop) {
-    // First check if it's a direct method on the mock
+    // Create namespace proxies for compatibility with real Logseq API
+    if (prop === 'Editor') {
+      return {
+        getCurrentPage: () => globalMockLogseq.getCurrentPage(),
+        getPage: (uuid: string) => globalMockLogseq.getPage(uuid),
+        getBlock: (uuid: string, opts?: any) => globalMockLogseq.getBlock(uuid, opts),
+        getPageBlocksTree: (uuid: string) => globalMockLogseq.getPageBlocksTree(uuid),
+      };
+    }
+    if (prop === 'App') {
+      return {
+        getCurrentGraph: () => globalMockLogseq.getCurrentGraph(),
+      };
+    }
+    if (prop === 'DB') {
+      return {
+        datascriptQuery: (query: string) => globalMockLogseq.datascriptQuery(query),
+      };
+    }
+    if (prop === 'UI') {
+      return {
+        showMsg: (message: string, type: 'success' | 'error' | 'warning') =>
+          globalMockLogseq.showMsg(message, type),
+      };
+    }
+
+    // Check if it's a direct method on the mock
     if (prop in target) {
       const value = (target as any)[prop];
       // Bind methods to maintain 'this' context
@@ -37,12 +63,34 @@ const logseqProxy = new Proxy(globalMockLogseq, {
   },
 });
 
+// Set Storybook mode flag globally so App component detects it
+(window as any).__STORYBOOK_MODE__ = true;
+
 // Install globally before stories load
 (global as any).logseq = logseqProxy;
 (window as any).logseq = logseqProxy;
 
 // Export for use in story setup functions
 export { globalMockLogseq };
+
+/**
+ * Wrapper component that initializes visibility for Storybook
+ * Emits the ui:visible:changed event so the hook can update
+ * The App component detects Storybook mode and skips auto-export
+ */
+function StoryWithVisibility({ children }: { children: React.ReactNode }) {
+  React.useEffect(() => {
+    // Set the property
+    (globalMockLogseq as any).isMainUIVisible = true;
+    // Emit event to trigger hook updates
+    // Auto-export is skipped in Storybook, so no toast loop
+    globalMockLogseq.emit('ui:visible:changed', { visible: true }).catch(err => {
+      console.error('Failed to emit visibility event:', err);
+    });
+  }, []);
+
+  return <>{children}</>;
+}
 
 const preview: Preview = {
   parameters: {
@@ -92,17 +140,40 @@ const preview: Preview = {
         context.parameters.mockLogseq.setup(globalMockLogseq);
       }
 
+      // Ensure current page is set if data was added
+      if (globalMockLogseq.getPageCount() > 0 && !globalMockLogseq.getState().currentPage) {
+        const firstPage = globalMockLogseq.getPages()[0];
+        if (firstPage) {
+          globalMockLogseq.setCurrentPage(firstPage);
+        }
+      }
+
       // Apply ToastProvider wrapper if not disabled
       const withToast = context.parameters.withToastProvider !== false;
 
+      // Show UI by default unless explicitly disabled
+      const showUI = context.parameters.mockLogseq?.showUI !== false;
+
       return (
         <div className="storybook-container" style={{ minHeight: "100vh" }}>
-          {withToast ? (
-            <ToastProvider>
-              <Story />
-            </ToastProvider>
+          {showUI ? (
+            <StoryWithVisibility>
+              {withToast ? (
+                <ToastProvider>
+                  <Story />
+                </ToastProvider>
+              ) : (
+                <Story />
+              )}
+            </StoryWithVisibility>
           ) : (
-            <Story />
+            withToast ? (
+              <ToastProvider>
+                <Story />
+              </ToastProvider>
+            ) : (
+              <Story />
+            )
           )}
         </div>
       );

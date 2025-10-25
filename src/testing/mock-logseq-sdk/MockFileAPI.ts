@@ -129,6 +129,7 @@ export class MockFileAPI implements FileAPI {
       bodyUsed: false,
       arrayBuffer: async () => { throw error; },
       formData: async () => { throw error; },
+      bytes: async () => { throw error; },
     } as Response);
     return this;
   }
@@ -254,6 +255,7 @@ export class MockFileAPI implements FileAPI {
       bodyUsed: false,
       arrayBuffer: async () => new ArrayBuffer(0),
       formData: async () => new FormData(),
+      bytes: async () => new Uint8Array(0),
     } as Response;
   }
 
@@ -285,6 +287,7 @@ export class MockFileAPI implements FileAPI {
       bodyUsed: false,
       arrayBuffer: async () => new ArrayBuffer(0),
       formData: async () => new FormData(),
+      bytes: async () => new Uint8Array(0),
     } as Response;
   }
 }

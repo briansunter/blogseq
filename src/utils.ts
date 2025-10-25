@@ -1,7 +1,16 @@
 import { LSPluginUserEvents } from "@logseq/libs/dist/LSPlugin.user";
 import { useSyncExternalStore } from "react";
 
-let _visible = (typeof logseq !== 'undefined' && logseq.isMainUIVisible) ?? false;
+// Safe access to logseq.isMainUIVisible
+const getInitialVisibility = (): boolean => {
+  if (typeof logseq === 'undefined') return false;
+  const visible = Object.prototype.hasOwnProperty.call(logseq, 'isMainUIVisible')
+    ? (logseq as unknown as Record<string, unknown>).isMainUIVisible
+    : false;
+  return Boolean(visible);
+};
+
+let _visible = getInitialVisibility();
 
 function subscribeLogseqEvent<T extends LSPluginUserEvents>(
   eventName: T,

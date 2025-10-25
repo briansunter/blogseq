@@ -109,13 +109,19 @@ function AppContent() {
 
   useEffect(() => {
     if (!visible) return;
-    
+
+    // Skip auto-export in Storybook/test environments
+    const isStorybook = typeof window !== 'undefined' &&
+      Object.prototype.hasOwnProperty.call(window, '__STORYBOOK_MODE__') &&
+      (window as unknown as Record<string, unknown>).__STORYBOOK_MODE__ === true;
+    if (isStorybook) return;
+
     loadCurrentPage();
     const timer = setTimeout(async () => {
       const page = await logseq.Editor.getCurrentPage();
       if (page) await handleExportWithUI();
     }, 100);
-    
+
     return () => clearTimeout(timer);
   }, [visible, loadCurrentPage, handleExportWithUI]);
 
