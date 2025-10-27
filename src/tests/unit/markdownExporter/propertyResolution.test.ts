@@ -8,11 +8,11 @@ import {
   resetAllMocks,
   type MockLogseqAPI,
   type MockFileAPI,
-  type MockDOMHelpers
+  type MockDOMHelpers,
 } from '../../test-utils';
 
 vi.mock('file-saver', () => ({
-  saveAs: vi.fn()
+  saveAs: vi.fn(),
 }));
 
 vi.mock('jszip', () => {
@@ -22,8 +22,8 @@ vi.mock('jszip', () => {
     default: vi.fn(() => ({
       file: mockFile,
       folder: mockFolder,
-      generateAsync: vi.fn().mockResolvedValue(new Blob(['test']))
-    }))
+      generateAsync: vi.fn().mockResolvedValue(new Blob(['test'])),
+    })),
   };
 });
 
@@ -41,13 +41,13 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
       saveAs: vi.fn(),
       createObjectURL: vi.fn(() => 'blob://test-url'),
       revokeObjectURL: vi.fn(),
-      writeToClipboard: vi.fn()
+      writeToClipboard: vi.fn(),
     };
 
     mockDOMHelpers = {
       createElement: vi.fn(),
       appendChild: vi.fn(),
-      removeChild: vi.fn()
+      removeChild: vi.fn(),
     };
 
     exporter = new MarkdownExporter(mockAPI, mockFileAPI, mockDOMHelpers);
@@ -73,8 +73,8 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         // Properties are at ROOT level with colons, NOT nested under .properties
         ':user.property/title-abc123': 'My Article Title',
         ':user.property/author-def456': 'John Doe',
-        'tags': [135, 138], // db/id references
-        ':logseq.property/status': 73
+        tags: [135, 138], // db/id references
+        ':logseq.property/status': 73,
       } as unknown as PageEntity;
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithRootLevelProps);
@@ -91,7 +91,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
             [':user.property/title-abc123', 'title'],
-            [':user.property/author-def456', 'author']
+            [':user.property/author-def456', 'author'],
           ];
         }
         // Mock UUID collection queries (should find nothing to skip)
@@ -103,7 +103,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
       const result = await exporter.exportCurrentPage({
         includeProperties: true,
-        includePageName: false
+        includePageName: false,
       });
 
       expect(result).toContain('---');
@@ -122,7 +122,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         'journal?': false,
         ':user.property/publishDate-xyz': 819, // db/id reference
         ':user.property/blogtitle-abc': 45116, // db/id reference
-        ':user.property/url-def': 45110 // db/id reference
+        ':user.property/url-def': 45110, // db/id reference
       } as unknown as PageEntity;
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithDbIds);
@@ -140,7 +140,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
           return [
             [':user.property/publishDate-xyz', 'publishDate'],
             [':user.property/blogtitle-abc', 'blogtitle'],
-            [':user.property/url-def', 'url']
+            [':user.property/url-def', 'url'],
           ];
         }
 
@@ -175,7 +175,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
       const result = await exporter.exportCurrentPage({
         includeProperties: true,
-        includePageName: false
+        includePageName: false,
       });
 
       expect(result).toContain('---');
@@ -195,7 +195,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         name: 'Test Page',
         originalName: 'Test Page',
         'journal?': false,
-        ':user.property/mystery-prop': 99999 // db/id that doesn't exist
+        ':user.property/mystery-prop': 99999, // db/id that doesn't exist
       } as unknown as PageEntity;
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithUnresolvableDbId);
@@ -223,7 +223,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
       const result = await exporter.exportCurrentPage({
         includeProperties: true,
-        includePageName: false
+        includePageName: false,
       });
 
       // Should fall back to the raw value if resolution fails
@@ -239,8 +239,8 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         name: 'Test Page',
         originalName: 'Test Page',
         'journal?': false,
-        'tags': [135, 138, 27350], // Array of db/id references
-        ':user.property/blogTags-xyz': [45204, 45205, 47532] // More db/id references
+        tags: [135, 138, 27350], // Array of db/id references
+        ':user.property/blogTags-xyz': [45204, 45205, 47532], // More db/id references
       } as unknown as PageEntity;
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithTagDbIds);
@@ -283,7 +283,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
       const result = await exporter.exportCurrentPage({
         includeProperties: true,
-        includePageName: false
+        includePageName: false,
       });
 
       expect(result).toContain('tags:');
@@ -305,8 +305,8 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         name: 'Test Page',
         originalName: 'Test Page',
         'journal?': false,
-        'tags': [100, 101], // 'tech', 'javascript'
-        ':user.property/blogTags-xyz': [101, 102] // 'javascript' (duplicate), 'typescript'
+        tags: [100, 101], // 'tech', 'javascript'
+        ':user.property/blogTags-xyz': [101, 102], // 'javascript' (duplicate), 'typescript'
       } as unknown as PageEntity;
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithDuplicateTags);
@@ -338,7 +338,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
       const result = await exporter.exportCurrentPage({
         includeProperties: true,
-        includePageName: false
+        includePageName: false,
       });
 
       // Count occurrences of 'javascript' - should only appear once
@@ -358,14 +358,14 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         originalName: 'Test Page',
         'journal?': false,
         ':user.property/blogTags-xyz': [45204, 45205], // These create blocks
-        ':user.property/url-abc': 45110
+        ':user.property/url-abc': 45110,
       } as unknown as PageEntity;
 
       const propertyValueBlocks: BlockEntity[] = [
         createMockBlock({ uuid: 'uuid-45204', content: 'blog' }), // Property value block
         createMockBlock({ uuid: 'uuid-45205', content: 'fitness' }), // Property value block
         createMockBlock({ uuid: 'uuid-45110', content: 'https://example.com' }), // Property value block
-        createMockBlock({ uuid: 'real-content-uuid', content: 'This is actual page content' }) // Real content
+        createMockBlock({ uuid: 'real-content-uuid', content: 'This is actual page content' }), // Real content
       ];
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithPropertyBlocks);
@@ -381,7 +381,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         if (query.includes('[:find ?prop-key ?prop-title :where')) {
           return [
             [':user.property/blogTags-xyz', 'blogTags'],
-            [':user.property/url-abc', 'url']
+            [':user.property/url-abc', 'url'],
           ];
         }
 
@@ -402,7 +402,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
       const result = await exporter.exportCurrentPage({
         includeProperties: true,
-        includePageName: true
+        includePageName: true,
       });
 
       // Should contain actual content
@@ -432,12 +432,12 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         id: 1,
         name: 'Simple Page',
         originalName: 'Simple Page',
-        'journal?': false
+        'journal?': false,
       } as unknown as PageEntity;
 
       const normalBlocks: BlockEntity[] = [
         createMockBlock({ uuid: 'block-1', content: 'First paragraph' }),
-        createMockBlock({ uuid: 'block-2', content: 'Second paragraph' })
+        createMockBlock({ uuid: 'block-2', content: 'Second paragraph' }),
       ];
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(simplePage);
@@ -463,7 +463,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
       const result = await exporter.exportCurrentPage({
         includeProperties: false,
-        includePageName: true
+        includePageName: true,
       });
 
       expect(result).toContain('First paragraph');
@@ -480,7 +480,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         name: 'Test Page',
         originalName: 'Test Page',
         'journal?': false,
-        ':user.property/another-prop': 99999
+        ':user.property/another-prop': 99999,
       } as unknown as PageEntity;
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithDbId);
@@ -516,7 +516,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
       await exporter.exportCurrentPage({
         includeProperties: true,
-        includePageName: false
+        includePageName: false,
       });
     });
   });
@@ -532,7 +532,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         updatedAt: 1761556235265,
         createdAt: 1738211909658,
         ':logseq.property/status': 73,
-        'tags': [135, 138, 27350, 36755],
+        tags: [135, 138, 27350, 36755],
         ':user.property/blogTags-Mx0ii3sb': [45204, 45205, 47532, 47533],
         ':user.property/publishDate-kRxfHtUv': 819,
         ':logseq.property/description': 45312,
@@ -541,7 +541,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         ':user.property/su9f7RGPa_ey2_N3I3wqd-rating': 9,
         ':user.property/q2helqDgR_XPJqNQCRN2O-url': 45110,
         ':user.property/bogtitle-FiJnwhpb': 45116,
-        ':user.property/coverimage-wTuZyU8U': 47526
+        ':user.property/coverimage-wTuZyU8U': 47526,
       } as unknown as PageEntity;
 
       const pageBlocks: BlockEntity[] = [
@@ -551,7 +551,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         createMockBlock({ uuid: 'uuid-45204', content: 'newsletter' }),
         createMockBlock({ uuid: 'uuid-45205', content: 'fitness' }),
         createMockBlock({ uuid: 'uuid-47532', content: 'blog' }),
-        createMockBlock({ uuid: 'uuid-47533', content: 'AI' })
+        createMockBlock({ uuid: 'uuid-47533', content: 'AI' }),
       ];
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(realWorldPage);
@@ -575,7 +575,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
             [':user.property/blogPhase-kMp_wFlD', 'blogPhase'],
             [':user.property/appState-MQ0Sgn1c', 'outputState'],
             [':user.property/coverimage-wTuZyU8U', 'coverimage'],
-            [':logseq.property/description', 'description']
+            [':logseq.property/description', 'description'],
           ];
         }
 
@@ -591,7 +591,8 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
         // Property value resolutions
         if (query.includes('[819 :block/title')) return [['2025-09-23']];
-        if (query.includes('[45110 :block/title')) return [['https://briansunter.com/central-pacific-update']];
+        if (query.includes('[45110 :block/title'))
+          return [['https://briansunter.com/central-pacific-update']];
         if (query.includes('[45116 :block/title')) return [['Central Pacific Update']];
         if (query.includes('[9 :block/title')) return []; // Numeric rating, can't resolve
         if (query.includes('[9 :block/content')) return [];
@@ -609,7 +610,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
 
       const result = await exporter.exportCurrentPage({
         includeProperties: true,
-        includePageName: true
+        includePageName: true,
       });
 
       // Verify frontmatter has resolved values

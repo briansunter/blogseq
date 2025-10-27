@@ -75,9 +75,21 @@ describe('ZIP Content Tests', () => {
     });
 
     it('should include multiple blocks', async () => {
-      const block1 = { ...SampleBlocks.simple, uuid: '550e8400-e29b-41d4-a716-446655440161', content: 'First block' };
-      const block2 = { ...SampleBlocks.simple, uuid: '550e8400-e29b-41d4-a716-446655440162', content: 'Second block' };
-      const block3 = { ...SampleBlocks.simple, uuid: '550e8400-e29b-41d4-a716-446655440163', content: 'Third block' };
+      const block1 = {
+        ...SampleBlocks.simple,
+        uuid: '550e8400-e29b-41d4-a716-446655440161',
+        content: 'First block',
+      };
+      const block2 = {
+        ...SampleBlocks.simple,
+        uuid: '550e8400-e29b-41d4-a716-446655440162',
+        content: 'Second block',
+      };
+      const block3 = {
+        ...SampleBlocks.simple,
+        uuid: '550e8400-e29b-41d4-a716-446655440163',
+        content: 'Third block',
+      };
 
       mockAPI.addPage(SamplePages.simple);
       mockAPI.setCurrentPage(SamplePages.simple);
@@ -220,7 +232,7 @@ describe('ZIP Content Tests', () => {
       // Use mockAPI.addAsset instead of addDataScriptQueryResponse
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Sample Image'
+        'block/title': 'Sample Image',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -252,7 +264,7 @@ describe('ZIP Content Tests', () => {
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'My Image'
+        'block/title': 'My Image',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -283,7 +295,7 @@ describe('ZIP Content Tests', () => {
 
       mockAPI.addAsset(TestUUIDs.pdfAsset, 'pdf', {
         uuid: TestUUIDs.pdfAsset,
-        'block/title': 'My PDF'
+        'block/title': 'My PDF',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -315,7 +327,7 @@ describe('ZIP Content Tests', () => {
 
       mockAPI.addAsset(TestUUIDs.pdfAsset, 'pdf', {
         uuid: TestUUIDs.pdfAsset,
-        'block/title': 'Important Document'
+        'block/title': 'Important Document',
       } as any);
 
       mockFileAPI.setFetchResponse(

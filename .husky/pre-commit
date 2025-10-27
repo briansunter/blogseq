@@ -1,18 +1,4 @@
 #!/bin/sh
 
-# Run linting and type checking on staged files
-echo "Running pre-commit checks..."
-
-# Type checking
-echo "✓ Type checking..."
-pnpm typecheck || exit 1
-
-# ESLint
-echo "✓ Running ESLint..."
-npx eslint src --max-warnings 0 || exit 1
-
-# Optional: Run tests on changed test files
-echo "✓ Running tests..."
-pnpm test --run --bail 2>/dev/null || true
-
-echo "✓ All pre-commit checks passed!"
+# Run lint-staged for formatting and linting only staged files
+npx lint-staged

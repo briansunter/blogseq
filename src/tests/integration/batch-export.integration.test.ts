@@ -48,7 +48,7 @@ describe('Batch Export Integration', () => {
       expect(pages.length).toBe(4);
 
       // Simulate adding each page to ZIP
-      pages.forEach((page) => {
+      pages.forEach(page => {
         zip.file(`${page.name}.md`, '# ' + page.name);
       });
 
@@ -60,9 +60,9 @@ describe('Batch Export Integration', () => {
       const context = setupIntegrationTest('multiPageGraph');
 
       const pages = Array.from(context.pages.values());
-      const pageNames = pages.map((p) => p.name);
+      const pageNames = pages.map(p => p.name);
 
-      pages.forEach((page) => {
+      pages.forEach(page => {
         zip.file(`${page.name}.md`, '# ' + page.name);
       });
 
@@ -74,7 +74,7 @@ describe('Batch Export Integration', () => {
       const context = setupIntegrationTest('multiPageGraph');
 
       const pages = Array.from(context.pages.values());
-      pages.forEach((page) => {
+      pages.forEach(page => {
         zip.file(`${page.name}.md`, '# ' + page.name);
       });
 
@@ -101,7 +101,7 @@ describe('Batch Export Integration', () => {
       const context = setupIntegrationTest('multiPageGraph');
 
       const pages = Array.from(context.pages.values());
-      pages.forEach((page) => {
+      pages.forEach(page => {
         const markdown = `# ${page.name}\n\nPage content`;
         zip.file(`${page.name}.md`, markdown);
       });
@@ -133,11 +133,11 @@ describe('Batch Export Integration', () => {
       const context = setupIntegrationTest('multiPageGraph');
 
       const pages = Array.from(context.pages.values());
-      pages.forEach((page) => {
+      pages.forEach(page => {
         zip.file(`${page.name}.md`, '# ' + page.name);
       });
 
-      Object.keys(zip.files).forEach((filename) => {
+      Object.keys(zip.files).forEach(filename => {
         expect(filename).toMatch(/\.md$/);
       });
     });
@@ -153,13 +153,9 @@ describe('Batch Export Integration', () => {
     it('should handle special characters in page names', async () => {
       const context = setupIntegrationTest('simplePage');
 
-      const specialPages = [
-        'Page with spaces',
-        'Page-with-dashes',
-        'Page_with_underscores',
-      ];
+      const specialPages = ['Page with spaces', 'Page-with-dashes', 'Page_with_underscores'];
 
-      specialPages.forEach((name) => {
+      specialPages.forEach(name => {
         zip.file(`${name}.md`, '# ' + name);
       });
 
@@ -184,7 +180,7 @@ describe('Batch Export Integration', () => {
       const context = setupIntegrationTest('multiPageGraph');
 
       const pages = Array.from(context.pages.values());
-      pages.forEach((page) => {
+      pages.forEach(page => {
         zip.file(`${page.name}.md`, '# ' + page.name);
       });
 
@@ -226,7 +222,7 @@ describe('Batch Export Integration', () => {
       let progress = 0;
       const total = pages.length;
 
-      pages.forEach((page) => {
+      pages.forEach(page => {
         zip.file(`${page.name}.md`, '# ' + page.name);
         progress++;
       });
@@ -281,10 +277,7 @@ describe('Batch Export Integration', () => {
     it('should handle large batch exports', async () => {
       // Create many files
       for (let i = 0; i < 50; i++) {
-        zip.file(
-          `page-${i}.md`,
-          `# Page ${i}\n\nContent for page ${i}`
-        );
+        zip.file(`page-${i}.md`, `# Page ${i}\n\nContent for page ${i}`);
       }
 
       const blob = await zip.generateAsync({ type: 'blob' });
@@ -315,7 +308,7 @@ describe('Batch Export Integration', () => {
       const context = setupIntegrationTest('multiPageGraph');
 
       const pages = Array.from(context.pages.values());
-      pages.forEach((page) => {
+      pages.forEach(page => {
         zip.file(`${page.name}.md`, '# ' + page.name);
       });
 
@@ -346,7 +339,7 @@ describe('Batch Export Integration', () => {
       const context = setupIntegrationTest('multiPageGraph');
 
       const pages = Array.from(context.pages.values());
-      pages.forEach((page) => {
+      pages.forEach(page => {
         zip.file(`${page.name}.md`, '# ' + page.name);
       });
 
@@ -373,14 +366,10 @@ describe('Batch Export Integration', () => {
 
       const pages = Array.from(context.pages.values());
 
-      pages.forEach((page) => {
-        const blocks = Array.from(context.blocks.values()).filter(
-          (b) => b.page?.uuid === page.uuid
-        );
+      pages.forEach(page => {
+        const blocks = Array.from(context.blocks.values()).filter(b => b.page?.uuid === page.uuid);
 
-        const markdown = `# ${page.name}\n\n${blocks
-          .map((b) => b.content)
-          .join('\n')}`;
+        const markdown = `# ${page.name}\n\n${blocks.map(b => b.content).join('\n')}`;
 
         zip.file(`${page.name}.md`, markdown);
       });

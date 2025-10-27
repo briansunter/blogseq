@@ -21,7 +21,9 @@
 ## ✨ Key Features
 
 ### 🖼️ **Automatic Asset Bundling**
+
 BlogSeq's killer feature - it finds and bundles **ALL** referenced images automatically:
+
 - Detects images in blocks, properties, and even nested references
 - Resolves UUID-based asset references to actual files
 - Creates organized `/assets/` folder with all media
@@ -30,6 +32,7 @@ BlogSeq's killer feature - it finds and bundles **ALL** referenced images automa
 ![Assets in ZIP](screenshots/zip.png)
 
 ### 📊 **YAML Frontmatter for Static Sites**
+
 Converts Logseq properties into standard YAML frontmatter - perfect for Jekyll, Hugo, Gatsby:
 
 **Logseq Properties:**
@@ -39,17 +42,21 @@ Converts Logseq properties into standard YAML frontmatter - perfect for Jekyll, 
 ![YAML Frontmatter](screenshots/markdown.png)
 
 ### 🔗 **Complete Reference Resolution**
+
 - Resolves `((block references))` to actual content
 - Converts `[[page links]]` to readable text
 - Handles nested and complex references
 - Even resolves images referenced by UUID in properties
 
 ### ⚡ **Real-Time Preview**
+
 See exactly what you'll get before exporting:
 ![Export Preview](screenshots/export-preview.png)
 
 ### Export Options
+
 Customize your export with simple checkboxes:
+
 - **Page Name as Header** - Add title as H1
 - **Flatten Blocks** - Clean paragraph format
 - **Include Properties** - YAML frontmatter for static sites
@@ -63,15 +70,18 @@ Customize your export with simple checkboxes:
 ### Installation
 
 **From Marketplace** (Recommended)
+
 1. Settings → Plugins → Search "BlogSeq" → Install
 
 **Manual Installation**
+
 1. Download from [Releases](https://github.com/briansunter/blogseq/releases)
 2. Settings → Enable Developer Mode → Load unpacked plugin
 
 ### Usage
 
 Three ways to export:
+
 1. **Toolbar** - Click BlogSeq icon
 2. **Slash Command** - Type `/Export page to markdown`
 3. **Right-Click** - Any page → "Export to Markdown"
@@ -79,16 +89,19 @@ Three ways to export:
 ## 📖 How It Works
 
 ### Export Options
+
 - **📄 Copy to Clipboard** - Quick paste anywhere
-- **💾 Download Markdown** - Single .md file  
+- **💾 Download Markdown** - Single .md file
 - **📦 Download ZIP** - Markdown + all assets bundled
 
 ### Asset Magic 🪄
+
 BlogSeq automatically converts:
+
 ```markdown
 [[uuid-reference-to-image]] → ![Image](assets/image.png)
-((block-with-image))       → Content with ![Image](assets/pic.jpg)
-property:: [[asset-uuid]]  → property: assets/document.pdf
+((block-with-image)) → Content with ![Image](assets/pic.jpg)
+property:: [[asset-uuid]] → property: assets/document.pdf
 ```
 
 All images and assets are bundled in the ZIP export - no broken links!
@@ -118,6 +131,7 @@ pnpm build   # Production build
 BlogSeq has comprehensive test coverage with 134+ tests across unit, component, and integration tests:
 
 ### Run Tests
+
 ```bash
 pnpm test              # Watch mode
 pnpm test:coverage     # Generate coverage report
@@ -125,11 +139,13 @@ pnpm test:ui           # Interactive test dashboard
 ```
 
 ### Test Structure
+
 - **Unit Tests (70%)**: Core export logic, hooks, utilities
 - **Component Tests (20%)**: React components, UI interactions
 - **Integration Tests (10%)**: End-to-end workflows, ZIP generation, asset handling
 
 ### Code Quality
+
 - **Type Checking**: `pnpm typecheck` (TypeScript strict mode)
 - **Linting**: `npx eslint src` (zero warnings)
 - **Coverage**: 80%+ across all metrics

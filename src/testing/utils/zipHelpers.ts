@@ -118,10 +118,7 @@ export async function verifyZipStructure(
  * expect(content).toContain('# My Page');
  * ```
  */
-export async function extractMarkdownFromZip(
-  zip: JSZip,
-  filename: string
-): Promise<string> {
+export async function extractMarkdownFromZip(zip: JSZip, filename: string): Promise<string> {
   const file = zip.file(filename);
 
   if (!file) {
@@ -140,10 +137,7 @@ export async function extractMarkdownFromZip(
  * expect(imageBlob.type).toBe('image/png');
  * ```
  */
-export async function extractAssetFromZip(
-  zip: JSZip,
-  path: string
-): Promise<Blob> {
+export async function extractAssetFromZip(zip: JSZip, path: string): Promise<Blob> {
   const file = zip.file(path);
 
   if (!file) {
@@ -204,9 +198,7 @@ export async function assertAssetInZip(
     const blob = await extractAssetFromZip(zip, assetPath);
     // Note: Blob type from ZIP may not always match original, this is a best-effort check
     if (blob.type && blob.type !== expectedType) {
-      console.warn(
-        `Asset type mismatch: expected '${expectedType}', got '${blob.type}'`
-      );
+      console.warn(`Asset type mismatch: expected '${expectedType}', got '${blob.type}'`);
     }
   }
 }
@@ -272,9 +264,7 @@ export async function extractAllMarkdownFromZip(
  * });
  * ```
  */
-export async function createTestZip(
-  files: Record<string, string | Blob>
-): Promise<JSZip> {
+export async function createTestZip(files: Record<string, string | Blob>): Promise<JSZip> {
   const zip = new JSZip();
 
   for (const [path, content] of Object.entries(files)) {

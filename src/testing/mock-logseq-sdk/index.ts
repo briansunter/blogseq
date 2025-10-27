@@ -33,14 +33,14 @@
  */
 
 // Export mock implementations
-export { MockLogseqAPI } from "./MockLogseqAPI";
-export { MockFileAPI } from "./MockFileAPI";
-export { MockDOMHelpers } from "./MockDOMHelpers";
+export { MockLogseqAPI } from './MockLogseqAPI';
+export { MockFileAPI } from './MockFileAPI';
+export { MockDOMHelpers } from './MockDOMHelpers';
 
 // Import for internal use
-import { MockLogseqAPI } from "./MockLogseqAPI";
-import { MockFileAPI } from "./MockFileAPI";
-import { MockDOMHelpers } from "./MockDOMHelpers";
+import { MockLogseqAPI } from './MockLogseqAPI';
+import { MockFileAPI } from './MockFileAPI';
+import { MockDOMHelpers } from './MockDOMHelpers';
 
 // Export fixtures
 export {
@@ -64,7 +64,7 @@ export {
   PageWithComplexReferences,
   ScenarioFixtures,
   createDeeplyNestedBlocks,
-} from "./fixtures";
+} from './fixtures';
 
 // Export builders
 export {
@@ -80,7 +80,7 @@ export {
   createJournalPage,
   createDocumentationPage,
   createTaskPage,
-} from "./builders";
+} from './builders';
 
 /**
  * Factory function to create a complete mock SDK
@@ -100,15 +100,15 @@ export function createPreConfiguredSDK() {
   const sdk = createMockSDK();
 
   // Add property definitions
-  sdk.logseq.addPropertyDefinition(":user.property/author", "author");
-  sdk.logseq.addPropertyDefinition(":user.property/tags", "tags");
-  sdk.logseq.addPropertyDefinition(":user.property/date", "date");
-  sdk.logseq.addPropertyDefinition(":user.property/blogTags", "blogTags");
+  sdk.logseq.addPropertyDefinition(':user.property/author', 'author');
+  sdk.logseq.addPropertyDefinition(':user.property/tags', 'tags');
+  sdk.logseq.addPropertyDefinition(':user.property/date', 'date');
+  sdk.logseq.addPropertyDefinition(':user.property/blogTags', 'blogTags');
 
   // Set graph
   sdk.logseq.setCurrentGraph({
-    path: "/Users/test/logseq-graph",
-    name: "Test Graph",
+    path: '/Users/test/logseq-graph',
+    name: 'Test Graph',
   });
 
   return sdk;
@@ -126,30 +126,24 @@ export function resetMockSDK(sdk: ReturnType<typeof createMockSDK>) {
 /**
  * Type guard to check if a value is a PageEntity
  */
-export function isPageEntity(entity: unknown): entity is import("@logseq/libs/dist/LSPlugin").PageEntity {
-  return (
-    typeof entity === "object" &&
-    entity !== null &&
-    "name" in entity &&
-    "uuid" in entity
-  );
+export function isPageEntity(
+  entity: unknown
+): entity is import('@logseq/libs/dist/LSPlugin').PageEntity {
+  return typeof entity === 'object' && entity !== null && 'name' in entity && 'uuid' in entity;
 }
 
 /**
  * Type guard to check if a value is a BlockEntity
  */
-export function isBlockEntity(entity: unknown): entity is import("@logseq/libs/dist/LSPlugin").BlockEntity {
-  return (
-    typeof entity === "object" &&
-    entity !== null &&
-    "content" in entity &&
-    "uuid" in entity
-  );
+export function isBlockEntity(
+  entity: unknown
+): entity is import('@logseq/libs/dist/LSPlugin').BlockEntity {
+  return typeof entity === 'object' && entity !== null && 'content' in entity && 'uuid' in entity;
 }
 
 // Re-export types from Logseq for convenience
-export type { PageEntity, BlockEntity } from "@logseq/libs/dist/LSPlugin";
-export type { MockLogseqState } from "./MockLogseqAPI";
+export type { PageEntity, BlockEntity } from '@logseq/libs/dist/LSPlugin';
+export type { MockLogseqState } from './MockLogseqAPI';
 
 // Export commonly used types
 export type MockSDK = ReturnType<typeof createMockSDK>;

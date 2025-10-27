@@ -1,5 +1,5 @@
-import { LSPluginUserEvents } from "@logseq/libs/dist/LSPlugin.user";
-import { useSyncExternalStore } from "react";
+import { LSPluginUserEvents } from '@logseq/libs/dist/LSPlugin.user';
+import { useSyncExternalStore } from 'react';
 
 // Safe access to logseq.isMainUIVisible
 const getInitialVisibility = (): boolean => {
@@ -23,7 +23,7 @@ function subscribeLogseqEvent<T extends LSPluginUserEvents>(
 }
 
 const subscribeToUIVisible = (onChange: () => void) =>
-  subscribeLogseqEvent("ui:visible:changed", (...args: unknown[]) => {
+  subscribeLogseqEvent('ui:visible:changed', (...args: unknown[]) => {
     const event = args[0] as { visible: boolean };
     _visible = event.visible;
     onChange();

@@ -146,7 +146,7 @@ This is some content`;
       includeProperties: false,
       preserveBlockRefs: false,
       flattenNested: false,
-      removeLogseqSyntax: true
+      removeLogseqSyntax: true,
     };
 
     it('should remove properties', () => {
@@ -254,19 +254,28 @@ Some content`;
 
     it('should keep tags when includeTags is true', () => {
       const content = 'Content with #tag';
-      const result = MarkdownHelpers.cleanLogseqSyntax(content, { ...defaultOptions, includeTags: true });
+      const result = MarkdownHelpers.cleanLogseqSyntax(content, {
+        ...defaultOptions,
+        includeTags: true,
+      });
       expect(result).toBe('Content with #tag');
     });
 
     it('should remove tags when includeTags is false', () => {
       const content = 'Content with #tag';
-      const result = MarkdownHelpers.cleanLogseqSyntax(content, { ...defaultOptions, includeTags: false });
+      const result = MarkdownHelpers.cleanLogseqSyntax(content, {
+        ...defaultOptions,
+        includeTags: false,
+      });
       expect(result).toBe('Content with');
     });
 
     it('should remove multiple tags when includeTags is false', () => {
       const content = 'Content with #tag1 and #tag2';
-      const result = MarkdownHelpers.cleanLogseqSyntax(content, { ...defaultOptions, includeTags: false });
+      const result = MarkdownHelpers.cleanLogseqSyntax(content, {
+        ...defaultOptions,
+        includeTags: false,
+      });
       expect(result).toBe('Content with  and');
     });
 
@@ -281,7 +290,10 @@ Some content`;
 TODO Task 1
 [[Page Link]] with #tag
 {{query test}}`;
-      const result = MarkdownHelpers.cleanLogseqSyntax(content, { ...defaultOptions, includeTags: false });
+      const result = MarkdownHelpers.cleanLogseqSyntax(content, {
+        ...defaultOptions,
+        includeTags: false,
+      });
       expect(result).toBe('Task 1\nPage Link with');
     });
 
@@ -441,7 +453,7 @@ More text`;
 
     it('should extract heading level from properties object', () => {
       const block = {
-        properties: { 'logseq.property/heading': 2 }
+        properties: { 'logseq.property/heading': 2 },
       } as unknown as BlockEntity;
       expect(MarkdownHelpers.getHeadingLevel(block)).toBe(2);
     });
@@ -489,7 +501,7 @@ More text`;
     it('should prioritize direct property over properties object', () => {
       const block = {
         'logseq.property/heading': 1,
-        properties: { 'logseq.property/heading': 2 }
+        properties: { 'logseq.property/heading': 2 },
       } as unknown as BlockEntity;
       expect(MarkdownHelpers.getHeadingLevel(block)).toBe(1);
     });
@@ -545,7 +557,7 @@ More text`;
       const data = {
         title: 'My Title',
         tags: ['tag1', 'tag2'],
-        description: 'Line 1\nLine 2'
+        description: 'Line 1\nLine 2',
       };
       const result = MarkdownHelpers.formatYaml(data);
       expect(result).toContain('title: My Title');

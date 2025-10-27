@@ -1,30 +1,30 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { ExportHeader } from "./ExportHeader";
+import type { Meta, StoryObj } from '@storybook/react';
+import { ExportHeader } from './ExportHeader';
 
 /**
  * The ExportHeader component displays the application title, current page name,
  * and export controls. It's shown at the top of the BlogSeq export UI.
  */
 const meta = {
-  title: "Components/ExportHeader",
+  title: 'Components/ExportHeader',
   component: ExportHeader,
   parameters: {
-    layout: "fullscreen",
+    layout: 'fullscreen',
   },
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     currentPageName: {
-      control: "text",
-      description: "Name of the page being exported",
+      control: 'text',
+      description: 'Name of the page being exported',
     },
     isExporting: {
-      control: "boolean",
-      description: "Whether export is in progress",
+      control: 'boolean',
+      description: 'Whether export is in progress',
     },
   },
   args: {
-    onQuickExport: () => console.log("Quick export clicked"),
-    onClose: () => console.log("Close clicked"),
+    onQuickExport: () => console.log('Quick export clicked'),
+    onClose: () => console.log('Close clicked'),
   },
 } satisfies Meta<typeof ExportHeader>;
 
@@ -36,7 +36,7 @@ type Story = StoryObj<typeof meta>;
  */
 export const Default: Story = {
   args: {
-    currentPageName: "My First Blog Post",
+    currentPageName: 'My First Blog Post',
     isExporting: false,
   },
 };
@@ -46,7 +46,7 @@ export const Default: Story = {
  */
 export const Exporting: Story = {
   args: {
-    currentPageName: "My First Blog Post",
+    currentPageName: 'My First Blog Post',
     isExporting: true,
   },
 };
@@ -56,7 +56,7 @@ export const Exporting: Story = {
  */
 export const NoActivePage: Story = {
   args: {
-    currentPageName: "",
+    currentPageName: '',
     isExporting: false,
   },
 };
@@ -66,7 +66,8 @@ export const NoActivePage: Story = {
  */
 export const LongPageName: Story = {
   args: {
-    currentPageName: "This is a very long page name that might overflow the container if not properly handled with CSS truncation",
+    currentPageName:
+      'This is a very long page name that might overflow the container if not properly handled with CSS truncation',
     isExporting: false,
   },
 };
@@ -76,7 +77,7 @@ export const LongPageName: Story = {
  */
 export const SpecialCharactersInName: Story = {
   args: {
-    currentPageName: "🚀 2024/01/15 - Blog Post #42 [Draft]",
+    currentPageName: '🚀 2024/01/15 - Blog Post #42 [Draft]',
     isExporting: false,
   },
 };
@@ -86,7 +87,7 @@ export const SpecialCharactersInName: Story = {
  */
 export const ExportingWithoutPage: Story = {
   args: {
-    currentPageName: "",
+    currentPageName: '',
     isExporting: true,
   },
 };

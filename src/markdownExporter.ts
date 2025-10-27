@@ -1,6 +1,6 @@
-import { BlockEntity, PageEntity } from "@logseq/libs/dist/LSPlugin";
-import JSZip from "jszip";
-import { saveAs } from "file-saver";
+import { BlockEntity, PageEntity } from '@logseq/libs/dist/LSPlugin';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 // Core types
 export type ExportOptions = {
@@ -13,7 +13,7 @@ export type ExportOptions = {
   includePageName?: boolean;
   assetPath?: string;
   debug?: boolean;
-}
+};
 
 export const DEFAULT_OPTIONS: Required<ExportOptions> = {
   includeTags: false,
@@ -33,14 +33,14 @@ export type AssetInfo = {
   type: string;
   originalPath: string;
   exportPath: string;
-}
+};
 
 export type LogseqEntity = Record<string, unknown> & {
   uuid?: string | { $uuid: string };
   title?: string | unknown[];
   name?: string;
   properties?: Record<string, unknown>;
-}
+};
 
 // API types
 export type LogseqAPI = {
@@ -51,7 +51,7 @@ export type LogseqAPI = {
   getCurrentGraph: () => Promise<{ path: string } | null>;
   datascriptQuery: (query: string) => Promise<unknown[][]>;
   showMsg: (message: string, type: 'success' | 'error' | 'warning') => void;
-}
+};
 
 export type FileAPI = {
   fetch: (url: string) => Promise<Response>;
@@ -59,19 +59,28 @@ export type FileAPI = {
   createObjectURL: (blob: Blob) => string;
   revokeObjectURL: (url: string) => void;
   writeToClipboard: (text: string) => Promise<void>;
-}
+};
 
 export type DOMHelpers = {
   createElement: (tagName: string) => HTMLElement;
   appendChild: (element: HTMLElement) => void;
   removeChild: (element: HTMLElement) => void;
-}
+};
 
 // Helper utilities
 export class MarkdownHelpers {
-  private static readonly UUID_REGEX = /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
+  private static readonly UUID_REGEX =
+    /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/i;
   private static readonly PROPERTY_REGEX = /^[a-zA-Z][a-zA-Z0-9-_]*::\s*.+$/;
-  private static readonly IMAGE_TYPES = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp']);
+  private static readonly IMAGE_TYPES = new Set([
+    'png',
+    'jpg',
+    'jpeg',
+    'gif',
+    'svg',
+    'webp',
+    'bmp',
+  ]);
 
   static extractUuid(value?: string | { $uuid: string }): string | undefined {
     if (!value) return undefined;
@@ -84,65 +93,62 @@ export class MarkdownHelpers {
 
   static isPropertyOnlyBlock(content: string): boolean {
     if (!content) return false;
-    return content.split('\n').every(line => 
-      !line.trim() || this.PROPERTY_REGEX.test(line.trim())
-    );
+    return content.split('\n').every(line => !line.trim() || this.PROPERTY_REGEX.test(line.trim()));
   }
 
   static cleanLogseqSyntax(content: string, options: ExportOptions): string {
     let result = content
-      .replace(/^[a-zA-Z-_]+::\s*.+$/gm, "")
-      .replace(/\{\{(query|renderer|embed)[^}]*\}\}/g, "")
-      .replace(/^(TODO|DOING|NOW|LATER|DONE|WAITING|CANCELLED)\s+/gm, "")
-      .replace(/\b(NOW)\s+/g, "")
-      .replace(/\[#[A-Z]\]\s*/g, "")
-      .replace(/\[\[+([^\]]+)\]\]+/g, "$1");
-    
+      .replace(/^[a-zA-Z-_]+::\s*.+$/gm, '')
+      .replace(/\{\{(query|renderer|embed)[^}]*\}\}/g, '')
+      .replace(/^(TODO|DOING|NOW|LATER|DONE|WAITING|CANCELLED)\s+/gm, '')
+      .replace(/\b(NOW)\s+/g, '')
+      .replace(/\[#[A-Z]\]\s*/g, '')
+      .replace(/\[\[+([^\]]+)\]\]+/g, '$1');
+
     if (!options.includeTags) {
-      result = result.replace(/#[^\s#[\]{}(),.!?;:'"]+/g, "");
+      result = result.replace(/#[^\s#[\]{}(),.!?;:'"]+/g, '');
     }
-    
-    return result.replace(/\n{3,}/g, "\n\n").trim();
+
+    return result.replace(/\n{3,}/g, '\n\n').trim();
   }
 
   static processAssetPaths(content: string, assetPath: string): string {
     const path = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
-    return content.replace(
-      /(!)?\[([^\]]*)\]\(\.\.\/assets\/([^)]+)\)/g, 
-      `$1[$2](${path}$3)`
-    );
+    return content.replace(/(!)?\[([^\]]*)\]\(\.\.\/assets\/([^)]+)\)/g, `$1[$2](${path}$3)`);
   }
 
   static postProcessMarkdown(markdown: string): string {
     return markdown
-      .replace(/\n{3,}/g, "\n\n")
-      .replace(/([^\n])\n(#{1,6}\s)/g, "$1\n\n$2")
-      .replace(/(#{1,6}\s[^\n]+)\n([^\n])/g, "$1\n\n$2")
-      .replace(/\n\n-\s/g, "\n- ")
-      .replace(/^-\s*$/gm, "")
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/([^\n])\n(#{1,6}\s)/g, '$1\n\n$2')
+      .replace(/(#{1,6}\s[^\n]+)\n([^\n])/g, '$1\n\n$2')
+      .replace(/\n\n-\s/g, '\n- ')
+      .replace(/^-\s*$/gm, '')
       .trim();
   }
 
   static getHeadingLevel(block: BlockEntity): number | null {
     // Check multiple possible property locations
     let level = (block as Record<string, unknown>)['logseq.property/heading'];
-    
+
     // Also check in properties object if it exists
     if (!level && (block as Record<string, unknown>).properties) {
-      level = ((block as Record<string, unknown>).properties as Record<string, unknown>)['logseq.property/heading'];
+      level = ((block as Record<string, unknown>).properties as Record<string, unknown>)[
+        'logseq.property/heading'
+      ];
     }
-    
+
     // Also check with colon prefix (DataScript format)
     if (!level) {
       level = (block as Record<string, unknown>)[':logseq.property/heading'];
     }
-    
+
     return typeof level === 'number' && level >= 1 && level <= 6 ? level : null;
   }
 
   static formatYaml(data: Record<string, unknown>): string {
-    const lines = ["---"];
-    
+    const lines = ['---'];
+
     for (const [key, value] of Object.entries(data)) {
       if (Array.isArray(value)) {
         lines.push(`${key}:`);
@@ -154,8 +160,8 @@ export class MarkdownHelpers {
         lines.push(`${key}: ${value}`);
       }
     }
-    
-    lines.push("---");
+
+    lines.push('---');
     return lines.join('\n') + '\n';
   }
 
@@ -169,75 +175,75 @@ export class MarkdownExporter {
   private processedBlocks = new Set<string>();
   private blockRefCache = new Map<string, string>();
   private referencedAssets = new Map<string, AssetInfo>();
-  private graphPath = "";
+  private graphPath = '';
   private debugEnabled = false;
-  
+
   constructor(
     private logseqAPI: LogseqAPI = {
       getCurrentPage: () => logseq.Editor.getCurrentPage(),
-      getPage: (uuid) => logseq.Editor.getPage(uuid),
+      getPage: uuid => logseq.Editor.getPage(uuid),
       getBlock: (uuid, opts) => logseq.Editor.getBlock(uuid, opts),
-      getPageBlocksTree: (uuid) => logseq.Editor.getPageBlocksTree(uuid),
+      getPageBlocksTree: uuid => logseq.Editor.getPageBlocksTree(uuid),
       getCurrentGraph: () => logseq.App.getCurrentGraph(),
-      datascriptQuery: (query) => logseq.DB.datascriptQuery(query),
-      showMsg: (msg, type) => logseq.UI.showMsg(msg, type)
+      datascriptQuery: query => logseq.DB.datascriptQuery(query),
+      showMsg: (msg, type) => logseq.UI.showMsg(msg, type),
     },
     private fileAPI: FileAPI = {
-      fetch: (url) => fetch(url),
+      fetch: url => fetch(url),
       saveAs: (blob, filename) => saveAs(blob, filename),
-      createObjectURL: (blob) => URL.createObjectURL(blob),
-      revokeObjectURL: (url) => URL.revokeObjectURL(url),
-      writeToClipboard: (text) => navigator.clipboard.writeText(text)
+      createObjectURL: blob => URL.createObjectURL(blob),
+      revokeObjectURL: url => URL.revokeObjectURL(url),
+      writeToClipboard: text => navigator.clipboard.writeText(text),
     },
     private domHelpers: DOMHelpers = {
-      createElement: (tagName) => document.createElement(tagName),
-      appendChild: (element) => document.body.appendChild(element),
-      removeChild: (element) => document.body.removeChild(element)
+      createElement: tagName => document.createElement(tagName),
+      appendChild: element => document.body.appendChild(element),
+      removeChild: element => document.body.removeChild(element),
     }
   ) {}
-  
+
   private debug(...args: unknown[]): void {
     if (this.debugEnabled) console.log(...args);
   }
-  
+
   async exportCurrentPage(options: ExportOptions = {}): Promise<string> {
     const opts = { ...DEFAULT_OPTIONS, ...options };
     this.debugEnabled = opts.debug || false;
-    
+
     this.debug('Starting export with options:', opts);
-    
+
     const currentPage = await this.logseqAPI.getCurrentPage();
-    if (!currentPage) throw new Error("NO_ACTIVE_PAGE");
-    
+    if (!currentPage) throw new Error('NO_ACTIVE_PAGE');
+
     const graph = await this.logseqAPI.getCurrentGraph();
     if (graph?.path) this.graphPath = graph.path;
-    
+
     const pageBlocks = await this.logseqAPI.getPageBlocksTree(currentPage.uuid);
-    
+
     // Reset state
     this.processedBlocks.clear();
     this.blockRefCache.clear();
     this.referencedAssets.clear();
-    
+
     // Build markdown
-    let markdown = "";
-    
+    let markdown = '';
+
     if (opts.includeProperties) {
       const frontmatter = await this.generateFrontmatter(currentPage, opts.assetPath);
-      if (frontmatter) markdown = frontmatter + "\n";
+      if (frontmatter) markdown = frontmatter + '\n';
     }
-    
+
     if (opts.includePageName) {
       markdown += `# ${currentPage.name}\n\n`;
     }
-    
+
     if (!pageBlocks || pageBlocks.length === 0) {
-      return markdown.trim() || "";
+      return markdown.trim() || '';
     }
-    
+
     // Pre-cache references
     await this.cacheBlockReferences(pageBlocks);
-    
+
     // Process blocks
     const propertyValueUUIDs = await this.collectPropertyValueUUIDs(currentPage.uuid);
 
@@ -250,86 +256,98 @@ export class MarkdownExporter {
 
       markdown += await this.processBlock(block, 0, opts);
     }
-    
+
     return MarkdownHelpers.postProcessMarkdown(markdown);
   }
-  
-  private async processBlock(block: BlockEntity, depth: number, options: ExportOptions): Promise<string> {
-    if (!block) return "";
-    
-    if (block.uuid && this.processedBlocks.has(block.uuid)) return "";
+
+  private async processBlock(
+    block: BlockEntity,
+    depth: number,
+    options: ExportOptions
+  ): Promise<string> {
+    if (!block) return '';
+
+    if (block.uuid && this.processedBlocks.has(block.uuid)) return '';
     if (block.uuid) this.processedBlocks.add(block.uuid);
-    
+
     // Check if this block itself is an asset
     if (block.uuid) {
       const assetInfo = await this.detectAsset(block.uuid);
       if (assetInfo) {
         const assetPath = options.assetPath ?? 'assets/';
         const markdown = this.createAssetLink(block.uuid, assetInfo, assetPath);
-        return markdown + '\n\n' + await this.processChildren(block, depth, options);
+        return markdown + '\n\n' + (await this.processChildren(block, depth, options));
       }
     }
-    
-    let content = block.content || "";
-    
+
+    let content = block.content || '';
+
     if (MarkdownHelpers.isPropertyOnlyBlock(content)) {
       return this.processChildren(block, depth, options);
     }
-    
+
     // Process content
     if (options.preserveBlockRefs) {
       content = await this.resolveReferences(content, options.assetPath ?? 'assets/', options);
     }
-    
+
     if (options.removeLogseqSyntax) {
       content = MarkdownHelpers.cleanLogseqSyntax(content, options);
     }
-    
+
     content = await this.trackAssets(content, options.assetPath ?? 'assets/');
-    
+
     // Format as markdown
     const headingLevel = MarkdownHelpers.getHeadingLevel(block);
-    
+
     // Debug logging for heading detection
     if (this.debugEnabled && headingLevel !== null) {
       this.debug(`Block with heading level ${headingLevel}:`, block.content);
     }
-    
+
     if (headingLevel !== null && content && options.flattenNested) {
       const heading = '#'.repeat(headingLevel) + ' ' + content;
-      return heading + '\n\n' + await this.processChildren(block, depth, options);
+      return heading + '\n\n' + (await this.processChildren(block, depth, options));
     } else if (options.flattenNested) {
-      const markdown = content ? `${content}\n\n` : "";
-      return markdown + await this.processChildren(block, depth, options);
+      const markdown = content ? `${content}\n\n` : '';
+      return markdown + (await this.processChildren(block, depth, options));
     } else if (depth === 0) {
       // Top-level blocks are paragraphs, but children start list formatting at depth 1
-      const markdown = content ? `${content}\n\n` : "";
-      return markdown + await this.processChildren(block, depth + 1, options);
+      const markdown = content ? `${content}\n\n` : '';
+      return markdown + (await this.processChildren(block, depth + 1, options));
     } else {
       // List formatting: depth-1 gives correct indentation (depth=1 → no indent, depth=2 → 2 spaces, etc.)
-      const indent = "  ".repeat(depth - 1);
-      const markdown = content ? `${indent}- ${content}\n` : "";
-      return markdown + await this.processChildren(block, depth + 1, options);
+      const indent = '  '.repeat(depth - 1);
+      const markdown = content ? `${indent}- ${content}\n` : '';
+      return markdown + (await this.processChildren(block, depth + 1, options));
     }
   }
-  
-  private async processChildren(block: BlockEntity, depth: number, options: ExportOptions): Promise<string> {
-    if (!block.children?.length) return "";
+
+  private async processChildren(
+    block: BlockEntity,
+    depth: number,
+    options: ExportOptions
+  ): Promise<string> {
+    if (!block.children?.length) return '';
 
     const results = await Promise.all(
-      (block.children as BlockEntity[]).map(child =>
-        this.processBlock(child, depth, options)
-      )
+      (block.children as BlockEntity[]).map(child => this.processBlock(child, depth, options))
     );
 
     return results.join('');
   }
-  
-  private async resolveReferences(content: string, assetPath: string, options?: ExportOptions): Promise<string> {
+
+  private async resolveReferences(
+    content: string,
+    assetPath: string,
+    options?: ExportOptions
+  ): Promise<string> {
     let result = content;
 
     // Handle [[uuid]] page refs
-    result = await this.replaceAsync(result, /\[\[([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\]\]/gi,
+    result = await this.replaceAsync(
+      result,
+      /\[\[([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\]\]/gi,
       async (_, uuid) => {
         const resolved = await this.resolveUuid(String(uuid), assetPath);
         return resolved ?? `[[${uuid}]]`;
@@ -337,7 +355,9 @@ export class MarkdownExporter {
     );
 
     // Handle ((uuid)) block refs
-    result = await this.replaceAsync(result, /\(\(([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)\)/gi,
+    result = await this.replaceAsync(
+      result,
+      /\(\(([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)\)/gi,
       async (_, uuid) => {
         const uuidStr = String(uuid);
         const resolved = await this.resolveUuid(uuidStr, assetPath);
@@ -347,7 +367,9 @@ export class MarkdownExporter {
 
     // Handle plain UUIDs only if resolvePlainUuids is enabled (defaults to true if not specified)
     if (options?.resolvePlainUuids !== false) {
-      result = await this.replaceAsync(result, /\b([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\b/gi,
+      result = await this.replaceAsync(
+        result,
+        /\b([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\b/gi,
         async (match, uuid, offset) => {
           const matchStr = String(match);
           const uuidStr = String(uuid);
@@ -363,7 +385,7 @@ export class MarkdownExporter {
 
     return result;
   }
-  
+
   private async resolveUuid(uuid: string, assetPath: string): Promise<string | null> {
     // Check cache - return any cached value
     const cached = this.blockRefCache.get(uuid);
@@ -377,7 +399,6 @@ export class MarkdownExporter {
       return this.createAssetLink(uuid, assetInfo, assetPath);
     }
 
-    
     // Try as page
     try {
       const page = await this.logseqAPI.getPage(uuid);
@@ -389,14 +410,18 @@ export class MarkdownExporter {
     } catch {
       // Intentionally swallow error - page lookup is optional fallback
     }
-    
+
     // Try as block
     try {
       const block = await this.logseqAPI.getBlock(uuid, { includeChildren: false });
       if (block?.content) {
-        let content = await this.resolveReferences(block.content, assetPath, { resolvePlainUuids: true });
+        let content = await this.resolveReferences(block.content, assetPath, {
+          resolvePlainUuids: true,
+        });
         content = MarkdownHelpers.cleanLogseqSyntax(content, {
-          includeTags: false, includeProperties: false, removeLogseqSyntax: true
+          includeTags: false,
+          includeProperties: false,
+          removeLogseqSyntax: true,
         });
         this.blockRefCache.set(uuid, content);
         return content;
@@ -404,10 +429,10 @@ export class MarkdownExporter {
     } catch {
       // Intentionally swallow error - block lookup is optional fallback
     }
-    
+
     return null;
   }
-  
+
   private async detectAsset(uuid: string): Promise<{ type: string; entity?: LogseqEntity } | null> {
     // Try DataScript query
     try {
@@ -426,7 +451,7 @@ export class MarkdownExporter {
     } catch {
       // Intentionally swallow error - DataScript query may fail on invalid UUID
     }
-    
+
     // Check page properties
     try {
       const page = await this.logseqAPI.getPage(uuid);
@@ -437,15 +462,15 @@ export class MarkdownExporter {
     } catch {
       // Intentionally swallow error - page property access is optional
     }
-    
+
     return null;
   }
-  
+
   private async findAssetType(entity: LogseqEntity): Promise<string | null> {
     // Use DataScript query to find asset type property
     const uuid = MarkdownHelpers.extractUuid(entity.uuid);
     if (!uuid) return null;
-    
+
     try {
       const query = `[:find ?type
                       :where 
@@ -455,24 +480,29 @@ export class MarkdownExporter {
                       [(= ?ns "logseq.property.asset")]
                       [(name ?prop) "type"]]`;
       const result = await this.logseqAPI.datascriptQuery(query);
-      
+
       if (result?.[0]?.[0] && typeof result[0][0] === 'string') {
         return result[0][0];
       }
     } catch {
       // Intentionally swallow error - asset type query may fail
     }
-    
+
     return null;
   }
-  
-  private createAssetLink(uuid: string, info: { type: string; entity?: LogseqEntity }, assetPath: string): string {
+
+  private createAssetLink(
+    uuid: string,
+    info: { type: string; entity?: LogseqEntity },
+    assetPath: string
+  ): string {
     // Try different property locations for title
-    const title = info.entity?.title ||
-                  info.entity?.['block/title'] ||
-                  info.entity?.[':block/title'] ||
-                  info.entity?.name ||
-                  `asset-${uuid.substring(0, 8)}`;
+    const title =
+      info.entity?.title ||
+      info.entity?.['block/title'] ||
+      info.entity?.[':block/title'] ||
+      info.entity?.name ||
+      `asset-${uuid.substring(0, 8)}`;
 
     const titleStr = typeof title === 'string' ? title : String(title);
     const path = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
@@ -484,7 +514,7 @@ export class MarkdownExporter {
       title: titleStr,
       type: info.type,
       originalPath: `${this.graphPath}/assets/${uuid}.${info.type}`,
-      exportPath
+      exportPath,
     });
 
     // Create markdown link
@@ -494,14 +524,16 @@ export class MarkdownExporter {
 
     return markdown;
   }
-  
+
   private async trackAssets(content: string, assetPath: string): Promise<string> {
     const path = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
-    
+
     return content.replace(
-      /(!)?\[([^\]]*)\]\(\.\.\/assets\/([^)]+)\)/g, 
+      /(!)?\[([^\]]*)\]\(\.\.\/assets\/([^)]+)\)/g,
       (_, isImg, title, file) => {
-        const match = file.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\.(\w+)/i);
+        const match = file.match(
+          /([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\.(\w+)/i
+        );
         if (match) {
           const [, uuid, ext] = match;
           if (!this.referencedAssets.has(uuid)) {
@@ -510,7 +542,7 @@ export class MarkdownExporter {
               type: ext,
               title: title || `asset-${uuid.substring(0, 8)}`,
               originalPath: `${this.graphPath}/assets/${uuid}.${ext}`,
-              exportPath: `${path}${uuid}.${ext}`
+              exportPath: `${path}${uuid}.${ext}`,
             });
           }
         }
@@ -518,23 +550,26 @@ export class MarkdownExporter {
       }
     );
   }
-  
-  private async cacheBlockReferences(blocks: BlockEntity[], visited = new Set<string>()): Promise<void> {
+
+  private async cacheBlockReferences(
+    blocks: BlockEntity[],
+    visited = new Set<string>()
+  ): Promise<void> {
     const uuidPattern = /[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/gi;
 
     for (const block of blocks) {
       if (block && block.uuid && !visited.has(block.uuid)) {
         visited.add(block.uuid);
-        this.blockRefCache.set(block.uuid, block.content || "");
-        
-        const uuids = Array.from((block.content || "").matchAll(uuidPattern))
+        this.blockRefCache.set(block.uuid, block.content || '');
+
+        const uuids = Array.from((block.content || '').matchAll(uuidPattern))
           .map(m => m[0])
           .filter(uuid => !this.blockRefCache.has(uuid));
-        
+
         for (const uuid of uuids) {
           await this.preCacheUuid(uuid);
         }
-        
+
         // Only process children if we haven't visited this block before
         if (block.children?.length) {
           await this.cacheBlockReferences(block.children as BlockEntity[], visited);
@@ -542,7 +577,7 @@ export class MarkdownExporter {
       }
     }
   }
-  
+
   private async preCacheUuid(uuid: string): Promise<void> {
     try {
       const page = await this.logseqAPI.getPage(uuid);
@@ -553,7 +588,7 @@ export class MarkdownExporter {
     } catch {
       // Intentionally swallow error - page pre-caching is optional
     }
-    
+
     try {
       const block = await this.logseqAPI.getBlock(uuid, { includeChildren: false });
       if (block?.content) {
@@ -563,13 +598,16 @@ export class MarkdownExporter {
       // Intentionally swallow error - block pre-caching is optional
     }
   }
-  
-  private async generateFrontmatter(page: BlockEntity | PageEntity, assetPath = 'assets/'): Promise<string> {
+
+  private async generateFrontmatter(
+    page: BlockEntity | PageEntity,
+    assetPath = 'assets/'
+  ): Promise<string> {
     try {
       // Get the full page entity
       let pageEntity = page;
       try {
-        pageEntity = await this.logseqAPI.getPage(page.uuid) || page;
+        pageEntity = (await this.logseqAPI.getPage(page.uuid)) || page;
       } catch {
         // Use original page if getPage fails
       }
@@ -615,10 +653,9 @@ export class MarkdownExporter {
 
       // Properties are at the root level with colon-prefixed keys
       // Extract all keys that look like properties
-      const propertyKeys = Object.keys(pageEntity).filter(key =>
-        key.startsWith(':user.property/') ||
-        key.startsWith(':logseq.property/') ||
-        key === 'tags'
+      const propertyKeys = Object.keys(pageEntity).filter(
+        key =>
+          key.startsWith(':user.property/') || key.startsWith(':logseq.property/') || key === 'tags'
       );
 
       if (propertyKeys.length > 0) {
@@ -633,7 +670,8 @@ export class MarkdownExporter {
           // Page keys are like ":user.property/title-abc123"
           // Map keys are like "user.property/title-abc123" (from DataScript)
           const keyWithoutColon = key.startsWith(':') ? key.slice(1) : key;
-          const cleanKey = propertyNameMap.get(keyWithoutColon) || propertyNameMap.get(key) || String(key);
+          const cleanKey =
+            propertyNameMap.get(keyWithoutColon) || propertyNameMap.get(key) || String(key);
           this.debug(`Property ${key} -> ${cleanKey}, value type: ${typeof value}`);
 
           // Handle tags specially
@@ -670,7 +708,8 @@ export class MarkdownExporter {
 
           // Strip leading colon for property name lookup
           const keyWithoutColon = key.startsWith(':') ? key.slice(1) : key;
-          const cleanKey = propertyNameMap.get(keyWithoutColon) || propertyNameMap.get(key) || String(key);
+          const cleanKey =
+            propertyNameMap.get(keyWithoutColon) || propertyNameMap.get(key) || String(key);
 
           // Skip tags we already processed
           if (cleanKey === 'tags' || cleanKey.toLowerCase().includes('blogtags')) {
@@ -697,15 +736,13 @@ export class MarkdownExporter {
         }
       }
 
-      return Object.keys(frontmatter).length > 0
-        ? MarkdownHelpers.formatYaml(frontmatter)
-        : "";
+      return Object.keys(frontmatter).length > 0 ? MarkdownHelpers.formatYaml(frontmatter) : '';
     } catch (error) {
-      console.error("Error generating frontmatter:", error);
-      return "";
+      console.error('Error generating frontmatter:', error);
+      return '';
     }
   }
-  
+
   private async processPropertyValue(value: unknown, assetPath: string): Promise<unknown> {
     if (typeof value === 'string') {
       const trimmed = value.trim();
@@ -727,7 +764,7 @@ export class MarkdownExporter {
               title: typeof assetInfo.entity?.title === 'string' ? assetInfo.entity.title : inner,
               type: assetInfo.type,
               originalPath: `${this.graphPath}/assets/${inner}.${assetInfo.type}`,
-              exportPath
+              exportPath,
             });
 
             return exportPath;
@@ -750,7 +787,7 @@ export class MarkdownExporter {
             title: typeof assetInfo.entity?.title === 'string' ? assetInfo.entity.title : trimmed,
             type: assetInfo.type,
             originalPath: `${this.graphPath}/assets/${trimmed}.${assetInfo.type}`,
-            exportPath
+            exportPath,
           });
 
           return exportPath;
@@ -785,7 +822,7 @@ export class MarkdownExporter {
 
     return value;
   }
-  
+
   private async findAssetByTitle(title: string): Promise<{ uuid: string; type: string } | null> {
     try {
       const query = `[:find ?uuid ?type
@@ -794,7 +831,7 @@ export class MarkdownExporter {
                       [?e :block/uuid ?uuid]
                       [?e :logseq.property.asset/type ?type]]`;
       const result = await this.logseqAPI.datascriptQuery(query);
-      
+
       if (result?.[0]) {
         const uuid = MarkdownHelpers.extractUuid(result[0][0] as string | { $uuid: string });
         const type = result[0][1];
@@ -805,10 +842,10 @@ export class MarkdownExporter {
     } catch {
       // Intentionally swallow error - asset title lookup is optional
     }
-    
+
     return null;
   }
-  
+
   private async resolveDbReference(dbId: number, assetPath: string): Promise<string | null> {
     try {
       // First try to resolve as asset using correct DataScript syntax
@@ -834,7 +871,7 @@ export class MarkdownExporter {
             title: String(title || uuid),
             type: String(type),
             originalPath: `${this.graphPath}/assets/${uuid}.${type}`,
-            exportPath
+            exportPath,
           });
 
           return exportPath;
@@ -860,7 +897,7 @@ export class MarkdownExporter {
 
     return null;
   }
-  
+
   private async collectPropertyValueUUIDs(pageUuid: string): Promise<Set<string>> {
     const uuids = new Set<string>();
     const page = await this.logseqAPI.getPage(pageUuid);
@@ -876,10 +913,9 @@ export class MarkdownExporter {
 
     // Properties are at the root level with colon-prefixed keys
     // Extract all keys that look like properties
-    const propertyKeys = Object.keys(page).filter(key =>
-      key.startsWith(':user.property/') ||
-      key.startsWith(':logseq.property/') ||
-      key === 'tags'
+    const propertyKeys = Object.keys(page).filter(
+      key =>
+        key.startsWith(':user.property/') || key.startsWith(':logseq.property/') || key === 'tags'
     );
 
     console.log('Property keys found:', propertyKeys);
@@ -912,7 +948,8 @@ export class MarkdownExporter {
       } else if (typeof v === 'object' && v !== null) {
         console.log(`${indent}→ Detected object:`, Object.keys(v));
         if ('id' in v || 'db/id' in v) {
-          const dbId = (v as { id?: number; 'db/id'?: number }).id || (v as { 'db/id'?: number })['db/id'];
+          const dbId =
+            (v as { id?: number; 'db/id'?: number }).id || (v as { 'db/id'?: number })['db/id'];
           console.log(`${indent}→ Found db/id in object: ${dbId}`);
           if (typeof dbId === 'number') {
             await processValue(dbId, depth + 1);
@@ -954,69 +991,69 @@ export class MarkdownExporter {
 
     return uuids;
   }
-  
+
   private async replaceAsync(
-    str: string, 
-    regex: RegExp, 
+    str: string,
+    regex: RegExp,
     asyncFn: (match: string, ...args: (string | number | undefined)[]) => Promise<string>
   ): Promise<string> {
     const promises: Promise<string>[] = [];
     const matches: RegExpExecArray[] = [];
     let match;
-    
+
     while ((match = regex.exec(str)) !== null) {
       matches.push(match);
       promises.push(asyncFn(match[0], ...match.slice(1), match.index));
     }
-    
+
     const replacements = await Promise.all(promises);
     let result = str;
-    
+
     for (let i = matches.length - 1; i >= 0; i--) {
       const m = matches[i];
       result = result.slice(0, m.index) + replacements[i] + result.slice(m.index + m[0].length);
     }
-    
+
     return result;
   }
-  
+
   // File operations
   async downloadMarkdown(content: string, filename?: string): Promise<void> {
     const currentPage = await this.logseqAPI.getCurrentPage();
-    const pageName = currentPage?.name || "export";
-    const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, "-")}.md`;
-    
-    const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
+    const pageName = currentPage?.name || 'export';
+    const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, '-')}.md`;
+
+    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
     const url = this.fileAPI.createObjectURL(blob);
-    
-    const link = this.domHelpers.createElement("a") as HTMLAnchorElement;
+
+    const link = this.domHelpers.createElement('a') as HTMLAnchorElement;
     link.href = url;
     link.download = safeFileName;
-    link.style.display = "none";
-    
+    link.style.display = 'none';
+
     this.domHelpers.appendChild(link);
     link.click();
-    
+
     setTimeout(() => {
       this.domHelpers.removeChild(link);
       this.fileAPI.revokeObjectURL(url);
     }, 100);
   }
-  
+
   async copyToClipboard(content: string): Promise<void> {
     try {
       await this.fileAPI.writeToClipboard(content);
-      this.logseqAPI.showMsg("Markdown copied to clipboard!", "success");
+      this.logseqAPI.showMsg('Markdown copied to clipboard!', 'success');
     } catch (error) {
-      console.error("Failed to copy to clipboard:", error);
-      this.logseqAPI.showMsg("Failed to copy to clipboard", "error");
+      console.error('Failed to copy to clipboard:', error);
+      this.logseqAPI.showMsg('Failed to copy to clipboard', 'error');
     }
   }
-  
+
   async downloadAsZip(content: string, filename?: string, assetPath = 'assets/'): Promise<void> {
     const currentPage = await this.logseqAPI.getCurrentPage();
-    const pageName = currentPage?.name || "export";
-    const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, "-")}`;
+    const pageName = currentPage?.name || 'export';
+    const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, '-')}`;
 
     const zip = new JSZip();
     zip.file(`${safeFileName}.md`, content);
@@ -1047,7 +1084,9 @@ export class MarkdownExporter {
             const assetFileName = `${uuid}.${assetInfo.type}`;
             assetsFolder?.file(assetFileName, assetBlob);
             successCount++;
-            console.log(`✅ Added asset to ZIP: ${assetInfo.title} as ${folderName}/${assetFileName}`);
+            console.log(
+              `✅ Added asset to ZIP: ${assetInfo.title} as ${folderName}/${assetFileName}`
+            );
             this.debug(`✅ Added asset: ${assetInfo.title}`);
           } else {
             throw new Error(`Failed to fetch: ${response.status}`);
@@ -1058,64 +1097,64 @@ export class MarkdownExporter {
         }
       }
     }
-    
-    const blob = await zip.generateAsync({ type: "blob" });
+
+    const blob = await zip.generateAsync({ type: 'blob' });
     this.fileAPI.saveAs(blob, `${safeFileName}.zip`);
-    
+
     // Show status
     if (this.referencedAssets.size > 0) {
       if (failedAssets.length === 0) {
-        this.logseqAPI.showMsg(`Exported as ZIP with ${successCount} assets!`, "success");
+        this.logseqAPI.showMsg(`Exported as ZIP with ${successCount} assets!`, 'success');
       } else if (successCount > 0) {
         this.logseqAPI.showMsg(
-          `Exported as ZIP with ${successCount} assets! (${failedAssets.length} failed)`, 
-          "warning"
+          `Exported as ZIP with ${successCount} assets! (${failedAssets.length} failed)`,
+          'warning'
         );
       } else {
-        this.logseqAPI.showMsg(`Exported as ZIP! (Failed to include assets)`, "warning");
+        this.logseqAPI.showMsg(`Exported as ZIP! (Failed to include assets)`, 'warning');
       }
     } else {
-      this.logseqAPI.showMsg(`Exported as ZIP!`, "success");
+      this.logseqAPI.showMsg(`Exported as ZIP!`, 'success');
     }
   }
-  
+
   // Query support
   async exportWithCustomQuery(query: string): Promise<string> {
     try {
       const results = await this.logseqAPI.datascriptQuery(query);
-      
-      let markdown = "# Query Results\n\n";
-      
+
+      let markdown = '# Query Results\n\n';
+
       if (results?.length > 0) {
         for (const result of results) {
-          if (typeof result === "object" && result !== null) {
-            if ("block/content" in result) {
+          if (typeof result === 'object' && result !== null) {
+            if ('block/content' in result) {
               const content = MarkdownHelpers.cleanLogseqSyntax(
-                (result as Record<string, unknown>)["block/content"] as string, 
+                (result as Record<string, unknown>)['block/content'] as string,
                 DEFAULT_OPTIONS
               );
-              markdown += content + "\n\n";
+              markdown += content + '\n\n';
             } else {
-              markdown += JSON.stringify(result, null, 2) + "\n\n";
+              markdown += JSON.stringify(result, null, 2) + '\n\n';
             }
           }
         }
       } else {
-        markdown += "_No results found for the query._\n";
+        markdown += '_No results found for the query._\n';
       }
-      
+
       return markdown;
     } catch (error) {
-      console.error("Error executing query:", error);
+      console.error('Error executing query:', error);
       throw error;
     }
   }
-  
+
   // Public accessors
   getReferencedAssets(): Map<string, AssetInfo> {
     return this.referencedAssets;
   }
-  
+
   getGraphPath(): string {
     return this.graphPath;
   }

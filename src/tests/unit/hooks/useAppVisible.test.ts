@@ -62,10 +62,7 @@ describe('useAppVisible hook', () => {
 
       renderHook(() => useAppVisible());
 
-      expect(mockOn).toHaveBeenCalledWith(
-        'ui:visible:changed',
-        expect.any(Function)
-      );
+      expect(mockOn).toHaveBeenCalledWith('ui:visible:changed', expect.any(Function));
     });
 
     it('should unsubscribe from ui:visible:changed on unmount', () => {
@@ -75,10 +72,7 @@ describe('useAppVisible hook', () => {
 
       unmount();
 
-      expect(mockOff).toHaveBeenCalledWith(
-        'ui:visible:changed',
-        expect.any(Function)
-      );
+      expect(mockOff).toHaveBeenCalledWith('ui:visible:changed', expect.any(Function));
     });
 
     it('should handle visibility change events', () => {

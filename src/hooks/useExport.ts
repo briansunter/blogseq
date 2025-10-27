@@ -1,28 +1,28 @@
-import { useState, useCallback } from "react";
-import { exporter } from "../markdownExporter";
-import { Asset, ExportSettings } from "../types";
+import { useState, useCallback } from 'react';
+import { exporter } from '../markdownExporter';
+import { Asset, ExportSettings } from '../types';
 
 export const useExport = (settings: ExportSettings) => {
   const [isExporting, setIsExporting] = useState(false);
-  const [preview, setPreview] = useState("");
+  const [preview, setPreview] = useState('');
   const [assets, setAssets] = useState<Asset[]>([]);
-  const [graphPath, setGraphPath] = useState("");
+  const [graphPath, setGraphPath] = useState('');
 
   const handleExport = useCallback(async () => {
     setIsExporting(true);
     try {
       const markdown = await exporter.exportCurrentPage(settings);
       setPreview(markdown);
-      
+
       const referencedAssets = exporter.getReferencedAssets();
       const path = exporter.getGraphPath();
-      
+
       const assetsList: Asset[] = Array.from(referencedAssets.entries()).map(([uuid, info]) => ({
         fileName: `${uuid}.${info.type}`,
         fullPath: `${path}/assets/${uuid}.${info.type}`,
-        title: info.title || `${uuid}.${info.type}`
+        title: info.title || `${uuid}.${info.type}`,
       }));
-      
+
       setAssets(assetsList);
       setGraphPath(path);
       return { success: true, markdown };
@@ -38,14 +38,14 @@ export const useExport = (settings: ExportSettings) => {
     try {
       const markdown = await exporter.exportCurrentPage(settings);
       await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
-      logseq.UI.showMsg("Page exported as ZIP successfully!", "success");
+      logseq.UI.showMsg('Page exported as ZIP successfully!', 'success');
       window.logseq.hideMainUI();
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage === "NO_ACTIVE_PAGE") {
-        logseq.UI.showMsg("⚠️ Please open a page first before exporting", "warning");
+      if (errorMessage === 'NO_ACTIVE_PAGE') {
+        logseq.UI.showMsg('⚠️ Please open a page first before exporting', 'warning');
       } else {
-        logseq.UI.showMsg("Export failed. Check console for details.", "error");
+        logseq.UI.showMsg('Export failed. Check console for details.', 'error');
       }
       window.logseq.hideMainUI();
     }
@@ -54,7 +54,7 @@ export const useExport = (settings: ExportSettings) => {
   const downloadMarkdown = useCallback(async () => {
     if (preview) {
       await exporter.downloadMarkdown(preview);
-      logseq.UI.showMsg("Markdown downloaded!", "success");
+      logseq.UI.showMsg('Markdown downloaded!', 'success');
     }
   }, [preview]);
 
@@ -79,6 +79,6 @@ export const useExport = (settings: ExportSettings) => {
     quickExport,
     downloadMarkdown,
     copyToClipboard,
-    downloadAsZip
+    downloadAsZip,
   };
 };

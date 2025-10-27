@@ -1,5 +1,5 @@
-import { BlockEntity, PageEntity } from "@logseq/libs/dist/LSPlugin";
-import { LogseqAPI } from "../../markdownExporter";
+import { BlockEntity, PageEntity } from '@logseq/libs/dist/LSPlugin';
+import { LogseqAPI } from '../../markdownExporter';
 
 /**
  * Type for DataScript query patterns
@@ -40,13 +40,16 @@ export interface MockLogseqState {
   blocks: Map<string, BlockEntity>;
   currentPage: PageEntity | null;
   currentGraph: { path: string; name?: string } | null;
-  assets: Map<string, {
-    uuid: string;
-    type: string;
-    entity: PageEntity | BlockEntity;
-  }>;
+  assets: Map<
+    string,
+    {
+      uuid: string;
+      type: string;
+      entity: PageEntity | BlockEntity;
+    }
+  >;
   propertyDefinitions: Map<string, string>;
-  messages: Array<{ message: string; type: "success" | "error" | "warning" }>;
+  messages: Array<{ message: string; type: 'success' | 'error' | 'warning' }>;
 }
 
 /**
@@ -72,7 +75,7 @@ export class MockLogseqAPI implements LogseqAPI {
     getPageBlocksTree: [] as string[],
     getCurrentGraph: [] as unknown[],
     datascriptQuery: [] as string[],
-    showMsg: [] as Array<{ message: string; type: "success" | "error" | "warning" }>,
+    showMsg: [] as Array<{ message: string; type: 'success' | 'error' | 'warning' }>,
   };
 
   constructor(initialState?: Partial<MockLogseqState>) {
@@ -153,7 +156,7 @@ export class MockLogseqAPI implements LogseqAPI {
 
         const results: [string, string][] = [];
         for (const [key] of Object.entries(page.properties)) {
-          const cleanKey = key.startsWith(":") ? key : `:${key}`;
+          const cleanKey = key.startsWith(':') ? key : `:${key}`;
           const title = state.propertyDefinitions.get(cleanKey);
           if (title) {
             results.push([cleanKey, title]);
@@ -172,7 +175,7 @@ export class MockLogseqAPI implements LogseqAPI {
 
         const title = titleMatch[1];
         for (const [uuid, asset] of state.assets) {
-          const assetTitle = "name" in asset.entity ? asset.entity.name : undefined;
+          const assetTitle = 'name' in asset.entity ? asset.entity.name : undefined;
           if (assetTitle === title) {
             return [[{ $uuid: uuid }, asset.type]];
           }
@@ -193,7 +196,7 @@ export class MockLogseqAPI implements LogseqAPI {
         const assets = Array.from(state.assets.values());
         if (dbId < assets.length) {
           const asset = assets[dbId];
-          const title = "name" in asset.entity ? asset.entity.name : asset.uuid;
+          const title = 'name' in asset.entity ? asset.entity.name : asset.uuid;
           return [[{ $uuid: asset.uuid }, asset.type, title]];
         }
         return [];
@@ -268,7 +271,7 @@ export class MockLogseqAPI implements LogseqAPI {
 
       // Check assets (which can be pages)
       const asset = this.state.assets.get(uuid);
-      if (asset && "name" in asset.entity) {
+      if (asset && 'name' in asset.entity) {
         return asset.entity as PageEntity;
       }
 
@@ -279,10 +282,7 @@ export class MockLogseqAPI implements LogseqAPI {
   /**
    * Get a block by UUID
    */
-  async getBlock(
-    uuid: string,
-    opts?: { includeChildren?: boolean }
-  ): Promise<BlockEntity | null> {
+  async getBlock(uuid: string, opts?: { includeChildren?: boolean }): Promise<BlockEntity | null> {
     this.calls.getBlock.push({ uuid, opts });
 
     return this.handleMethodSimulation('getBlock', () => {
@@ -332,9 +332,7 @@ export class MockLogseqAPI implements LogseqAPI {
     return this.handleMethodSimulation('datascriptQuery', () => {
       // Try each registered pattern
       for (const { pattern, handler } of this.queryPatterns) {
-        const matches = typeof pattern === "string"
-          ? query.includes(pattern)
-          : pattern.test(query);
+        const matches = typeof pattern === 'string' ? query.includes(pattern) : pattern.test(query);
 
         if (matches) {
           const result = handler(query, this.state);
@@ -365,7 +363,7 @@ export class MockLogseqAPI implements LogseqAPI {
   /**
    * Show a message to the user
    */
-  showMsg(message: string, type: "success" | "error" | "warning"): void {
+  showMsg(message: string, type: 'success' | 'error' | 'warning'): void {
     this.calls.showMsg.push({ message, type });
     this.state.messages.push({ message, type });
   }
@@ -480,8 +478,8 @@ export class MockLogseqAPI implements LogseqAPI {
     // Use a regex pattern with 's' flag to match across newlines
     const assetQueryPattern = new RegExp(
       `\\[:find\\s+\\?type\\s+\\(pull\\s+\\?e\\s+\\[\\*\\]\\).*` +
-      `\\[\\?e\\s+:block/uuid\\s+#uuid\\s+"${uuid}"\\].*` +
-      `\\[\\?e\\s+:logseq\\.property\\.asset/type\\s+\\?type\\]\\]`,
+        `\\[\\?e\\s+:block/uuid\\s+#uuid\\s+"${uuid}"\\].*` +
+        `\\[\\?e\\s+:logseq\\.property\\.asset/type\\s+\\?type\\]\\]`,
       's'
     );
 
@@ -544,13 +542,10 @@ export class MockLogseqAPI implements LogseqAPI {
    */
   addDataScriptQueryResponse(query: string, response: unknown[][]): this {
     const normalizedQuery = query.replace(/\s+/g, ' ').trim();
-    this.addQueryPattern(
-      normalizedQuery,
-      (incomingQuery: string) => {
-        const normalizedIncoming = incomingQuery.replace(/\s+/g, ' ').trim();
-        return normalizedIncoming === normalizedQuery ? response : [];
-      }
-    );
+    this.addQueryPattern(normalizedQuery, (incomingQuery: string) => {
+      const normalizedIncoming = incomingQuery.replace(/\s+/g, ' ').trim();
+      return normalizedIncoming === normalizedQuery ? response : [];
+    });
     return this;
   }
 
@@ -640,7 +635,7 @@ export class MockLogseqAPI implements LogseqAPI {
   /**
    * Get all messages shown
    */
-  getMessages(): Array<{ message: string; type: "success" | "error" | "warning" }> {
+  getMessages(): Array<{ message: string; type: 'success' | 'error' | 'warning' }> {
     return [...this.state.messages];
   }
 
@@ -649,7 +644,7 @@ export class MockLogseqAPI implements LogseqAPI {
   /**
    * Configure the mock to throw an error on next call to a method
    */
-  throwOnNextCall(method: keyof LogseqAPI, error: Error = new Error("Mock error")): this {
+  throwOnNextCall(method: keyof LogseqAPI, error: Error = new Error('Mock error')): this {
     this.errorSimulations.set(method, {
       method,
       error,
@@ -661,7 +656,11 @@ export class MockLogseqAPI implements LogseqAPI {
   /**
    * Configure the mock to throw an error after N calls to a method
    */
-  throwAfterNCalls(method: keyof LogseqAPI, n: number, error: Error = new Error("Mock error")): this {
+  throwAfterNCalls(
+    method: keyof LogseqAPI,
+    n: number,
+    error: Error = new Error('Mock error')
+  ): this {
     this.errorSimulations.set(method, {
       method,
       error,
@@ -769,8 +768,9 @@ export class MockLogseqAPI implements LogseqAPI {
     }
 
     if (method === 'getBlock') {
-      return (callList as Array<{ uuid: string; opts?: { includeChildren?: boolean } }>)
-        .some(call => args.includes(call.uuid));
+      return (callList as Array<{ uuid: string; opts?: { includeChildren?: boolean } }>).some(
+        call => args.includes(call.uuid)
+      );
     }
 
     return false;
@@ -860,10 +860,7 @@ export class MockLogseqAPI implements LogseqAPI {
   /**
    * @deprecated Use throwOnNextCall instead
    */
-  throwErrorOn(
-    method: keyof LogseqAPI,
-    error: Error = new Error("Mock error")
-  ): this {
+  throwErrorOn(method: keyof LogseqAPI, error: Error = new Error('Mock error')): this {
     return this.throwOnNextCall(method, error);
   }
 
@@ -871,6 +868,6 @@ export class MockLogseqAPI implements LogseqAPI {
    * @deprecated Use throwOnNextCall with a null return simulation instead
    */
   returnNullOn(method: keyof LogseqAPI): this {
-    return this.throwOnNextCall(method, new Error("Method returned null"));
+    return this.throwOnNextCall(method, new Error('Method returned null'));
   }
 }

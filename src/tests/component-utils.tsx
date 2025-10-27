@@ -8,15 +8,10 @@ import { ErrorBoundary } from '../components/ErrorBoundary';
  * Custom render function that wraps components with required providers
  * (ToastProvider, ErrorBoundary)
  */
-export const renderWithProviders = (
-  ui: ReactElement,
-  options?: Omit<RenderOptions, 'wrapper'>
-) => {
+export const renderWithProviders = (ui: ReactElement, options?: Omit<RenderOptions, 'wrapper'>) => {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
     <ErrorBoundary>
-      <ToastProvider>
-        {children}
-      </ToastProvider>
+      <ToastProvider>{children}</ToastProvider>
     </ErrorBoundary>
   );
 

@@ -1,5 +1,5 @@
 // Core types
-export type PreviewMode = "raw" | "rendered";
+export type PreviewMode = 'raw' | 'rendered';
 
 export type Asset = {
   fileName: string;

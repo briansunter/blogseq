@@ -8,7 +8,7 @@ import {
   mockPageBlocksResponse,
   MockLogseqAPI,
   MockFileAPI,
-  MockDOMHelpers
+  MockDOMHelpers,
 } from '../../test-utils';
 
 describe('Real-world Asset Detection', () => {
@@ -24,12 +24,12 @@ describe('Real-world Asset Detection', () => {
       saveAs: vi.fn(),
       createObjectURL: vi.fn(() => 'blob://test-url'),
       revokeObjectURL: vi.fn(),
-      writeToClipboard: vi.fn()
+      writeToClipboard: vi.fn(),
     };
     mockDOMHelpers = {
       createElement: vi.fn(),
       appendChild: vi.fn(),
-      removeChild: vi.fn()
+      removeChild: vi.fn(),
     };
 
     exporter = new MarkdownExporter(mockAPI, mockFileAPI, mockDOMHelpers);
@@ -46,14 +46,14 @@ describe('Real-world Asset Detection', () => {
     // Mock the page
     const page = createMockPage({
       name: 'Test Page',
-      uuid: 'page-uuid'
+      uuid: 'page-uuid',
     });
 
     // Create blocks matching the real structure
     // Block that references the asset
     const blockWithRef = createMockBlock({
       uuid: blockWithRefUuid,
-      content: `[[${assetUuid}]]` // This is the reference to the asset
+      content: `[[${assetUuid}]]`, // This is the reference to the asset
     });
 
     // The asset block itself (would be elsewhere in the graph)
@@ -62,8 +62,8 @@ describe('Real-world Asset Detection', () => {
       content: '', // Assets typically have no content
       properties: {
         'logseq.property.asset/type': 'jpeg',
-        'block/title': 'Lost Concert'
-      }
+        'block/title': 'Lost Concert',
+      },
     });
 
     mockCurrentPageResponse(mockAPI, page);
@@ -76,23 +76,27 @@ describe('Real-world Asset Detection', () => {
       if (query.includes(assetUuid) && query.includes(':logseq.property.asset/type')) {
         // Return structure matching real Logseq DataScript response
         return Promise.resolve([
-          ['jpeg', {
-            ':block/tx-id': 537023847,
-            ':logseq.property.asset/type': 'jpeg',
-            ':block/uuid': { '$uuid': assetUuid },
-            ':logseq.property.embedding/hnsw-label-updated-at': 1758590618337,
-            ':block/updated-at': 1758590618337,
-            ':block/refs': [{ ':db/id': 9 }, { ':db/id': 36868 }],
-            ':logseq.property.asset/checksum': '6b95c98844e4ec5543e8b498fbe5c4ca3de889950cf1d197a745f7713bed2764',
-            ':block/created-at': 1758590611540,
-            ':block/title': 'Lost Concert',
-            ':logseq.property.asset/size': 214301,
-            ':db/id': 73304,
-            ':block/parent': { ':db/id': 55549 },
-            ':block/order': 'a08',
-            ':block/page': { ':db/id': 55549 },
-            ':block/tags': [{ ':db/id': 36868 }]
-          }]
+          [
+            'jpeg',
+            {
+              ':block/tx-id': 537023847,
+              ':logseq.property.asset/type': 'jpeg',
+              ':block/uuid': { $uuid: assetUuid },
+              ':logseq.property.embedding/hnsw-label-updated-at': 1758590618337,
+              ':block/updated-at': 1758590618337,
+              ':block/refs': [{ ':db/id': 9 }, { ':db/id': 36868 }],
+              ':logseq.property.asset/checksum':
+                '6b95c98844e4ec5543e8b498fbe5c4ca3de889950cf1d197a745f7713bed2764',
+              ':block/created-at': 1758590611540,
+              ':block/title': 'Lost Concert',
+              ':logseq.property.asset/size': 214301,
+              ':db/id': 73304,
+              ':block/parent': { ':db/id': 55549 },
+              ':block/order': 'a08',
+              ':block/page': { ':db/id': 55549 },
+              ':block/tags': [{ ':db/id': 36868 }],
+            },
+          ],
         ]);
       }
       return Promise.resolve([]);
@@ -119,7 +123,7 @@ describe('Real-world Asset Detection', () => {
     const result = await exporter.exportCurrentPage({
       includePageName: false,
       preserveBlockRefs: true,
-      debug: true // Enable debug logging
+      debug: true, // Enable debug logging
     });
 
     console.log('Final export result:', result);
@@ -138,13 +142,13 @@ describe('Real-world Asset Detection', () => {
     // Block with mixed content
     const blockWithMixedContent = createMockBlock({
       uuid: 'block-1',
-      content: `Here's an ultrawide monitor image: [[${assetUuid}]]`
+      content: `Here's an ultrawide monitor image: [[${assetUuid}]]`,
     });
 
     // Block with just the reference
     const blockWithJustRef = createMockBlock({
       uuid: 'block-2',
-      content: `[[${assetUuid}]]`
+      content: `[[${assetUuid}]]`,
     });
 
     mockCurrentPageResponse(mockAPI, page);
@@ -154,11 +158,14 @@ describe('Real-world Asset Detection', () => {
     mockAPI.datascriptQuery.mockImplementation((query: string) => {
       if (query.includes(assetUuid) && query.includes(':logseq.property.asset/type')) {
         return Promise.resolve([
-          ['jpeg', {
-            ':block/title': 'Lost Concert',
-            ':block/uuid': { '$uuid': assetUuid },
-            ':logseq.property.asset/type': 'jpeg'
-          }]
+          [
+            'jpeg',
+            {
+              ':block/title': 'Lost Concert',
+              ':block/uuid': { $uuid: assetUuid },
+              ':logseq.property.asset/type': 'jpeg',
+            },
+          ],
         ]);
       }
       return Promise.resolve([]);
@@ -166,7 +173,7 @@ describe('Real-world Asset Detection', () => {
 
     const result = await exporter.exportCurrentPage({
       includePageName: false,
-      preserveBlockRefs: true
+      preserveBlockRefs: true,
     });
 
     // First block should have text and image

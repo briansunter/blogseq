@@ -1,4 +1,4 @@
-import { DOMHelpers } from "../../markdownExporter";
+import { DOMHelpers } from '../../markdownExporter';
 
 /**
  * Mock HTMLElement for testing
@@ -137,7 +137,7 @@ export class MockDOMHelpers implements DOMHelpers {
    */
   getElementsByTagName(tagName: string): MockHTMLElement[] {
     const upperTagName = tagName.toUpperCase();
-    return this.elements.filter((el) => el.tagName === upperTagName);
+    return this.elements.filter(el => el.tagName === upperTagName);
   }
 
   /**
@@ -165,7 +165,7 @@ export class MockDOMHelpers implements DOMHelpers {
    * Count how many times a tag was created
    */
   countCreated(tagName: string): number {
-    return this.calls.createElement.filter((tag) => tag === tagName).length;
+    return this.calls.createElement.filter(tag => tag === tagName).length;
   }
 
   /**
@@ -177,7 +177,7 @@ export class MockDOMHelpers implements DOMHelpers {
     style: Record<string, string>;
   } | null {
     const mockElement = element as unknown as MockHTMLElement;
-    if (mockElement.tagName !== "A") {
+    if (mockElement.tagName !== 'A') {
       return null;
     }
 
@@ -196,7 +196,7 @@ export class MockDOMHelpers implements DOMHelpers {
     href?: string;
     download?: string;
   }> {
-    return this.getElementsByTagName("a").map((el) => ({
+    return this.getElementsByTagName('a').map(el => ({
       element: el,
       href: el.href,
       download: el.download,
@@ -233,7 +233,10 @@ export class MockDOMHelpers implements DOMHelpers {
   /**
    * Verify a download operation occurred
    */
-  verifyDownload(expectedFilename?: string, expectedHref?: string): {
+  verifyDownload(
+    expectedFilename?: string,
+    expectedHref?: string
+  ): {
     success: boolean;
     anchor?: MockHTMLElement;
     error?: string;
@@ -243,7 +246,7 @@ export class MockDOMHelpers implements DOMHelpers {
     if (anchors.length === 0) {
       return {
         success: false,
-        error: "No anchor elements created",
+        error: 'No anchor elements created',
       };
     }
 
@@ -273,7 +276,7 @@ export class MockDOMHelpers implements DOMHelpers {
       return {
         success: false,
         anchor: lastAnchor.element,
-        error: "Anchor was not appended to body",
+        error: 'Anchor was not appended to body',
       };
     }
 
@@ -281,7 +284,7 @@ export class MockDOMHelpers implements DOMHelpers {
       return {
         success: false,
         anchor: lastAnchor.element,
-        error: "Anchor was not removed from body",
+        error: 'Anchor was not removed from body',
       };
     }
 
@@ -295,9 +298,9 @@ export class MockDOMHelpers implements DOMHelpers {
    * Print current state (for debugging)
    */
   debugPrint(): void {
-    console.log("=== MockDOMHelpers State ===");
-    console.log("Created elements:", this.calls.createElement);
-    console.log("Currently appended:", this.appendedElements.length);
-    console.log("Anchors:", this.getAnchors());
+    console.log('=== MockDOMHelpers State ===');
+    console.log('Created elements:', this.calls.createElement);
+    console.log('Currently appended:', this.appendedElements.length);
+    console.log('Anchors:', this.getAnchors());
   }
 }

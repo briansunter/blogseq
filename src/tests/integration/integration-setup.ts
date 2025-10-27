@@ -48,7 +48,7 @@ export const createIntegrationLogseqAPI = (
       }),
       getPageBlocksTree: vi.fn(async (pageUuid: string) => {
         const pageBlocks: BlockEntity[] = [];
-        blocks.forEach((block) => {
+        blocks.forEach(block => {
           if (String(block.page?.id) === pageUuid || block.page?.uuid === pageUuid) {
             pageBlocks.push(block);
           }
@@ -131,7 +131,7 @@ export const addBlocksToPage = (
 ): BlockEntity[] => {
   const newBlocks: BlockEntity[] = [];
 
-  blockContents.forEach((content) => {
+  blockContents.forEach(content => {
     const block: BlockEntity = {
       id: Date.now() + Math.random(),
       uuid: `block-${Date.now()}-${Math.random()}`,
@@ -164,7 +164,7 @@ export const addNestedBlocksToPage = (
 ): BlockEntity[] => {
   const createdBlocks: BlockEntity[] = [];
 
-  structure.forEach((item) => {
+  structure.forEach(item => {
     const parentBlock: BlockEntity = {
       id: Date.now() + Math.random(),
       uuid: `block-${Date.now()}-${Math.random()}`,
@@ -182,7 +182,7 @@ export const addNestedBlocksToPage = (
 
     // Add children if specified
     if (item.children && Array.isArray(item.children)) {
-      item.children.forEach((childContent) => {
+      item.children.forEach(childContent => {
         const childBlock: BlockEntity = {
           id: Date.now() + Math.random(),
           uuid: `block-${Date.now()}-${Math.random()}`,
@@ -269,7 +269,7 @@ export const setupIntegrationTest = (
 
   if (Array.isArray(fixtureData)) {
     // Multi-page fixture
-    fixtureData.forEach((pageData) => {
+    fixtureData.forEach(pageData => {
       const page = addPageToContext(context, pageData.name);
       addBlocksToPage(context, page.uuid, pageData.blocks);
     });

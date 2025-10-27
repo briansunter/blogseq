@@ -42,7 +42,7 @@ describe('Asset Handling Integration', () => {
       const context = setupIntegrationTest('pageWithAssets');
 
       const blocks = Array.from(context.blocks.values());
-      const assetBlocks = blocks.filter((b) => b.content.includes('!['));
+      const assetBlocks = blocks.filter(b => b.content.includes('!['));
 
       expect(assetBlocks.length).toBeGreaterThan(0);
     });
@@ -51,7 +51,7 @@ describe('Asset Handling Integration', () => {
       const context = setupIntegrationTest('pageWithAssets');
 
       const blocks = Array.from(context.blocks.values());
-      const docBlocks = blocks.filter((b) => b.content.includes('['));
+      const docBlocks = blocks.filter(b => b.content.includes('['));
 
       expect(docBlocks.length).toBeGreaterThan(0);
     });
@@ -64,7 +64,7 @@ describe('Asset Handling Integration', () => {
         'assets/video.mp4',
       ];
 
-      assetPaths.forEach((path) => {
+      assetPaths.forEach(path => {
         const ext = path.split('.').pop();
         expect(ext).toBeTruthy();
         expect(ext?.length).toBeLessThanOrEqual(4);
@@ -90,8 +90,8 @@ describe('Asset Handling Integration', () => {
       assetsFolder?.file('doc-uuid.pdf', new Blob(['pdf content']));
 
       const files = Object.keys(zip.files);
-      expect(files.some((f) => f.includes('image-uuid.png'))).toBe(true);
-      expect(files.some((f) => f.includes('doc-uuid.pdf'))).toBe(true);
+      expect(files.some(f => f.includes('image-uuid.png'))).toBe(true);
+      expect(files.some(f => f.includes('doc-uuid.pdf'))).toBe(true);
     });
 
     it('should maintain asset folder structure', async () => {
@@ -105,9 +105,7 @@ describe('Asset Handling Integration', () => {
       const newZip = new JSZip();
       const extracted = await newZip.loadAsync(blob);
 
-      const assetFiles = Object.keys(extracted.files).filter((f) =>
-        f.includes('assets/')
-      );
+      const assetFiles = Object.keys(extracted.files).filter(f => f.includes('assets/'));
       expect(assetFiles.length).toBeGreaterThan(0);
     });
   });
@@ -255,7 +253,7 @@ Text here.`;
       assetsFolder?.file('image.png', new Blob(['image content']));
 
       const files = Object.keys(zip.files);
-      const imageFiles = files.filter((f) => f.includes('image.png'));
+      const imageFiles = files.filter(f => f.includes('image.png'));
 
       expect(imageFiles.length).toBeLessThanOrEqual(1);
     });
@@ -364,8 +362,8 @@ Text here.`;
       const newZip = new JSZip();
       const extracted = await newZip.loadAsync(blob);
 
-      const assetFiles = Object.keys(extracted.files).filter((f) =>
-        f.startsWith('assets/') && !f.endsWith('/')
+      const assetFiles = Object.keys(extracted.files).filter(
+        f => f.startsWith('assets/') && !f.endsWith('/')
       );
       expect(assetFiles.length).toBe(3);
     });
@@ -429,11 +427,8 @@ Text here.`;
       const pages = Array.from(context.pages.values());
       const assetsFolder = zip.folder('assets');
 
-      pages.forEach((page) => {
-        zip.file(
-          `${page.name}.md`,
-          `# ${page.name}\n\n![Shared](assets/shared.png)`
-        );
+      pages.forEach(page => {
+        zip.file(`${page.name}.md`, `# ${page.name}\n\n![Shared](assets/shared.png)`);
       });
 
       // Add shared asset only once
@@ -445,9 +440,7 @@ Text here.`;
       const newZip = new JSZip();
       const extracted = await newZip.loadAsync(blob);
 
-      const sharedAssets = Object.keys(extracted.files).filter((f) =>
-        f.includes('shared.png')
-      );
+      const sharedAssets = Object.keys(extracted.files).filter(f => f.includes('shared.png'));
       expect(sharedAssets.length).toBe(1);
     });
   });
@@ -472,7 +465,7 @@ Text here.`;
       const extracted = await newZip.loadAsync(blob);
 
       const files = Object.keys(extracted.files);
-      expect(files.some((f) => f.includes('screenshot.png'))).toBe(true);
+      expect(files.some(f => f.includes('screenshot.png'))).toBe(true);
     });
   });
 });

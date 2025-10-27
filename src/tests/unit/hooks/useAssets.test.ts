@@ -86,11 +86,7 @@ describe('useAssets hook', () => {
         await result.current.downloadAsset(mockAsset);
       });
 
-      expect(mockXHR.open).toHaveBeenCalledWith(
-        'GET',
-        `file://${mockAsset.fullPath}`,
-        true
-      );
+      expect(mockXHR.open).toHaveBeenCalledWith('GET', `file://${mockAsset.fullPath}`, true);
       expect(mockXHR.send).toHaveBeenCalled();
     });
 
@@ -116,14 +112,8 @@ describe('useAssets hook', () => {
         }
       });
 
-      expect(saveAs).toHaveBeenCalledWith(
-        expect.any(Blob),
-        mockAsset.fileName
-      );
-      expect(logseq.UI.showMsg).toHaveBeenCalledWith(
-        `Downloaded ${mockAsset.fileName}`,
-        'success'
-      );
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), mockAsset.fileName);
+      expect(logseq.UI.showMsg).toHaveBeenCalledWith(`Downloaded ${mockAsset.fileName}`, 'success');
     });
 
     it('should download asset on status 0 (file:// success)', async () => {
@@ -138,10 +128,7 @@ describe('useAssets hook', () => {
         }
       });
 
-      expect(saveAs).toHaveBeenCalledWith(
-        expect.any(Blob),
-        mockAsset.fileName
-      );
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), mockAsset.fileName);
     });
 
     it('should copy path to clipboard on XHR error', async () => {
@@ -176,10 +163,7 @@ describe('useAssets hook', () => {
       });
 
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockAsset.fullPath);
-      expect(logseq.UI.showMsg).toHaveBeenCalledWith(
-        `Path copied: ${mockAsset.fullPath}`,
-        'info'
-      );
+      expect(logseq.UI.showMsg).toHaveBeenCalledWith(`Path copied: ${mockAsset.fullPath}`, 'info');
     });
 
     it('should handle file:// protocol correctly', async () => {
@@ -189,11 +173,7 @@ describe('useAssets hook', () => {
         await result.current.downloadAsset(mockAsset);
       });
 
-      expect(mockXHR.open).toHaveBeenCalledWith(
-        'GET',
-        expect.stringContaining('file://'),
-        true
-      );
+      expect(mockXHR.open).toHaveBeenCalledWith('GET', expect.stringContaining('file://'), true);
     });
   });
 
@@ -258,14 +238,9 @@ describe('useAssets hook', () => {
         });
 
         expect(navigator.clipboard.write).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({})
-          ])
+          expect.arrayContaining([expect.objectContaining({})])
         );
-        expect(logseq.UI.showMsg).toHaveBeenCalledWith(
-          'Image copied to clipboard!',
-          'success'
-        );
+        expect(logseq.UI.showMsg).toHaveBeenCalledWith('Image copied to clipboard!', 'success');
       });
 
       it('should handle JPG MIME type correctly (image/jpeg)', async () => {
@@ -365,9 +340,7 @@ describe('useAssets hook', () => {
           await result.current.copyAssetPath(mockDocumentAsset);
         });
 
-        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-          mockDocumentAsset.fullPath
-        );
+        expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockDocumentAsset.fullPath);
         expect(logseq.UI.showMsg).toHaveBeenCalledWith(
           `Path copied: ${mockDocumentAsset.fileName}`,
           'success'
@@ -406,9 +379,7 @@ describe('useAssets hook', () => {
       it('should handle exceptions gracefully', async () => {
         const { result } = renderHook(() => useAssets());
 
-        vi.mocked(navigator.clipboard.writeText).mockRejectedValue(
-          new Error('Clipboard error')
-        );
+        vi.mocked(navigator.clipboard.writeText).mockRejectedValue(new Error('Clipboard error'));
 
         await act(async () => {
           await result.current.copyAssetPath(mockDocumentAsset);
@@ -515,11 +486,7 @@ describe('useAssets hook', () => {
         await result.current.downloadAsset(mockAsset);
       });
 
-      expect(mockXHR.open).toHaveBeenCalledWith(
-        'GET',
-        expect.stringContaining('file://'),
-        true
-      );
+      expect(mockXHR.open).toHaveBeenCalledWith('GET', expect.stringContaining('file://'), true);
     });
 
     it('should use file:// protocol for image copying', async () => {
@@ -529,11 +496,7 @@ describe('useAssets hook', () => {
         await result.current.copyAssetPath(mockAsset);
       });
 
-      expect(mockXHR.open).toHaveBeenCalledWith(
-        'GET',
-        expect.stringContaining('file://'),
-        true
-      );
+      expect(mockXHR.open).toHaveBeenCalledWith('GET', expect.stringContaining('file://'), true);
     });
 
     it('should handle paths with spaces', async () => {
@@ -549,11 +512,7 @@ describe('useAssets hook', () => {
         await result.current.downloadAsset(asset);
       });
 
-      expect(mockXHR.open).toHaveBeenCalledWith(
-        'GET',
-        `file://${asset.fullPath}`,
-        true
-      );
+      expect(mockXHR.open).toHaveBeenCalledWith('GET', `file://${asset.fullPath}`, true);
     });
 
     it('should handle paths with special characters', async () => {
@@ -569,11 +528,7 @@ describe('useAssets hook', () => {
         await result.current.downloadAsset(asset);
       });
 
-      expect(mockXHR.open).toHaveBeenCalledWith(
-        'GET',
-        expect.stringContaining('file://'),
-        true
-      );
+      expect(mockXHR.open).toHaveBeenCalledWith('GET', expect.stringContaining('file://'), true);
     });
   });
 
@@ -647,9 +602,7 @@ describe('useAssets hook', () => {
         await result.current.copyAssetPath(mockDocumentAsset);
       });
 
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        mockDocumentAsset.fullPath
-      );
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(mockDocumentAsset.fullPath);
     });
 
     it('should use ClipboardItem for image data', async () => {

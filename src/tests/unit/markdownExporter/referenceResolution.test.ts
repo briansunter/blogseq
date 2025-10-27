@@ -12,7 +12,7 @@ import {
   mockGraphResponse,
   type MockLogseqAPI,
   type MockFileAPI,
-  type MockDOMHelpers
+  type MockDOMHelpers,
 } from '../../test-utils';
 import { vi } from 'vitest';
 
@@ -30,13 +30,13 @@ describe('MarkdownExporter - Reference Resolution', () => {
       saveAs: vi.fn(),
       createObjectURL: vi.fn(() => 'blob://test-url'),
       revokeObjectURL: vi.fn(),
-      writeToClipboard: vi.fn()
+      writeToClipboard: vi.fn(),
     };
 
     mockDOMHelpers = {
       createElement: vi.fn(),
       appendChild: vi.fn(),
-      removeChild: vi.fn()
+      removeChild: vi.fn(),
     };
 
     exporter = new MarkdownExporter(mockAPI, mockFileAPI, mockDOMHelpers);
@@ -54,7 +54,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const pageRefUuid = '12345678-1234-1234-1234-123456789abc';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `Link to [[${pageRefUuid}]]`
+        content: `Link to [[${pageRefUuid}]]`,
       });
 
       mockAPI.Editor.getPage.mockImplementation((uuid: string) => {
@@ -71,7 +71,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain('Link to Referenced Page');
@@ -84,7 +84,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid2 = '22222222-2222-2222-2222-222222222222';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `First [[${uuid1}]] and second [[${uuid2}]]`
+        content: `First [[${uuid1}]] and second [[${uuid2}]]`,
       });
 
       mockAPI.Editor.getPage.mockImplementation((uuid: string) => {
@@ -100,7 +100,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain('First Page One');
@@ -112,7 +112,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const unresolvedUuid = '550e8400-e29b-41d4-a716-888888888888';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440110',
-        content: `Link to [[${unresolvedUuid}]]`
+        content: `Link to [[${unresolvedUuid}]]`,
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -130,7 +130,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includeProperties: false,
         preserveBlockRefs: true,
         removeLogseqSyntax: false,
-        resolvePlainUuids: false
+        resolvePlainUuids: false,
       });
 
       expect(result).toContain(`[[${unresolvedUuid}]]`);
@@ -141,7 +141,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const mixedCaseUuid = 'AbCdEf12-3456-7890-ABCD-EF1234567890';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `Link to [[${mixedCaseUuid}]]`
+        content: `Link to [[${mixedCaseUuid}]]`,
       });
 
       mockAPI.Editor.getPage.mockImplementation((uuid: string) => {
@@ -158,7 +158,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain('Mixed Case Page');
@@ -171,7 +171,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const blockRefUuid = '550e8400-e29b-41d4-a716-446655440163';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440003',
-        content: `Reference to ((${blockRefUuid}))`
+        content: `Reference to ((${blockRefUuid}))`,
       });
 
       mockAPI.Editor.getBlock.mockImplementation((uuid: string) => {
@@ -179,7 +179,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
           return Promise.resolve({
             uuid: blockRefUuid,
             content: 'Referenced block content',
-            properties: {}
+            properties: {},
           } as BlockEntity);
         }
         return Promise.resolve(null);
@@ -192,7 +192,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain('Reference to Referenced block content');
@@ -205,12 +205,22 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid2 = '550e8402-e29b-41d4-a716-222222222222';
       const block = createMockBlock({
         uuid: 'block-main',
-        content: `First ((${uuid1})) then ((${uuid2}))`
+        content: `First ((${uuid1})) then ((${uuid2}))`,
       });
 
       mockAPI.Editor.getBlock.mockImplementation((uuid: string) => {
-        if (uuid === uuid1) return Promise.resolve({ uuid: uuid1, content: 'Block One', properties: {} } as BlockEntity);
-        if (uuid === uuid2) return Promise.resolve({ uuid: uuid2, content: 'Block Two', properties: {} } as BlockEntity);
+        if (uuid === uuid1)
+          return Promise.resolve({
+            uuid: uuid1,
+            content: 'Block One',
+            properties: {},
+          } as BlockEntity);
+        if (uuid === uuid2)
+          return Promise.resolve({
+            uuid: uuid2,
+            content: 'Block Two',
+            properties: {},
+          } as BlockEntity);
         return Promise.resolve(null);
       });
 
@@ -221,7 +231,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain('First Block One');
@@ -233,7 +243,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const unresolvedUuid = '550e8400-e29b-41d4-a716-999999999999';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440225',
-        content: `Reference to ((${unresolvedUuid}))`
+        content: `Reference to ((${unresolvedUuid}))`,
       });
 
       mockAPI.Editor.getBlock.mockResolvedValue(null);
@@ -245,7 +255,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain('[Unresolved:');
@@ -257,7 +267,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const nestedUuid = '550e8400-e29b-41d4-a716-446655440252';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `Reference to ((${mainUuid}))`
+        content: `Reference to ((${mainUuid}))`,
       });
 
       mockAPI.Editor.getBlock.mockImplementation((uuid: string) => {
@@ -265,14 +275,14 @@ describe('MarkdownExporter - Reference Resolution', () => {
           return Promise.resolve({
             uuid: mainUuid,
             content: `Nested reference ((${nestedUuid}))`,
-            properties: {}
+            properties: {},
           } as BlockEntity);
         }
         if (uuid === nestedUuid) {
           return Promise.resolve({
             uuid: nestedUuid,
             content: 'Final content',
-            properties: {}
+            properties: {},
           } as BlockEntity);
         }
         return Promise.resolve(null);
@@ -285,7 +295,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain('Final content');
@@ -296,7 +306,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const blockRefUuid = '550e8400-e29b-41d4-a716-446655440291';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440008',
-        content: `Reference to ((${blockRefUuid}))`
+        content: `Reference to ((${blockRefUuid}))`,
       });
 
       mockAPI.Editor.getBlock.mockImplementation((uuid: string) => {
@@ -304,7 +314,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
           return Promise.resolve({
             uuid: blockRefUuid,
             content: 'TODO NOW [#A] Task content with #tag',
-            properties: {}
+            properties: {},
           } as BlockEntity);
         }
         return Promise.resolve(null);
@@ -319,7 +329,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includeProperties: false,
         preserveBlockRefs: true,
         removeLogseqSyntax: true,
-        includeTags: false
+        includeTags: false,
       });
 
       // removeLogseqSyntax IS applied to resolved block content
@@ -338,13 +348,13 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const plainUuid = '550e8400-e29b-41d4-a716-446655440324';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440004',
-        content: `UUID in text: ${plainUuid}`
+        content: `UUID in text: ${plainUuid}`,
       });
 
       mockAPI.Editor.getBlock.mockResolvedValue({
         uuid: plainUuid,
         content: 'Resolved plain UUID',
-        properties: {}
+        properties: {},
       } as BlockEntity);
 
       mockCurrentPageResponse(mockAPI, page);
@@ -355,7 +365,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includePageName: false,
         includeProperties: false,
         preserveBlockRefs: true,
-        resolvePlainUuids: true
+        resolvePlainUuids: true,
       });
 
       expect(result).toContain('Resolved plain UUID');
@@ -366,13 +376,13 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440352';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `/assets/${uuid}.png`
+        content: `/assets/${uuid}.png`,
       });
 
       mockAPI.Editor.getBlock.mockResolvedValue({
         uuid,
         content: 'Should not appear',
-        properties: {}
+        properties: {},
       } as BlockEntity);
 
       mockCurrentPageResponse(mockAPI, page);
@@ -382,7 +392,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain(`/assets/${uuid}.png`);
@@ -394,13 +404,13 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440380';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `file-${uuid}.md`
+        content: `file-${uuid}.md`,
       });
 
       mockAPI.Editor.getBlock.mockResolvedValue({
         uuid,
         content: 'Should not appear',
-        properties: {}
+        properties: {},
       } as BlockEntity);
 
       mockCurrentPageResponse(mockAPI, page);
@@ -410,7 +420,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain(`file-${uuid}.md`);
@@ -422,13 +432,13 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440408';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `var_${uuid}`
+        content: `var_${uuid}`,
       });
 
       mockAPI.Editor.getBlock.mockResolvedValue({
         uuid,
         content: 'Should not appear',
-        properties: {}
+        properties: {},
       } as BlockEntity);
 
       mockCurrentPageResponse(mockAPI, page);
@@ -438,7 +448,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain(`var_${uuid}`);
@@ -450,7 +460,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440436';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `Plain UUID: ${uuid}`
+        content: `Plain UUID: ${uuid}`,
       });
 
       mockAPI.Editor.getPage.mockResolvedValue(null);
@@ -463,7 +473,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain(uuid);
@@ -476,7 +486,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const assetUuid = '550e8400-e29b-41d4-a716-446655440462';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `Asset: ${assetUuid}`
+        content: `Asset: ${assetUuid}`,
       });
 
       mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
@@ -495,7 +505,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includePageName: false,
         includeProperties: false,
         preserveBlockRefs: true,
-        resolvePlainUuids: true
+        resolvePlainUuids: true,
       });
 
       expect(result).toContain(`![My Image](assets/${assetUuid}.png)`);
@@ -506,7 +516,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const assetUuid = '550e8400-e29b-41d4-a716-446655440492';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `First ${assetUuid} and second ${assetUuid}`
+        content: `First ${assetUuid} and second ${assetUuid}`,
       });
 
       let queryCallCount = 0;
@@ -527,7 +537,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includePageName: false,
         includeProperties: false,
         preserveBlockRefs: true,
-        resolvePlainUuids: true
+        resolvePlainUuids: true,
       });
 
       // Asset should be detected once and cached
@@ -541,7 +551,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440527';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `UUID: ${uuid}`
+        content: `UUID: ${uuid}`,
       });
 
       // Asset query fails
@@ -554,7 +564,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       mockAPI.Editor.getBlock.mockResolvedValue({
         uuid,
         content: 'Fallback block content',
-        properties: {}
+        properties: {},
       } as BlockEntity);
 
       mockCurrentPageResponse(mockAPI, page);
@@ -565,7 +575,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includePageName: false,
         includeProperties: false,
         preserveBlockRefs: true,
-        resolvePlainUuids: true
+        resolvePlainUuids: true,
       });
 
       expect(result).toContain('Fallback block content');
@@ -576,7 +586,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440562';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `UUID: ${uuid}`
+        content: `UUID: ${uuid}`,
       });
 
       // Asset query fails
@@ -585,7 +595,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       // Page lookup succeeds
       mockAPI.Editor.getPage.mockResolvedValue({
         uuid,
-        name: 'Page Name'
+        name: 'Page Name',
       } as PageEntity);
 
       mockCurrentPageResponse(mockAPI, page);
@@ -596,7 +606,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includePageName: false,
         includeProperties: false,
         preserveBlockRefs: true,
-        resolvePlainUuids: true
+        resolvePlainUuids: true,
       });
 
       expect(result).toContain('Page Name');
@@ -607,7 +617,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440593';
       const block = createMockBlock({
         uuid: 'block-1',
-        content: `UUID: ${uuid}`
+        content: `UUID: ${uuid}`,
       });
 
       mockAPI.DB.datascriptQuery.mockResolvedValue([]);
@@ -621,7 +631,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       // UUID should remain unchanged
@@ -634,7 +644,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'empty',
-        content: ''
+        content: '',
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -644,7 +654,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result.trim()).toBe('');
@@ -654,7 +664,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'no-uuids',
-        content: 'Plain text with no references'
+        content: 'Plain text with no references',
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -664,7 +674,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain('Plain text with no references');
@@ -674,7 +684,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'malformed',
-        content: 'Bad UUID: 12345-not-a-valid-uuid'
+        content: 'Bad UUID: 12345-not-a-valid-uuid',
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -684,7 +694,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       expect(result).toContain('Bad UUID: 12345-not-a-valid-uuid');
@@ -697,16 +707,27 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const plainUuid = '550e8400-e29b-41d4-a716-446655440683';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440005',
-        content: `Page [[${pageUuid}]] and block ((${blockUuid})) and plain ${plainUuid}`
+        content: `Page [[${pageUuid}]] and block ((${blockUuid})) and plain ${plainUuid}`,
       });
 
       mockAPI.Editor.getPage.mockImplementation((uuid: string) => {
-        if (uuid === pageUuid) return Promise.resolve({ uuid: pageUuid, name: 'Page Ref' } as PageEntity);
+        if (uuid === pageUuid)
+          return Promise.resolve({ uuid: pageUuid, name: 'Page Ref' } as PageEntity);
         return Promise.resolve(null);
       });
       mockAPI.Editor.getBlock.mockImplementation((uuid: string) => {
-        if (uuid === blockUuid) return Promise.resolve({ uuid: blockUuid, content: 'Block Ref', properties: {} } as BlockEntity);
-        if (uuid === plainUuid) return Promise.resolve({ uuid: plainUuid, content: 'Plain Ref', properties: {} } as BlockEntity);
+        if (uuid === blockUuid)
+          return Promise.resolve({
+            uuid: blockUuid,
+            content: 'Block Ref',
+            properties: {},
+          } as BlockEntity);
+        if (uuid === plainUuid)
+          return Promise.resolve({
+            uuid: plainUuid,
+            content: 'Plain Ref',
+            properties: {},
+          } as BlockEntity);
         return Promise.resolve(null);
       });
       mockAPI.DB.datascriptQuery.mockResolvedValue([]);
@@ -719,7 +740,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includePageName: false,
         includeProperties: false,
         preserveBlockRefs: true,
-        resolvePlainUuids: true
+        resolvePlainUuids: true,
       });
 
       expect(result).toContain('Page Page Ref');
@@ -732,7 +753,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440714';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440006',
-        content: `Reference [[${uuid}]]`
+        content: `Reference [[${uuid}]]`,
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -758,7 +779,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         includeProperties: false,
         preserveBlockRefs: true,
         removeLogseqSyntax: false,
-        resolvePlainUuids: false
+        resolvePlainUuids: false,
       });
 
       // Should keep original format on error
@@ -770,7 +791,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const uuid = '550e8400-e29b-41d4-a716-446655440739';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440007',
-        content: `Reference ((${uuid}))`
+        content: `Reference ((${uuid}))`,
       });
 
       mockAPI.DB.datascriptQuery.mockResolvedValue([]);
@@ -784,7 +805,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       // Should show unresolved message
@@ -798,7 +819,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const pageUuid = '550e8400-e29b-41d4-a716-446655440765';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440001',
-        content: `First [[${pageUuid}]] and second [[${pageUuid}]]`
+        content: `First [[${pageUuid}]] and second [[${pageUuid}]]`,
       });
 
       let pageCallCount = 0;
@@ -817,7 +838,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       // Page should be fetched at least once and then cached
@@ -829,14 +850,18 @@ describe('MarkdownExporter - Reference Resolution', () => {
       const blockUuid = '550e8400-e29b-41d4-a716-446655440796';
       const block = createMockBlock({
         uuid: '550e8400-e29b-41d4-a716-446655440002',
-        content: `First ((${blockUuid})) and second ((${blockUuid}))`
+        content: `First ((${blockUuid})) and second ((${blockUuid}))`,
       });
 
       let blockCallCount = 0;
       mockAPI.Editor.getBlock.mockImplementation((uuid: string) => {
         if (uuid === blockUuid) {
           blockCallCount++;
-          return Promise.resolve({ uuid: blockUuid, content: 'Cached Block', properties: {} } as BlockEntity);
+          return Promise.resolve({
+            uuid: blockUuid,
+            content: 'Cached Block',
+            properties: {},
+          } as BlockEntity);
         }
         return Promise.resolve(null);
       });
@@ -848,7 +873,7 @@ describe('MarkdownExporter - Reference Resolution', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        preserveBlockRefs: true
+        preserveBlockRefs: true,
       });
 
       // Block should be fetched at least once and then cached

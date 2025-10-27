@@ -92,9 +92,11 @@ describe('ErrorBoundary', () => {
 
     it('should not catch errors in event handlers', () => {
       const ButtonWithEventError = () => (
-        <button onClick={() => {
-          throw new Error('Event handler error');
-        }}>
+        <button
+          onClick={() => {
+            throw new Error('Event handler error');
+          }}
+        >
           Click me
         </button>
       );
@@ -306,8 +308,8 @@ describe('ErrorBoundary', () => {
       );
 
       // Error message should be in the DOM and readable
-      const errorElement = container.querySelector('[role="alert"]') ||
-                          container.querySelector('[class*="bg-red"]');
+      const errorElement =
+        container.querySelector('[role="alert"]') || container.querySelector('[class*="bg-red"]');
       expect(errorElement).toBeTruthy();
       expect(container.textContent).toContain('Something went wrong');
     });

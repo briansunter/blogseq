@@ -48,7 +48,7 @@ describe('ZIP Error Handling Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [block]);
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any);
 
       // Mock failed fetch
@@ -81,7 +81,7 @@ describe('ZIP Error Handling Tests', () => {
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Failed Asset'
+        'block/title': 'Failed Asset',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -97,8 +97,8 @@ describe('ZIP Error Handling Tests', () => {
       expect(mockAPI.calls.showMsg).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'warning'
-          })
+            type: 'warning',
+          }),
         ])
       );
     });
@@ -115,11 +115,11 @@ describe('ZIP Error Handling Tests', () => {
 
       // Mock both assets
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any);
 
       mockAPI.addAsset(TestUUIDs.pdfAsset, 'pdf', {
-        uuid: TestUUIDs.pdfAsset
+        uuid: TestUUIDs.pdfAsset,
       } as any);
 
       // Image succeeds, PDF fails
@@ -159,7 +159,7 @@ describe('ZIP Error Handling Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [block]);
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any);
 
       // Simulate timeout error
@@ -375,7 +375,7 @@ describe('ZIP Error Handling Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [block]);
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any); // No title
 
       mockFileAPI.setFetchResponse(
@@ -403,7 +403,7 @@ describe('ZIP Error Handling Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [block]);
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'unknown-type', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -433,7 +433,7 @@ describe('ZIP Error Handling Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [block]);
 
       mockAPI.addAsset(specialUuid, 'png', {
-        uuid: specialUuid
+        uuid: specialUuid,
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -518,8 +518,9 @@ describe('ZIP Error Handling Tests', () => {
       mockAPI.setCurrentPage(SamplePages.withAssets);
 
       // Create block referencing 20 assets with valid UUIDs
-      const assetUUIDs = Array.from({ length: 20 }, (_, i) =>
-        `550e8400-e29b-41d4-a716-4466554401${i.toString().padStart(2, '0')}`
+      const assetUUIDs = Array.from(
+        { length: 20 },
+        (_, i) => `550e8400-e29b-41d4-a716-4466554401${i.toString().padStart(2, '0')}`
       );
       const assetRefs = assetUUIDs.map(uuid => `[[${uuid}]]`).join(' ');
       const block = {
@@ -531,7 +532,7 @@ describe('ZIP Error Handling Tests', () => {
       // Mock all assets
       assetUUIDs.forEach((uuid, i) => {
         mockAPI.addAsset(uuid, 'png', {
-          uuid
+          uuid,
         } as any);
 
         mockFileAPI.setFetchResponse(
@@ -563,7 +564,7 @@ describe('ZIP Error Handling Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [block]);
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -578,8 +579,8 @@ describe('ZIP Error Handling Tests', () => {
       expect(mockAPI.calls.showMsg).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'warning'
-          })
+            type: 'warning',
+          }),
         ])
       );
     });

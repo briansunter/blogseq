@@ -27,18 +27,21 @@ tsc
 ### Core Components
 
 **Plugin Entry (`src/main.tsx`)**
+
 - Registers toolbar UI items and slash commands
 - Creates the Logseq plugin model with `show()` and `exportPage()` methods
 - Mounts the React app and manages UI visibility
 - Plugin ID: `_briansunter-blogseq`
 
 **React Application (`src/App.tsx`)**
+
 - Main UI component with ultra-compact design
 - Three-row header layout: title/export button, settings checkboxes, preview controls
 - Handles export settings state and preview generation
 - Top spacer (32px) prevents macOS window button overlap
 
 **Markdown Exporter (`src/markdownExporter.ts`)**
+
 - Core export logic as a singleton class
 - Key features:
   - Resolves block references `((uuid))` and page references `[[page]]`
@@ -48,12 +51,14 @@ tsc
   - Supports ZIP export with assets folder
 
 **Utilities (`src/utils.ts`)**
+
 - `useAppVisible` hook syncs React component visibility with Logseq UI state
 - Uses Logseq event subscriptions for UI show/hide events
 
 ### Export Options
 
 The exporter supports these configurable options:
+
 - `includePageName`: Add page name as H1 header (default: false)
 - `flattenNested`: Flatten nested blocks into paragraphs (default: true)
 - `preserveBlockRefs`: Resolve ((uuid)) references (default: true)
@@ -65,6 +70,7 @@ The exporter supports these configurable options:
 ### Asset Handling
 
 The plugin detects assets through DataScript queries checking for:
+
 - `logseq.property.asset/type` or similar asset type properties
 - Assets are tracked in `referencedAssets` Map during export
 - ZIP export includes an `/assets/` folder with all referenced files
@@ -103,20 +109,20 @@ The plugin detects assets through DataScript queries checking for:
 const props = page.properties;
 
 // ✅ CORRECT - properties are root-level keys starting with colons
-const propertyKeys = Object.keys(page).filter(key =>
-  key.startsWith(':user.property/') ||
-  key.startsWith(':logseq.property/') ||
-  key === 'tags'
+const propertyKeys = Object.keys(page).filter(
+  key => key.startsWith(':user.property/') || key.startsWith(':logseq.property/') || key === 'tags'
 );
 ```
 
 **Property Value Format:**
+
 - Property values are often stored as **numeric db/ids** (e.g., `45204`)
 - These must be resolved to actual content or UUIDs using DataScript queries
 - Use direct entity ID syntax: `[:find ?uuid :where [45204 :block/uuid ?uuid]]`
 - NOT `:db/id` attribute syntax: `[?e :db/id 45204]` ❌ (causes parse errors)
 
 **Example Page Structure:**
+
 ```typescript
 {
   updatedAt: 1761556235265,
@@ -133,6 +139,7 @@ const propertyKeys = Object.keys(page).filter(key =>
 ```
 
 **Property Value Blocks:**
+
 - Logseq creates hidden blocks to store property values (tags, dates, custom values)
 - These blocks appear in `getPageBlocksTree()` results at the end
 - Must be filtered out by:

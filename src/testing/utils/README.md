@@ -163,7 +163,7 @@ const asset = createSampleAsset({
 ```typescript
 const { page, blocks } = createPageWithBlocks(
   { name: 'Test Page' },
-  3  // Create 3 blocks
+  3 // Create 3 blocks
 );
 ```
 

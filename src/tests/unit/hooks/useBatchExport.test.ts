@@ -245,9 +245,7 @@ describe('useBatchExport hook', () => {
     });
 
     it('should include error entries for failed pages', async () => {
-      vi.mocked(logseq.Editor.getPage).mockRejectedValue(
-        new Error('Page not found')
-      );
+      vi.mocked(logseq.Editor.getPage).mockRejectedValue(new Error('Page not found'));
 
       const { result } = renderHook(() => useBatchExport());
 
@@ -286,9 +284,7 @@ describe('useBatchExport hook', () => {
         name: 'Test Page',
       } as any);
 
-      vi.mocked(logseq.Editor.getPageBlocksTree).mockRejectedValue(
-        new Error('Block tree error')
-      );
+      vi.mocked(logseq.Editor.getPageBlocksTree).mockRejectedValue(new Error('Block tree error'));
 
       const { result } = renderHook(() => useBatchExport());
 
@@ -384,10 +380,7 @@ describe('useBatchExport hook', () => {
         await result.current.exportPagesToZip(['Test Page']);
       });
 
-      expect(saveAs).toHaveBeenCalledWith(
-        expect.any(Blob),
-        'logseq-export-2024-03-15.zip'
-      );
+      expect(saveAs).toHaveBeenCalledWith(expect.any(Blob), 'logseq-export-2024-03-15.zip');
     });
 
     it('should use YYYY-MM-DD date format', async () => {
@@ -468,9 +461,7 @@ describe('useBatchExport hook', () => {
         {
           uuid: 'block-1',
           content: 'Parent block',
-          children: [
-            { uuid: 'block-2', content: 'Child block' },
-          ],
+          children: [{ uuid: 'block-2', content: 'Child block' }],
         },
       ] as any);
 
@@ -584,9 +575,7 @@ describe('useBatchExport hook', () => {
 
   describe('Error handling', () => {
     it('should catch errors during page export', async () => {
-      vi.mocked(logseq.Editor.getPage).mockRejectedValue(
-        new Error('Export error')
-      );
+      vi.mocked(logseq.Editor.getPage).mockRejectedValue(new Error('Export error'));
 
       const { result } = renderHook(() => useBatchExport());
 
@@ -601,7 +590,7 @@ describe('useBatchExport hook', () => {
 
     it('should continue exporting after page error', async () => {
       let callCount = 0;
-      vi.mocked(logseq.Editor.getPage).mockImplementation(async (name) => {
+      vi.mocked(logseq.Editor.getPage).mockImplementation(async name => {
         callCount++;
         if (callCount === 1) {
           throw new Error('First page error');
@@ -629,9 +618,7 @@ describe('useBatchExport hook', () => {
     });
 
     it('should include error details in results', async () => {
-      vi.mocked(logseq.Editor.getPage).mockRejectedValue(
-        new Error('Detailed error message')
-      );
+      vi.mocked(logseq.Editor.getPage).mockRejectedValue(new Error('Detailed error message'));
 
       const { result } = renderHook(() => useBatchExport());
 
@@ -659,9 +646,7 @@ describe('useBatchExport hook', () => {
 
   describe('Progress tracking', () => {
     it('should update progress even on errors', async () => {
-      vi.mocked(logseq.Editor.getPage).mockRejectedValue(
-        new Error('Error')
-      );
+      vi.mocked(logseq.Editor.getPage).mockRejectedValue(new Error('Error'));
 
       const { result } = renderHook(() => useBatchExport());
 
@@ -697,9 +682,7 @@ describe('useBatchExport hook', () => {
     });
 
     it('should clean up state on export error', async () => {
-      vi.mocked(logseq.Editor.getPage).mockRejectedValue(
-        new Error('Error')
-      );
+      vi.mocked(logseq.Editor.getPage).mockRejectedValue(new Error('Error'));
 
       const { result } = renderHook(() => useBatchExport());
 

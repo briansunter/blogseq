@@ -12,19 +12,19 @@ interface GlobalWithLogseq {
     getCurrentPage: vi.fn(),
     getPage: vi.fn(),
     getBlock: vi.fn(),
-    getPageBlocksTree: vi.fn()
+    getPageBlocksTree: vi.fn(),
   },
   App: {
-    getCurrentGraph: vi.fn()
+    getCurrentGraph: vi.fn(),
   },
   DB: {
-    datascriptQuery: vi.fn()
+    datascriptQuery: vi.fn(),
   },
   UI: {
-    showMsg: vi.fn()
+    showMsg: vi.fn(),
   },
   on: vi.fn(),
-  off: vi.fn()
+  off: vi.fn(),
 };
 
 // Mock fetch for asset tests

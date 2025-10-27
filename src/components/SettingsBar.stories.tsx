@@ -1,6 +1,6 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { SettingsBar } from "./SettingsBar";
-import { ExportSettings } from "../types";
+import type { Meta, StoryObj } from '@storybook/react';
+import { SettingsBar } from './SettingsBar';
+import { ExportSettings } from '../types';
 
 /**
  * The SettingsBar component allows users to configure export options
@@ -8,21 +8,21 @@ import { ExportSettings } from "../types";
  * and setting the asset path.
  */
 const meta = {
-  title: "Components/SettingsBar",
+  title: 'Components/SettingsBar',
   component: SettingsBar,
   parameters: {
-    layout: "fullscreen",
+    layout: 'fullscreen',
   },
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     settings: {
-      control: "object",
-      description: "Current export settings configuration",
+      control: 'object',
+      description: 'Current export settings configuration',
     },
   },
   args: {
-    onSettingChange: (key: keyof ExportSettings) => console.log("Setting changed:", key),
-    onAssetPathChange: (value: string) => console.log("Asset path changed:", value),
+    onSettingChange: (key: keyof ExportSettings) => console.log('Setting changed:', key),
+    onAssetPathChange: (value: string) => console.log('Asset path changed:', value),
   },
 } satisfies Meta<typeof SettingsBar>;
 
@@ -34,7 +34,7 @@ const defaultSettings: ExportSettings = {
   flattenNested: true,
   preserveBlockRefs: true,
   includeProperties: true,
-  assetPath: "assets/",
+  assetPath: 'assets/',
   debug: false,
 };
 
@@ -57,7 +57,7 @@ export const AllEnabled: Story = {
       flattenNested: true,
       preserveBlockRefs: true,
       includeProperties: true,
-      assetPath: "assets/",
+      assetPath: 'assets/',
       debug: true,
     },
   },
@@ -73,7 +73,7 @@ export const AllDisabled: Story = {
       flattenNested: false,
       preserveBlockRefs: false,
       includeProperties: false,
-      assetPath: "assets/",
+      assetPath: 'assets/',
       debug: false,
     },
   },
@@ -98,7 +98,7 @@ export const CustomAssetPath: Story = {
   args: {
     settings: {
       ...defaultSettings,
-      assetPath: "../images/",
+      assetPath: '../images/',
     },
   },
 };
@@ -110,7 +110,7 @@ export const AbsoluteAssetPath: Story = {
   args: {
     settings: {
       ...defaultSettings,
-      assetPath: "/static/blog-assets/",
+      assetPath: '/static/blog-assets/',
     },
   },
 };
@@ -125,7 +125,7 @@ export const MinimalExport: Story = {
       flattenNested: true,
       preserveBlockRefs: false,
       includeProperties: false,
-      assetPath: "",
+      assetPath: '',
       debug: false,
     },
   },
@@ -141,7 +141,7 @@ export const MaximumFidelity: Story = {
       flattenNested: false,
       preserveBlockRefs: true,
       includeProperties: true,
-      assetPath: "assets/",
+      assetPath: 'assets/',
       debug: false,
     },
   },

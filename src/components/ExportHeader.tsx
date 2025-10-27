@@ -1,5 +1,5 @@
-import React from "react";
-import { CloudDownload, Spinner, Close } from "./Icons";
+import React from 'react';
+import { CloudDownload, Spinner, Close } from './Icons';
 
 type ExportHeaderProps = {
   currentPageName: string;
@@ -23,13 +23,15 @@ export const ExportHeader = ({
         </h1>
         <span className={`text-xs ${currentPageName ? 'text-gray-400' : 'text-yellow-500'}`}>
           {currentPageName ? (
-            <>Exporting <span className="text-blue-400">{currentPageName}</span></>
+            <>
+              Exporting <span className="text-blue-400">{currentPageName}</span>
+            </>
           ) : (
-            "⚠️ No active page - please open a page first"
+            '⚠️ No active page - please open a page first'
           )}
         </span>
       </div>
-      
+
       <div className="flex items-center gap-2">
         <button
           onClick={onQuickExport}
@@ -38,9 +40,15 @@ export const ExportHeader = ({
         >
           <span className="flex items-center">
             {isExporting ? (
-              <><Spinner className="w-3 h-3 mr-1" />Exporting...</>
+              <>
+                <Spinner className="w-3 h-3 mr-1" />
+                Exporting...
+              </>
             ) : (
-              <><CloudDownload className="w-3 h-3 mr-1" />Export</>
+              <>
+                <CloudDownload className="w-3 h-3 mr-1" />
+                Export
+              </>
             )}
           </span>
         </button>

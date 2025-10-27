@@ -1,4 +1,4 @@
-import { BlockEntity, PageEntity } from "@logseq/libs/dist/LSPlugin";
+import { BlockEntity, PageEntity } from '@logseq/libs/dist/LSPlugin';
 
 // UUID validation regex
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -17,7 +17,9 @@ function generateTestUuid(): string {
 // Validate UUID format
 function validateUuid(uuid: string): void {
   if (!UUID_REGEX.test(uuid)) {
-    throw new Error(`Invalid UUID format: ${uuid}. Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`);
+    throw new Error(
+      `Invalid UUID format: ${uuid}. Expected format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`
+    );
   }
 }
 
@@ -39,9 +41,9 @@ export class PageBuilder {
     this.page = {
       id: Math.floor(Math.random() * 1000000),
       uuid: generateTestUuid(),
-      name: "Test Page",
-      originalName: "Test Page",
-      "journal?": false,
+      name: 'Test Page',
+      originalName: 'Test Page',
+      'journal?': false,
       properties: {},
       children: [],
     };
@@ -98,7 +100,7 @@ export class PageBuilder {
    * Mark as journal page
    */
   asJournalPage(): this {
-    this.page["journal?"] = true;
+    this.page['journal?'] = true;
     return this;
   }
 
@@ -106,15 +108,15 @@ export class PageBuilder {
    * Add multiple properties from a fluent API
    */
   withAuthor(author: string): this {
-    return this.withProperty("user.property/author", author);
+    return this.withProperty('user.property/author', author);
   }
 
   withTags(...tags: string[]): this {
-    return this.withProperty("user.property/tags", tags);
+    return this.withProperty('user.property/tags', tags);
   }
 
   withDate(date: string): this {
-    return this.withProperty("user.property/date", date);
+    return this.withProperty('user.property/date', date);
   }
 
   /**
@@ -150,8 +152,8 @@ export class BlockBuilder {
     this.block = {
       id: Math.floor(Math.random() * 1000000),
       uuid: generateTestUuid(),
-      content: "Test block content",
-      format: "markdown",
+      content: 'Test block content',
+      format: 'markdown',
       children: [],
       left: { id: 1 },
       parent: { id: 2 },
@@ -221,7 +223,7 @@ export class BlockBuilder {
     if (!this.block.properties) {
       this.block.properties = {};
     }
-    this.block.properties["logseq.property/heading"] = level;
+    this.block.properties['logseq.property/heading'] = level;
     return this;
   }
 
@@ -256,7 +258,7 @@ export class BlockBuilder {
     return this;
   }
 
-  withFormat(format: "markdown" | "org"): this {
+  withFormat(format: 'markdown' | 'org'): this {
     this.block.format = format;
     return this;
   }
@@ -264,7 +266,7 @@ export class BlockBuilder {
   asPropertyOnly(properties: Record<string, string>): this {
     const propertyContent = Object.entries(properties)
       .map(([key, value]) => `${key}:: ${value}`)
-      .join("\n");
+      .join('\n');
     this.block.content = propertyContent;
     return this;
   }
@@ -315,8 +317,8 @@ export class BlockBuilder {
   build(): BlockEntity {
     if (this.validateOnBuild) {
       validateUuid(this.block.uuid);
-      if (this.block.properties?.["logseq.property/heading"]) {
-        validateHeadingLevel(this.block.properties["logseq.property/heading"] as number);
+      if (this.block.properties?.['logseq.property/heading']) {
+        validateHeadingLevel(this.block.properties['logseq.property/heading'] as number);
       }
     }
     return this.block;
@@ -337,10 +339,10 @@ export class AssetBuilder {
   constructor() {
     this.asset = {
       uuid: generateTestUuid(),
-      title: "Test Asset",
-      type: "png",
+      title: 'Test Asset',
+      type: 'png',
       properties: {
-        "logseq.property.asset/type": "png",
+        'logseq.property.asset/type': 'png',
       },
     };
   }
@@ -357,19 +359,19 @@ export class AssetBuilder {
 
   withType(type: string): this {
     this.asset.type = type;
-    this.asset.properties["logseq.property.asset/type"] = type;
+    this.asset.properties['logseq.property.asset/type'] = type;
     return this;
   }
 
-  asImage(type: "png" | "jpg" | "jpeg" | "gif" | "svg" | "webp" | "bmp" = "png"): this {
+  asImage(type: 'png' | 'jpg' | 'jpeg' | 'gif' | 'svg' | 'webp' | 'bmp' = 'png'): this {
     return this.withType(type);
   }
 
   asPdf(): this {
-    return this.withType("pdf");
+    return this.withType('pdf');
   }
 
-  asDocument(type: "doc" | "docx" | "txt" | "md" = "md"): this {
+  asDocument(type: 'doc' | 'docx' | 'txt' | 'md' = 'md'): this {
     return this.withType(type);
   }
 
@@ -389,8 +391,8 @@ export class AssetBuilder {
     return {
       id: Math.floor(Math.random() * 1000000),
       uuid: this.asset.uuid,
-      content: "",
-      format: "markdown",
+      content: '',
+      format: 'markdown',
       properties: this.asset.properties,
       children: [],
       left: { id: 1 },
@@ -408,7 +410,7 @@ export class AssetBuilder {
       uuid: this.asset.uuid,
       name: this.asset.title,
       originalName: this.asset.title,
-      "journal?": false,
+      'journal?': false,
       properties: this.asset.properties,
       children: [],
     };
@@ -423,8 +425,8 @@ export class GraphBuilder {
 
   constructor() {
     this.graph = {
-      path: "/Users/test/logseq-graph",
-      name: "Test Graph",
+      path: '/Users/test/logseq-graph',
+      name: 'Test Graph',
     };
   }
 
@@ -450,9 +452,7 @@ export function createBlockTree(
   rootContent: string,
   children: Array<{ content: string; children?: Array<{ content: string }> }>
 ): BlockEntity {
-  const root = new BlockBuilder()
-    .withContent(rootContent)
-    .build();
+  const root = new BlockBuilder().withContent(rootContent).build();
 
   root.children = children.map((child, index) => {
     const childBlock = new BlockBuilder()
@@ -482,11 +482,9 @@ export function createPageWithBlocks(
   pageName: string,
   blocks: Array<{ content: string; properties?: Record<string, unknown>; children?: BlockEntity[] }>
 ): PageEntity {
-  const page = new PageBuilder()
-    .withName(pageName)
-    .build();
+  const page = new PageBuilder().withName(pageName).build();
 
-  const builtBlocks = blocks.map((blockConfig) => {
+  const builtBlocks = blocks.map(blockConfig => {
     const builder = new BlockBuilder().withContent(blockConfig.content);
 
     if (blockConfig.properties) {
@@ -525,7 +523,7 @@ export function createBlogPost(options: {
 }): PageEntity {
   const page = new PageBuilder()
     .withName(options.title)
-    .withProperty("user.property/type", "blog-post");
+    .withProperty('user.property/type', 'blog-post');
 
   if (options.author) {
     page.withAuthor(options.author);
@@ -544,19 +542,10 @@ export function createBlogPost(options: {
   if (options.sections) {
     options.sections.forEach(section => {
       // Add heading block
-      blocks.push(
-        new BlockBuilder()
-          .withContent(section.heading)
-          .withHeadingLevel(2)
-          .build()
-      );
+      blocks.push(new BlockBuilder().withContent(section.heading).withHeadingLevel(2).build());
 
       // Add content block
-      blocks.push(
-        new BlockBuilder()
-          .withContent(section.content)
-          .build()
-      );
+      blocks.push(new BlockBuilder().withContent(section.content).build());
     });
   }
 
@@ -576,7 +565,7 @@ export function createNotesPage(options: {
 }): PageEntity {
   const page = new PageBuilder()
     .withName(options.title)
-    .withProperty("user.property/type", "notes");
+    .withProperty('user.property/type', 'notes');
 
   const blocks: BlockEntity[] = [];
 
@@ -588,11 +577,7 @@ export function createNotesPage(options: {
       .build();
 
     // Add notes as children
-    headingBlock.children = topic.notes.map(note =>
-      new BlockBuilder()
-        .withContent(note)
-        .build()
-    );
+    headingBlock.children = topic.notes.map(note => new BlockBuilder().withContent(note).build());
 
     blocks.push(headingBlock);
   });
@@ -605,23 +590,36 @@ export function createNotesPage(options: {
  */
 export function createJournalPage(date: string): PageEntity {
   const dateObj = new Date(date);
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthNames = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
   const formattedDate = `${monthNames[dateObj.getMonth()]} ${dateObj.getDate()}${getDaySuffix(dateObj.getDate())}, ${dateObj.getFullYear()}`;
 
-  return new PageBuilder()
-    .withName(formattedDate)
-    .asJournalPage()
-    .withDate(date)
-    .build();
+  return new PageBuilder().withName(formattedDate).asJournalPage().withDate(date).build();
 }
 
 function getDaySuffix(day: number): string {
-  if (day >= 11 && day <= 13) return "th";
+  if (day >= 11 && day <= 13) return 'th';
   switch (day % 10) {
-    case 1: return "st";
-    case 2: return "nd";
-    case 3: return "rd";
-    default: return "th";
+    case 1:
+      return 'st';
+    case 2:
+      return 'nd';
+    case 3:
+      return 'rd';
+    default:
+      return 'th';
   }
 }
 
@@ -639,41 +637,27 @@ export function createDocumentationPage(options: {
 }): PageEntity {
   const page = new PageBuilder()
     .withName(options.title)
-    .withProperty("user.property/type", "documentation");
+    .withProperty('user.property/type', 'documentation');
 
   if (options.version) {
-    page.withProperty("user.property/version", options.version);
+    page.withProperty('user.property/version', options.version);
   }
 
   const blocks: BlockEntity[] = [];
 
   options.sections.forEach(section => {
     // Section heading
-    blocks.push(
-      new BlockBuilder()
-        .withContent(section.heading)
-        .withHeadingLevel(2)
-        .build()
-    );
+    blocks.push(new BlockBuilder().withContent(section.heading).withHeadingLevel(2).build());
 
     // Description
-    blocks.push(
-      new BlockBuilder()
-        .withContent(section.description)
-        .build()
-    );
+    blocks.push(new BlockBuilder().withContent(section.description).build());
 
     // Examples
     if (section.examples) {
-      const examplesBlock = new BlockBuilder()
-        .withContent("Examples")
-        .withHeadingLevel(3)
-        .build();
+      const examplesBlock = new BlockBuilder().withContent('Examples').withHeadingLevel(3).build();
 
       examplesBlock.children = section.examples.map(example =>
-        new BlockBuilder()
-          .withContent(example)
-          .build()
+        new BlockBuilder().withContent(example).build()
       );
 
       blocks.push(examplesBlock);
@@ -692,11 +676,11 @@ export function createTaskPage(options: {
 }): PageEntity {
   const page = new PageBuilder()
     .withName(options.title)
-    .withProperty("user.property/type", "tasks");
+    .withProperty('user.property/type', 'tasks');
 
   const blocks = options.tasks.map(task =>
     new BlockBuilder()
-      .withContent(`${task.completed ? "DONE" : "TODO"} ${task.description}`)
+      .withContent(`${task.completed ? 'DONE' : 'TODO'} ${task.description}`)
       .build()
   );
 

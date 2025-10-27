@@ -37,10 +37,7 @@ describe('Mock SDK Example Usage', () => {
       const page = SamplePages.simple;
       page.children = [SampleBlocks.simple as any];
 
-      sdk.logseq
-        .setCurrentPage(page)
-        .addPage(page)
-        .addBlock(SampleBlocks.simple);
+      sdk.logseq.setCurrentPage(page).addPage(page).addBlock(SampleBlocks.simple);
 
       const result = await exporter.exportCurrentPage();
 
@@ -52,10 +49,7 @@ describe('Mock SDK Example Usage', () => {
       const page = SamplePages.simple;
       page.children = [SampleBlocks.heading as any];
 
-      sdk.logseq
-        .setCurrentPage(page)
-        .addPage(page)
-        .addBlock(SampleBlocks.heading);
+      sdk.logseq.setCurrentPage(page).addPage(page).addBlock(SampleBlocks.heading);
 
       const result = await exporter.exportCurrentPage();
 
@@ -71,16 +65,11 @@ describe('Mock SDK Example Usage', () => {
         .withProperty('user.property/tags', ['example', 'test'])
         .build();
 
-      const block = new BlockBuilder()
-        .withContent('Custom content here')
-        .build();
+      const block = new BlockBuilder().withContent('Custom content here').build();
 
       page.children = [block as any];
 
-      sdk.logseq
-        .setCurrentPage(page)
-        .addPage(page)
-        .addBlock(block);
+      sdk.logseq.setCurrentPage(page).addPage(page).addBlock(block);
 
       const result = await exporter.exportCurrentPage({ includeProperties: true });
 
@@ -90,27 +79,15 @@ describe('Mock SDK Example Usage', () => {
     });
 
     it('should build blocks with different heading levels', async () => {
-      const page = new PageBuilder()
-        .withName('Heading Test')
-        .build();
+      const page = new PageBuilder().withName('Heading Test').build();
 
-      const h1 = new BlockBuilder()
-        .withContent('Level 1 Heading')
-        .withHeadingLevel(1)
-        .build();
+      const h1 = new BlockBuilder().withContent('Level 1 Heading').withHeadingLevel(1).build();
 
-      const h2 = new BlockBuilder()
-        .withContent('Level 2 Heading')
-        .withHeadingLevel(2)
-        .build();
+      const h2 = new BlockBuilder().withContent('Level 2 Heading').withHeadingLevel(2).build();
 
       page.children = [h1, h2] as any;
 
-      sdk.logseq
-        .setCurrentPage(page)
-        .addPage(page)
-        .addBlock(h1)
-        .addBlock(h2);
+      sdk.logseq.setCurrentPage(page).addPage(page).addBlock(h1).addBlock(h2);
 
       const result = await exporter.exportCurrentPage();
 
@@ -119,9 +96,7 @@ describe('Mock SDK Example Usage', () => {
     });
 
     it('should handle block references', async () => {
-      const page = new PageBuilder()
-        .withName('Reference Test')
-        .build();
+      const page = new PageBuilder().withName('Reference Test').build();
 
       const referencedBlock = new BlockBuilder()
         .withUuid(TestUUIDs.referencedBlock)
@@ -148,9 +123,7 @@ describe('Mock SDK Example Usage', () => {
 
   describe('Using Assets', () => {
     it('should handle image assets', async () => {
-      const page = new PageBuilder()
-        .withName('Asset Test')
-        .build();
+      const page = new PageBuilder().withName('Asset Test').build();
 
       const image = new AssetBuilder()
         .withUuid(TestUUIDs.imageAsset)
@@ -182,10 +155,7 @@ describe('Mock SDK Example Usage', () => {
       const page = SamplePages.simple;
       page.children = [SampleBlocks.simple as any];
 
-      sdk.logseq
-        .setCurrentPage(page)
-        .addPage(page)
-        .addBlock(SampleBlocks.simple);
+      sdk.logseq.setCurrentPage(page).addPage(page).addBlock(SampleBlocks.simple);
 
       await exporter.exportCurrentPage();
 
@@ -201,10 +171,7 @@ describe('Mock SDK Example Usage', () => {
       const page = SamplePages.simple;
       page.children = [SampleBlocks.simple as any];
 
-      sdk.logseq
-        .setCurrentPage(page)
-        .addPage(page)
-        .addBlock(SampleBlocks.simple);
+      sdk.logseq.setCurrentPage(page).addPage(page).addBlock(SampleBlocks.simple);
 
       const markdown = await exporter.exportCurrentPage();
       await exporter.downloadMarkdown(markdown);
@@ -218,10 +185,7 @@ describe('Mock SDK Example Usage', () => {
       const page = SamplePages.simple;
       page.children = [SampleBlocks.simple as any];
 
-      sdk.logseq
-        .setCurrentPage(page)
-        .addPage(page)
-        .addBlock(SampleBlocks.simple);
+      sdk.logseq.setCurrentPage(page).addPage(page).addBlock(SampleBlocks.simple);
 
       const markdown = await exporter.exportCurrentPage();
       await exporter.copyToClipboard(markdown);

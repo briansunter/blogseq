@@ -92,7 +92,9 @@ export function assertMarkdownStructure(
   // Check asset link
   if (expected.hasAssetLink) {
     const assetLinkRegex = new RegExp(`!?\\[.*?\\]\\(.*?${expected.hasAssetLink}.*?\\)`);
-    expect(markdown, `Expected to find asset link: ${expected.hasAssetLink}`).toMatch(assetLinkRegex);
+    expect(markdown, `Expected to find asset link: ${expected.hasAssetLink}`).toMatch(
+      assetLinkRegex
+    );
   }
 
   // Check does not contain
@@ -126,9 +128,10 @@ export function assertMarkdownStructure(
     if (match) {
       const actualValue = match[1].trim();
       const expectedValue = typeof value === 'string' ? value : JSON.stringify(value);
-      expect(actualValue, `Expected frontmatter property '${key}' to equal '${expectedValue}'`).toBe(
-        expectedValue
-      );
+      expect(
+        actualValue,
+        `Expected frontmatter property '${key}' to equal '${expectedValue}'`
+      ).toBe(expectedValue);
     }
   }
 
@@ -187,8 +190,7 @@ export function assertBlockTree(blocks: BlockEntity[], expectedDepth: number): v
  * ```
  */
 export function assertIsUuid(value: string): void {
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
   const isValidFormat = uuidRegex.test(value) || /^[0-9a-f]{8,}$/i.test(value);
 
@@ -247,7 +249,9 @@ export function assertLogseqAPICalledWith(
     return callArg === expectedArg;
   });
 
-  expect(found, `Expected '${method}' to be called with: ${JSON.stringify(expectedArg)}`).toBe(true);
+  expect(found, `Expected '${method}' to be called with: ${JSON.stringify(expectedArg)}`).toBe(
+    true
+  );
 }
 
 /**
@@ -263,8 +267,7 @@ export function assertBlockHasProperty(
   propertyKey: string,
   expectedValue?: any
 ): void {
-  const hasProperty =
-    block.properties && propertyKey in block.properties;
+  const hasProperty = block.properties && propertyKey in block.properties;
 
   expect(hasProperty, `Expected block to have property '${propertyKey}'`).toBe(true);
 
@@ -363,9 +366,7 @@ export function assertBlockCount(markdown: string, expectedCount: number): void 
   const content = markdown.replace(/^---\n[\s\S]*?\n---\n/, '');
 
   // Count non-empty lines/paragraphs
-  const blocks = content
-    .split('\n\n')
-    .filter(block => block.trim().length > 0);
+  const blocks = content.split('\n\n').filter(block => block.trim().length > 0);
 
   expect(blocks.length, `Expected ${expectedCount} blocks`).toBe(expectedCount);
 }
@@ -379,8 +380,7 @@ export function assertBlockCount(markdown: string, expectedCount: number): void 
  * ```
  */
 export function assertAssetPath(actualPath: string, expectedPrefix: string): void {
-  expect(
-    actualPath,
-    `Expected asset path to start with '${expectedPrefix}'`
-  ).toMatch(new RegExp(`^${expectedPrefix}`));
+  expect(actualPath, `Expected asset path to start with '${expectedPrefix}'`).toMatch(
+    new RegExp(`^${expectedPrefix}`)
+  );
 }

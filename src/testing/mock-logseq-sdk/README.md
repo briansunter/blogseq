@@ -68,10 +68,7 @@ const page = new PageBuilder()
   .build();
 
 // Build blocks
-const headingBlock = new BlockBuilder()
-  .withContent('Introduction')
-  .withHeadingLevel(2)
-  .build();
+const headingBlock = new BlockBuilder().withContent('Introduction').withHeadingLevel(2).build();
 
 const textBlock = new BlockBuilder()
   .withContent('This is some content')
@@ -86,7 +83,11 @@ mockLogseq.addBlock(headingBlock).addBlock(textBlock);
 ### Using Factory Functions
 
 ```typescript
-import { createBlogPost, createJournalPage, createPreConfiguredSDK } from '@/testing/mock-logseq-sdk';
+import {
+  createBlogPost,
+  createJournalPage,
+  createPreConfiguredSDK,
+} from '@/testing/mock-logseq-sdk';
 
 // Create a blog post
 const blogPost = createBlogPost({
@@ -96,8 +97,8 @@ const blogPost = createBlogPost({
   date: '2024-01-15',
   sections: [
     { heading: 'Introduction', content: 'Welcome to my blog!' },
-    { heading: 'Main Content', content: 'Here is the main content...' }
-  ]
+    { heading: 'Main Content', content: 'Here is the main content...' },
+  ],
 });
 
 // Create a journal page
@@ -261,11 +262,11 @@ hasAsset(uuid: string): boolean
 #### Call Tracking
 
 ```typescript
-mockLogseq.calls.getCurrentPage // Array of calls
-mockLogseq.calls.getPage        // Array of UUIDs requested
-mockLogseq.calls.getBlock       // Array of { uuid, opts }
-mockLogseq.calls.datascriptQuery // Array of queries executed
-mockLogseq.calls.showMsg        // Array of { message, type }
+mockLogseq.calls.getCurrentPage; // Array of calls
+mockLogseq.calls.getPage; // Array of UUIDs requested
+mockLogseq.calls.getBlock; // Array of { uuid, opts }
+mockLogseq.calls.datascriptQuery; // Array of queries executed
+mockLogseq.calls.showMsg; // Array of { message, type }
 ```
 
 ### MockFileAPI
@@ -395,57 +396,57 @@ Pre-built test data for common scenarios:
 Predefined UUIDs for consistent testing:
 
 ```typescript
-TestUUIDs.simplePage
-TestUUIDs.pageWithAssets
-TestUUIDs.pageWithProperties
-TestUUIDs.simpleBlock
-TestUUIDs.headingBlock
-TestUUIDs.imageAsset
+TestUUIDs.simplePage;
+TestUUIDs.pageWithAssets;
+TestUUIDs.pageWithProperties;
+TestUUIDs.simpleBlock;
+TestUUIDs.headingBlock;
+TestUUIDs.imageAsset;
 // ... and more
 ```
 
 ### SamplePages
 
 ```typescript
-SamplePages.simple          // Basic page
-SamplePages.withAssets      // Page with asset references
-SamplePages.withProperties  // Page with various properties
-SamplePages.empty           // Empty page
+SamplePages.simple; // Basic page
+SamplePages.withAssets; // Page with asset references
+SamplePages.withProperties; // Page with various properties
+SamplePages.empty; // Empty page
 ```
 
 ### SampleBlocks
 
 ```typescript
-SampleBlocks.simple         // Plain text block
-SampleBlocks.heading        // Heading block (h2)
-SampleBlocks.nested         // Block with children
-SampleBlocks.withBlockRef   // Block with ((uuid)) reference
-SampleBlocks.propertyOnly   // Property-only block
+SampleBlocks.simple; // Plain text block
+SampleBlocks.heading; // Heading block (h2)
+SampleBlocks.nested; // Block with children
+SampleBlocks.withBlockRef; // Block with ((uuid)) reference
+SampleBlocks.propertyOnly; // Property-only block
 ```
 
 ### Complex Fixtures
 
 ```typescript
-ComplexBlogPost             // Blog post with multiple sections and assets
-DeeplyNestedPage            // Page with 10 levels of nesting
-LargeContentBlock           // Block with 10KB of text
-BlockWithManyChildren       // Block with 100 children
-PropertyVarietyPage         // Page with all property types
-AssetVarietyFixtures        // All asset types (png, jpg, pdf, etc.)
-JournalPage                 // Journal page example
-PageWithComplexReferences   // Page with mixed references
+ComplexBlogPost; // Blog post with multiple sections and assets
+DeeplyNestedPage; // Page with 10 levels of nesting
+LargeContentBlock; // Block with 10KB of text
+BlockWithManyChildren; // Block with 100 children
+PropertyVarietyPage; // Page with all property types
+AssetVarietyFixtures; // All asset types (png, jpg, pdf, etc.)
+JournalPage; // Journal page example
+PageWithComplexReferences; // Page with mixed references
 ```
 
 ### Scenario Fixtures
 
 ```typescript
-ScenarioFixtures.simpleBlogPost      // Simple blog scenario
-ScenarioFixtures.blogPostWithImages  // Blog with images
-ScenarioFixtures.technicalDocs       // Documentation scenario
-ScenarioFixtures.dailyJournal        // Journal scenario
-ScenarioFixtures.propertyShowcase    // All property types
-ScenarioFixtures.deeplyNested        // Deep nesting test
-ScenarioFixtures.performance         // Performance test scenario
+ScenarioFixtures.simpleBlogPost; // Simple blog scenario
+ScenarioFixtures.blogPostWithImages; // Blog with images
+ScenarioFixtures.technicalDocs; // Documentation scenario
+ScenarioFixtures.dailyJournal; // Journal scenario
+ScenarioFixtures.propertyShowcase; // All property types
+ScenarioFixtures.deeplyNested; // Deep nesting test
+ScenarioFixtures.performance; // Performance test scenario
 ```
 
 ## Builders
@@ -456,19 +457,19 @@ Fluent API for building pages:
 
 ```typescript
 new PageBuilder()
-  .withValidation()           // Enable validation
-  .withUuid(uuid)            // Set UUID
-  .withId(id)                // Set ID
-  .withName(name)            // Set name
-  .withProperty(key, value)  // Add single property
-  .withProperties(props)     // Add multiple properties
-  .withBlocks(blocks)        // Set blocks
-  .asJournalPage()           // Mark as journal
-  .withAuthor(author)        // Convenience: add author property
-  .withTags(...tags)         // Convenience: add tags property
-  .withDate(date)            // Convenience: add date property
-  .clone()                   // Clone this builder
-  .build()                   // Build PageEntity
+  .withValidation() // Enable validation
+  .withUuid(uuid) // Set UUID
+  .withId(id) // Set ID
+  .withName(name) // Set name
+  .withProperty(key, value) // Add single property
+  .withProperties(props) // Add multiple properties
+  .withBlocks(blocks) // Set blocks
+  .asJournalPage() // Mark as journal
+  .withAuthor(author) // Convenience: add author property
+  .withTags(...tags) // Convenience: add tags property
+  .withDate(date) // Convenience: add date property
+  .clone() // Clone this builder
+  .build(); // Build PageEntity
 ```
 
 ### BlockBuilder
@@ -477,27 +478,27 @@ Fluent API for building blocks:
 
 ```typescript
 new BlockBuilder()
-  .withValidation()              // Enable validation
-  .withUuid(uuid)               // Set UUID
-  .withId(id)                   // Set ID
-  .withContent(content)         // Set content
-  .appendContent(content)       // Append to content
-  .prependContent(content)      // Prepend to content
-  .withProperty(key, value)     // Add property
-  .withHeadingLevel(level)      // Set heading level (1-6)
-  .withChildren(blocks)         // Set children
-  .addChild(block)              // Add single child
-  .withParent(parentId)         // Set parent ID
-  .withLeft(leftId)             // Set left sibling ID
-  .withPage(pageId)             // Set page ID
-  .withFormat(format)           // Set format (markdown/org)
-  .asPropertyOnly(props)        // Property-only block
-  .withBlockReference(uuid)     // Add ((uuid)) reference
-  .withPageReference(name)      // Add [[name]] reference
-  .withTag(tag)                 // Add #tag
-  .withTags(...tags)            // Add multiple tags
-  .clone()                      // Clone this builder
-  .build()                      // Build BlockEntity
+  .withValidation() // Enable validation
+  .withUuid(uuid) // Set UUID
+  .withId(id) // Set ID
+  .withContent(content) // Set content
+  .appendContent(content) // Append to content
+  .prependContent(content) // Prepend to content
+  .withProperty(key, value) // Add property
+  .withHeadingLevel(level) // Set heading level (1-6)
+  .withChildren(blocks) // Set children
+  .addChild(block) // Add single child
+  .withParent(parentId) // Set parent ID
+  .withLeft(leftId) // Set left sibling ID
+  .withPage(pageId) // Set page ID
+  .withFormat(format) // Set format (markdown/org)
+  .asPropertyOnly(props) // Property-only block
+  .withBlockReference(uuid) // Add ((uuid)) reference
+  .withPageReference(name) // Add [[name]] reference
+  .withTag(tag) // Add #tag
+  .withTags(...tags) // Add multiple tags
+  .clone() // Clone this builder
+  .build(); // Build BlockEntity
 ```
 
 ### AssetBuilder
@@ -506,25 +507,22 @@ Fluent API for building assets:
 
 ```typescript
 new AssetBuilder()
-  .withUuid(uuid)           // Set UUID
-  .withTitle(title)         // Set title
-  .withType(type)           // Set type
-  .asImage('png')           // Set as image type
-  .asPdf()                  // Set as PDF
-  .asDocument('md')         // Set as document
+  .withUuid(uuid) // Set UUID
+  .withTitle(title) // Set title
+  .withType(type) // Set type
+  .asImage('png') // Set as image type
+  .asPdf() // Set as PDF
+  .asDocument('md') // Set as document
   .withProperty(key, value) // Add property
-  .build()                  // Build asset object
-  .buildAsBlock()           // Build as BlockEntity
-  .buildAsPage()            // Build as PageEntity
+  .build() // Build asset object
+  .buildAsBlock() // Build as BlockEntity
+  .buildAsPage(); // Build as PageEntity
 ```
 
 ### GraphBuilder
 
 ```typescript
-new GraphBuilder()
-  .withPath(path)
-  .withName(name)
-  .build()
+new GraphBuilder().withPath(path).withName(name).build();
 ```
 
 ## Factory Functions
@@ -541,8 +539,8 @@ const post = createBlogPost({
   date: '2024-01-15',
   sections: [
     { heading: 'Introduction', content: 'Welcome!' },
-    { heading: 'Main Content', content: 'Content here...' }
-  ]
+    { heading: 'Main Content', content: 'Content here...' },
+  ],
 });
 ```
 
@@ -557,14 +555,14 @@ const notes = createNotesPage({
     {
       heading: 'Types',
       level: 2,
-      notes: ['String', 'Number', 'Boolean']
+      notes: ['String', 'Number', 'Boolean'],
     },
     {
       heading: 'Interfaces',
       level: 2,
-      notes: ['Defining interfaces', 'Extending interfaces']
-    }
-  ]
+      notes: ['Defining interfaces', 'Extending interfaces'],
+    },
+  ],
 });
 ```
 
@@ -589,14 +587,14 @@ const docs = createDocumentationPage({
     {
       heading: 'Installation',
       description: 'How to install...',
-      examples: ['npm install package', 'yarn add package']
+      examples: ['npm install package', 'yarn add package'],
     },
     {
       heading: 'Usage',
       description: 'How to use...',
-      examples: ['import { fn } from "package"']
-    }
-  ]
+      examples: ['import { fn } from "package"'],
+    },
+  ],
 });
 ```
 
@@ -610,8 +608,8 @@ const tasks = createTaskPage({
   tasks: [
     { description: 'Setup project', completed: true },
     { description: 'Write tests', completed: false },
-    { description: 'Deploy', completed: false }
-  ]
+    { description: 'Deploy', completed: false },
+  ],
 });
 ```
 
@@ -637,9 +635,7 @@ mockLogseq.clearErrorSimulation('getCurrentPage');
 mockLogseq.delayResponse('datascriptQuery', 500);
 
 // Test race conditions
-mockLogseq
-  .delayResponse('getCurrentPage', 100)
-  .delayResponse('getPageBlocksTree', 200);
+mockLogseq.delayResponse('getCurrentPage', 100).delayResponse('getPageBlocksTree', 200);
 
 // Clear timing simulation
 mockLogseq.clearTimingSimulation('datascriptQuery');
@@ -699,10 +695,7 @@ if (mockLogseq.hasPage('some-uuid')) {
 
 ```typescript
 // Setup initial state
-mockLogseq
-  .addPage(SamplePages.simple)
-  .addBlock(SampleBlocks.heading)
-  .saveSeed(); // Save as seed
+mockLogseq.addPage(SamplePages.simple).addBlock(SampleBlocks.heading).saveSeed(); // Save as seed
 
 // Run test that modifies state
 await exporter.exportCurrentPage();
@@ -716,7 +709,7 @@ mockLogseq.reset({}); // Clears everything
 // Reset to custom seed
 mockLogseq.reset({
   pages: new Map([['uuid', somePage]]),
-  blocks: new Map()
+  blocks: new Map(),
 });
 ```
 
@@ -754,9 +747,7 @@ const block = new BlockBuilder()
 
 ```typescript
 // Create base template
-const baseBlock = new BlockBuilder()
-  .withProperty('template', 'true')
-  .withTags('template');
+const baseBlock = new BlockBuilder().withProperty('template', 'true').withTags('template');
 
 // Clone and customize
 const block1 = baseBlock.clone().withContent('Block 1').build();
@@ -796,9 +787,7 @@ describe('MarkdownExporter with Mock SDK', () => {
       title: 'Test Post',
       author: 'Brian',
       tags: ['test'],
-      sections: [
-        { heading: 'Intro', content: 'Hello' }
-      ]
+      sections: [{ heading: 'Intro', content: 'Hello' }],
     });
 
     sdk.logseq.setCurrentPage(page).addPage(page);
@@ -842,9 +831,7 @@ it('should handle image assets', async () => {
   const imageUuid = '323e4567-e89b-12d3-a456-426614174000';
 
   const page = new PageBuilder().withName('Page With Image').build();
-  const block = new BlockBuilder()
-    .withContent(`Check out this image: [[${imageUuid}]]`)
-    .build();
+  const block = new BlockBuilder().withContent(`Check out this image: [[${imageUuid}]]`).build();
 
   page.children = [block as any];
 
@@ -928,17 +915,20 @@ it('should handle deeply nested blocks', async () => {
 If you're migrating from previous mocking approaches:
 
 **Old approach:**
+
 ```typescript
 const mockLogseq = { getCurrentPage: vi.fn() };
 ```
 
 **New approach:**
+
 ```typescript
 const mockLogseq = new MockLogseqAPI();
 mockLogseq.setCurrentPage(SamplePages.simple);
 ```
 
 **Benefits:**
+
 - Type safety
 - State management
 - Call tracking built-in
@@ -953,10 +943,7 @@ mockLogseq.setCurrentPage(SamplePages.simple);
 Enable validation to catch UUID format errors:
 
 ```typescript
-const page = new PageBuilder()
-  .withValidation()
-  .withUuid('must-be-valid-uuid-format')
-  .build();
+const page = new PageBuilder().withValidation().withUuid('must-be-valid-uuid-format').build();
 ```
 
 ### Query not matching
@@ -964,13 +951,12 @@ const page = new PageBuilder()
 Check query patterns and add custom pattern if needed:
 
 ```typescript
-mockLogseq.addQueryPattern(
-  /your-pattern/,
-  (query, state) => {
-    console.log('Query:', query);
-    return [/* results */];
-  }
-);
+mockLogseq.addQueryPattern(/your-pattern/, (query, state) => {
+  console.log('Query:', query);
+  return [
+    /* results */
+  ];
+});
 ```
 
 ### State not resetting between tests

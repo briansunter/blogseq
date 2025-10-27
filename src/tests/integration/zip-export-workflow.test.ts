@@ -115,7 +115,7 @@ describe('ZIP Export Workflow Tests', () => {
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'My Image'
+        'block/title': 'My Image',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -218,7 +218,7 @@ describe('ZIP Export Workflow Tests', () => {
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Asset Title'
+        'block/title': 'Asset Title',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -391,7 +391,7 @@ describe('ZIP Export Workflow Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [parentBlock]);
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -421,7 +421,7 @@ describe('ZIP Export Workflow Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [block]);
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -450,7 +450,7 @@ describe('ZIP Export Workflow Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [block]);
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -482,8 +482,8 @@ describe('ZIP Export Workflow Tests', () => {
       expect(mockAPI.calls.showMsg).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'success'
-          })
+            type: 'success',
+          }),
         ])
       );
     });
@@ -499,11 +499,11 @@ describe('ZIP Export Workflow Tests', () => {
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithAssets, [block]);
 
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
-        uuid: TestUUIDs.imageAsset
+        uuid: TestUUIDs.imageAsset,
       } as any);
 
       mockAPI.addAsset(TestUUIDs.pdfAsset, 'pdf', {
-        uuid: TestUUIDs.pdfAsset
+        uuid: TestUUIDs.pdfAsset,
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -522,8 +522,8 @@ describe('ZIP Export Workflow Tests', () => {
       expect(mockAPI.calls.showMsg).toEqual(
         expect.arrayContaining([
           expect.objectContaining({
-            type: 'success'
-          })
+            type: 'success',
+          }),
         ])
       );
     });

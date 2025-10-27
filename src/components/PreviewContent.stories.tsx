@@ -1,22 +1,22 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import { PreviewContent } from "./PreviewContent";
+import type { Meta, StoryObj } from '@storybook/react';
+import { PreviewContent } from './PreviewContent';
 
 /**
  * The PreviewContent component renders markdown content in either raw or rendered mode.
  * It handles frontmatter, images, code blocks, and all standard markdown elements.
  */
 const meta = {
-  title: "Components/PreviewContent",
+  title: 'Components/PreviewContent',
   component: PreviewContent,
   parameters: {
-    layout: "fullscreen",
+    layout: 'fullscreen',
   },
-  tags: ["autodocs"],
+  tags: ['autodocs'],
   argTypes: {
     previewMode: {
-      control: "radio",
-      options: ["raw", "rendered"],
-      description: "Display mode for the markdown content",
+      control: 'radio',
+      options: ['raw', 'rendered'],
+      description: 'Display mode for the markdown content',
     },
   },
 } satisfies Meta<typeof PreviewContent>;
@@ -279,8 +279,8 @@ Testing special chars: & < > " ' \` @ # $ % ^ * ( ) [ ] { }
 export const Default: Story = {
   args: {
     preview: sampleMarkdownWithFrontmatter,
-    previewMode: "rendered",
-    graphPath: "/Users/test/logseq-graph",
+    previewMode: 'rendered',
+    graphPath: '/Users/test/logseq-graph',
   },
 };
 
@@ -290,8 +290,8 @@ export const Default: Story = {
 export const RawMode: Story = {
   args: {
     preview: sampleMarkdownWithFrontmatter,
-    previewMode: "raw",
-    graphPath: "/Users/test/logseq-graph",
+    previewMode: 'raw',
+    graphPath: '/Users/test/logseq-graph',
   },
 };
 
@@ -301,8 +301,8 @@ export const RawMode: Story = {
 export const SimpleContent: Story = {
   args: {
     preview: simpleMarkdown,
-    previewMode: "rendered",
-    graphPath: "/Users/test/logseq-graph",
+    previewMode: 'rendered',
+    graphPath: '/Users/test/logseq-graph',
   },
 };
 
@@ -312,8 +312,8 @@ export const SimpleContent: Story = {
 export const CodeHeavy: Story = {
   args: {
     preview: codeHeavyMarkdown,
-    previewMode: "rendered",
-    graphPath: "/Users/test/logseq-graph",
+    previewMode: 'rendered',
+    graphPath: '/Users/test/logseq-graph',
   },
 };
 
@@ -323,8 +323,8 @@ export const CodeHeavy: Story = {
 export const LongArticle: Story = {
   args: {
     preview: longArticle,
-    previewMode: "rendered",
-    graphPath: "/Users/test/logseq-graph",
+    previewMode: 'rendered',
+    graphPath: '/Users/test/logseq-graph',
   },
 };
 
@@ -334,8 +334,8 @@ export const LongArticle: Story = {
 export const WithImages: Story = {
   args: {
     preview: markdownWithImages,
-    previewMode: "rendered",
-    graphPath: "/Users/test/logseq-graph",
+    previewMode: 'rendered',
+    graphPath: '/Users/test/logseq-graph',
   },
 };
 
@@ -345,8 +345,8 @@ export const WithImages: Story = {
 export const ComplexFormatting: Story = {
   args: {
     preview: complexFormatting,
-    previewMode: "rendered",
-    graphPath: "/Users/test/logseq-graph",
+    previewMode: 'rendered',
+    graphPath: '/Users/test/logseq-graph',
   },
 };
 
@@ -355,9 +355,9 @@ export const ComplexFormatting: Story = {
  */
 export const Empty: Story = {
   args: {
-    preview: "",
-    previewMode: "rendered",
-    graphPath: "/Users/test/logseq-graph",
+    preview: '',
+    previewMode: 'rendered',
+    graphPath: '/Users/test/logseq-graph',
   },
 };
 
@@ -370,7 +370,7 @@ export const OnlyFrontmatter: Story = {
 title: Empty Page
 author: Test User
 ---`,
-    previewMode: "rendered",
-    graphPath: "/Users/test/logseq-graph",
+    previewMode: 'rendered',
+    graphPath: '/Users/test/logseq-graph',
   },
 };

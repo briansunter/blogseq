@@ -101,14 +101,18 @@ describe('ZIP Asset Tests', () => {
         { uuid: '550e8400-e29b-41d4-a716-446655440101', type: 'png', mime: 'image/png' },
         { uuid: '550e8400-e29b-41d4-a716-446655440102', type: 'jpg', mime: 'image/jpeg' },
         { uuid: '550e8400-e29b-41d4-a716-446655440103', type: 'pdf', mime: 'application/pdf' },
-        { uuid: '550e8400-e29b-41d4-a716-446655440104', type: 'docx', mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' },
+        {
+          uuid: '550e8400-e29b-41d4-a716-446655440104',
+          type: 'docx',
+          mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        },
       ];
 
       // Test each asset type
       for (const asset of assetTypes) {
         mockAPI.addAsset(asset.uuid, asset.type, {
           uuid: asset.uuid,
-          'block/title': `Asset ${asset.type}`
+          'block/title': `Asset ${asset.type}`,
         } as any);
 
         mockFileAPI.setFetchResponse(
@@ -146,12 +150,12 @@ describe('ZIP Asset Tests', () => {
       // Use mockAPI.addAsset for consistent mocking
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Test Image'
+        'block/title': 'Test Image',
       } as any);
 
       mockAPI.addAsset(TestUUIDs.pdfAsset, 'pdf', {
         uuid: TestUUIDs.pdfAsset,
-        'block/title': 'Test PDF'
+        'block/title': 'Test PDF',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -192,7 +196,7 @@ describe('ZIP Asset Tests', () => {
       for (const uuid of [image1, image2, image3]) {
         mockAPI.addAsset(uuid, 'png', {
           uuid,
-          'block/title': `Image ${uuid}`
+          'block/title': `Image ${uuid}`,
         } as any);
 
         mockFileAPI.setFetchResponse(
@@ -226,12 +230,12 @@ describe('ZIP Asset Tests', () => {
       // CRITICAL: Set up asset mocks BEFORE adding page/blocks
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Test Image'
+        'block/title': 'Test Image',
       } as any);
 
       mockAPI.addAsset(TestUUIDs.pdfAsset, 'pdf', {
         uuid: TestUUIDs.pdfAsset,
-        'block/title': 'Test PDF'
+        'block/title': 'Test PDF',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -277,7 +281,7 @@ describe('ZIP Asset Tests', () => {
       // CRITICAL: Set up asset mocks BEFORE adding page/blocks
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Test Image'
+        'block/title': 'Test Image',
       } as any);
 
       const originalData = 'this-is-binary-image-data-12345';
@@ -311,7 +315,7 @@ describe('ZIP Asset Tests', () => {
       // CRITICAL: Set up asset mocks BEFORE adding page/blocks
       mockAPI.addAsset(TestUUIDs.pdfAsset, 'pdf', {
         uuid: TestUUIDs.pdfAsset,
-        'block/title': 'Test PDF'
+        'block/title': 'Test PDF',
       } as any);
 
       const largeData = 'x'.repeat(10000);
@@ -343,7 +347,7 @@ describe('ZIP Asset Tests', () => {
       // CRITICAL: Set up asset mocks BEFORE adding page/blocks
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Test Image'
+        'block/title': 'Test Image',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -386,7 +390,7 @@ describe('ZIP Asset Tests', () => {
       for (const { type, uuid } of imageTypes) {
         mockAPI.addAsset(uuid, type, {
           uuid,
-          'block/title': `Image ${type}`
+          'block/title': `Image ${type}`,
         } as any);
 
         mockFileAPI.setFetchResponse(
@@ -397,7 +401,6 @@ describe('ZIP Asset Tests', () => {
 
       // Test each asset type
       for (const { type, uuid } of imageTypes) {
-
         mockAPI.addPage(SamplePages.withAssets);
         mockAPI.setCurrentPage(SamplePages.withAssets);
 
@@ -430,7 +433,7 @@ describe('ZIP Asset Tests', () => {
       for (const { type, uuid } of docTypes) {
         mockAPI.addAsset(uuid, type, {
           uuid,
-          'block/title': `Document ${type}`
+          'block/title': `Document ${type}`,
         } as any);
 
         mockFileAPI.setFetchResponse(
@@ -441,7 +444,6 @@ describe('ZIP Asset Tests', () => {
 
       // Test each asset type
       for (const { type, uuid } of docTypes) {
-
         mockAPI.addPage(SamplePages.withAssets);
         mockAPI.setCurrentPage(SamplePages.withAssets);
 
@@ -468,7 +470,7 @@ describe('ZIP Asset Tests', () => {
       // CRITICAL: Set up asset mocks BEFORE adding page/blocks
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Image: With / Special? Chars!'
+        'block/title': 'Image: With / Special? Chars!',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -499,7 +501,7 @@ describe('ZIP Asset Tests', () => {
       // CRITICAL: Set up asset mocks BEFORE adding page/blocks
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Test Image'
+        'block/title': 'Test Image',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -536,7 +538,7 @@ describe('ZIP Asset Tests', () => {
       // CRITICAL: Set up asset mocks BEFORE adding page/blocks
       mockAPI.addAsset(TestUUIDs.imageAsset, 'png', {
         uuid: TestUUIDs.imageAsset,
-        'block/title': 'Test Image'
+        'block/title': 'Test Image',
       } as any);
 
       mockFileAPI.setFetchResponse(
@@ -576,7 +578,7 @@ describe('ZIP Asset Tests', () => {
       for (const uuid of [image1, image2]) {
         mockAPI.addAsset(uuid, 'png', {
           uuid,
-          'block/title': `Image ${uuid}`
+          'block/title': `Image ${uuid}`,
         } as any);
 
         mockFileAPI.setFetchResponse(
@@ -612,7 +614,7 @@ describe('ZIP Asset Tests', () => {
       for (const uuid of [pdf1, pdf2]) {
         mockAPI.addAsset(uuid, 'pdf', {
           uuid,
-          'block/title': `PDF ${uuid}`
+          'block/title': `PDF ${uuid}`,
         } as any);
 
         mockFileAPI.setFetchResponse(

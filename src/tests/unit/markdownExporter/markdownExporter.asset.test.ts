@@ -9,7 +9,7 @@ import {
   mockPageBlocksResponse,
   MockLogseqAPI,
   MockFileAPI,
-  MockDOMHelpers
+  MockDOMHelpers,
 } from '../../test-utils';
 
 describe('Asset Detection for [[uuid]] References', () => {
@@ -25,12 +25,12 @@ describe('Asset Detection for [[uuid]] References', () => {
       saveAs: vi.fn(),
       createObjectURL: vi.fn(() => 'blob://test-url'),
       revokeObjectURL: vi.fn(),
-      writeToClipboard: vi.fn()
+      writeToClipboard: vi.fn(),
     };
     mockDOMHelpers = {
       createElement: vi.fn(),
       appendChild: vi.fn(),
-      removeChild: vi.fn()
+      removeChild: vi.fn(),
     };
 
     exporter = new MarkdownExporter(mockAPI, mockFileAPI, mockDOMHelpers);
@@ -47,7 +47,7 @@ describe('Asset Detection for [[uuid]] References', () => {
     const page = createMockPage({ name: 'Test Page', uuid: 'page-uuid' });
     const blockWithRef = createMockBlock({
       uuid: 'block-uuid',
-      content: `[[${assetUuid}]]`  // Direct [[uuid]] reference
+      content: `[[${assetUuid}]]`, // Direct [[uuid]] reference
     });
 
     mockCurrentPageResponse(mockAPI, page);
@@ -61,11 +61,14 @@ describe('Asset Detection for [[uuid]] References', () => {
       // Match the asset detection query
       if (query.includes(assetUuid) && query.includes(':logseq.property.asset/type')) {
         return Promise.resolve([
-          ['jpeg', {
-            'block/uuid': assetUuid,
-            'block/title': 'Lost Concert',
-            'logseq.property.asset/type': 'jpeg'
-          }]
+          [
+            'jpeg',
+            {
+              'block/uuid': assetUuid,
+              'block/title': 'Lost Concert',
+              'logseq.property.asset/type': 'jpeg',
+            },
+          ],
         ]);
       }
       return Promise.resolve([]);
@@ -89,7 +92,7 @@ describe('Asset Detection for [[uuid]] References', () => {
 
     const result = await exporter.exportCurrentPage({
       includePageName: false,
-      preserveBlockRefs: true
+      preserveBlockRefs: true,
     });
 
     console.log('Export result:', result);
@@ -105,7 +108,7 @@ describe('Asset Detection for [[uuid]] References', () => {
     const page = createMockPage({ name: 'Test Page', uuid: 'page-uuid' });
     const blockWithEmbed = createMockBlock({
       uuid: 'block-uuid',
-      content: `Check out this image: [[${assetUuid}]] - it's great!`
+      content: `Check out this image: [[${assetUuid}]] - it's great!`,
     });
 
     mockCurrentPageResponse(mockAPI, page);
@@ -115,11 +118,14 @@ describe('Asset Detection for [[uuid]] References', () => {
     mockAPI.datascriptQuery.mockImplementation((query: string) => {
       if (query.includes(assetUuid) && query.includes(':logseq.property.asset/type')) {
         return Promise.resolve([
-          ['png', {
-            'block/uuid': assetUuid,
-            'block/title': 'Screenshot',
-            'logseq.property.asset/type': 'png'
-          }]
+          [
+            'png',
+            {
+              'block/uuid': assetUuid,
+              'block/title': 'Screenshot',
+              'logseq.property.asset/type': 'png',
+            },
+          ],
         ]);
       }
       return Promise.resolve([]);
@@ -127,7 +133,7 @@ describe('Asset Detection for [[uuid]] References', () => {
 
     const result = await exporter.exportCurrentPage({
       includePageName: false,
-      preserveBlockRefs: true
+      preserveBlockRefs: true,
     });
 
     expect(result).toContain('Check out this image:');

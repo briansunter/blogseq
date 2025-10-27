@@ -80,11 +80,11 @@ describe('Export Workflow Integration', () => {
 
       const page = Array.from(context.pages.values())[0];
       const blocks = Array.from(context.blocks.values()).filter(
-        (b) => String(b.page?.id) === String(page.uuid) || b.page?.uuid === page.uuid
+        b => String(b.page?.id) === String(page.uuid) || b.page?.uuid === page.uuid
       );
 
       expect(blocks.length).toBeGreaterThan(0);
-      blocks.forEach((block) => {
+      blocks.forEach(block => {
         expect(block.content).toBeDefined();
       });
     });
@@ -117,7 +117,7 @@ describe('Export Workflow Integration', () => {
       expect(blocks.length).toBeGreaterThan(0);
 
       // Verify heading detection would work
-      blocks.forEach((block) => {
+      blocks.forEach(block => {
         expect(block.content).toBeDefined();
       });
     });
@@ -128,9 +128,7 @@ describe('Export Workflow Integration', () => {
       const context = setupIntegrationTest('pageWithReferences');
 
       const blocks = Array.from(context.blocks.values());
-      const blockWithReference = blocks.find((b) =>
-        b.content.includes('[[')
-      );
+      const blockWithReference = blocks.find(b => b.content.includes('[['));
 
       expect(blockWithReference).toBeDefined();
     });
@@ -139,9 +137,7 @@ describe('Export Workflow Integration', () => {
       const context = setupIntegrationTest('pageWithReferences');
 
       const blocks = Array.from(context.blocks.values());
-      const blockWithReference = blocks.find((b) =>
-        b.content.includes('((')
-      );
+      const blockWithReference = blocks.find(b => b.content.includes('(('));
 
       expect(blockWithReference).toBeDefined();
     });
@@ -150,7 +146,7 @@ describe('Export Workflow Integration', () => {
       const context = setupIntegrationTest('pageWithReferences');
 
       const blocks = Array.from(context.blocks.values());
-      blocks.forEach((block) => {
+      blocks.forEach(block => {
         if (block.content.includes('[[')) {
           expect(block.content).toMatch(/\[\[.*\]\]/);
         }
@@ -166,7 +162,7 @@ describe('Export Workflow Integration', () => {
       const context = setupIntegrationTest('pageWithAssets');
 
       const blocks = Array.from(context.blocks.values());
-      const assetBlocks = blocks.filter((b) => b.content.includes('!'));
+      const assetBlocks = blocks.filter(b => b.content.includes('!'));
 
       expect(assetBlocks.length).toBeGreaterThan(0);
     });
@@ -175,7 +171,7 @@ describe('Export Workflow Integration', () => {
       const context = setupIntegrationTest('pageWithAssets');
 
       const blocks = Array.from(context.blocks.values());
-      const assetBlocks = blocks.filter((b) => b.content.includes('['));
+      const assetBlocks = blocks.filter(b => b.content.includes('['));
 
       expect(assetBlocks.length).toBeGreaterThan(0);
     });
@@ -184,9 +180,9 @@ describe('Export Workflow Integration', () => {
       const context = setupIntegrationTest('pageWithAssets');
 
       const blocks = Array.from(context.blocks.values());
-      const assetBlocks = blocks.filter((b) => b.content.includes('.'));
+      const assetBlocks = blocks.filter(b => b.content.includes('.'));
 
-      assetBlocks.forEach((block) => {
+      assetBlocks.forEach(block => {
         expect(block.content).toMatch(/\.(png|jpg|jpeg|gif|pdf|doc|docx)/i);
       });
     });
@@ -202,15 +198,11 @@ describe('Export Workflow Integration', () => {
     it('should preserve cross-page references', async () => {
       const context = setupIntegrationTest('multiPageGraph');
 
-      const indexPage = Array.from(context.pages.values()).find(
-        (p) => p.name === 'Index Page'
-      );
+      const indexPage = Array.from(context.pages.values()).find(p => p.name === 'Index Page');
       expect(indexPage).toBeDefined();
 
       // Verify other pages exist
-      const pageA = Array.from(context.pages.values()).find(
-        (p) => p.name === 'Page A'
-      );
+      const pageA = Array.from(context.pages.values()).find(p => p.name === 'Page A');
       expect(pageA).toBeDefined();
     });
 
@@ -219,7 +211,7 @@ describe('Export Workflow Integration', () => {
 
       // Each page should have separate file in ZIP
       const pages = Array.from(context.pages.values());
-      const uniquePageNames = new Set(pages.map((p) => p.name));
+      const uniquePageNames = new Set(pages.map(p => p.name));
 
       expect(uniquePageNames.size).toBe(pages.length);
     });
@@ -227,7 +219,7 @@ describe('Export Workflow Integration', () => {
     it('should batch export all pages', async () => {
       const context = setupIntegrationTest('multiPageGraph');
 
-      const pageNames = Array.from(context.pages.values()).map((p) => p.name);
+      const pageNames = Array.from(context.pages.values()).map(p => p.name);
       expect(pageNames.length).toBe(4);
     });
   });
@@ -268,7 +260,7 @@ describe('Export Workflow Integration', () => {
       addNestedBlocksToPage(context, page.uuid, nestedStructure);
 
       const parentBlocks = Array.from(context.blocks.values()).filter(
-        (b) => b.content === 'Main section'
+        b => b.content === 'Main section'
       );
       expect(parentBlocks.length).toBeGreaterThan(0);
     });
@@ -280,10 +272,7 @@ describe('Export Workflow Integration', () => {
       const deepStructure = [
         {
           content: 'Level 1',
-          children: [
-            'Level 2 (would have children)',
-            'Level 2 sibling',
-          ],
+          children: ['Level 2 (would have children)', 'Level 2 sibling'],
         },
       ];
 
@@ -338,15 +327,13 @@ describe('Export Workflow Integration', () => {
       const context = setupIntegrationTest('simplePage');
 
       const page = Array.from(context.pages.values())[0];
-      const blocks = Array.from(context.blocks.values()).filter(
-        (b) => b.page?.uuid === page.uuid
-      );
+      const blocks = Array.from(context.blocks.values()).filter(b => b.page?.uuid === page.uuid);
 
       // Remove all blocks to test empty page
-      blocks.forEach((b) => context.blocks.delete(b.uuid));
+      blocks.forEach(b => context.blocks.delete(b.uuid));
 
       const remainingBlocks = Array.from(context.blocks.values()).filter(
-        (b) => b.page?.uuid === page.uuid
+        b => b.page?.uuid === page.uuid
       );
       expect(remainingBlocks.length).toBe(0);
     });
@@ -357,9 +344,7 @@ describe('Export Workflow Integration', () => {
       const page = Array.from(context.pages.values())[0];
       addBlocksToPage(context, page.uuid, ['', '', 'content']);
 
-      const emptyBlocks = Array.from(context.blocks.values()).filter(
-        (b) => b.content === ''
-      );
+      const emptyBlocks = Array.from(context.blocks.values()).filter(b => b.content === '');
       expect(emptyBlocks.length).toBeGreaterThan(0);
     });
 
@@ -367,14 +352,10 @@ describe('Export Workflow Integration', () => {
       const context = setupIntegrationTest('simplePage');
 
       const page = Array.from(context.pages.values())[0];
-      addBlocksToPage(context, page.uuid, [
-        '   ',
-        '\t\t',
-        'valid content',
-      ]);
+      addBlocksToPage(context, page.uuid, ['   ', '\t\t', 'valid content']);
 
-      const whitespaceBlocks = Array.from(context.blocks.values()).filter(
-        (b) => /^\s+$/.test(b.content)
+      const whitespaceBlocks = Array.from(context.blocks.values()).filter(b =>
+        /^\s+$/.test(b.content)
       );
       expect(whitespaceBlocks.length).toBeGreaterThan(0);
     });
@@ -393,7 +374,7 @@ describe('Export Workflow Integration', () => {
       const context = setupIntegrationTest('multiPageGraph');
 
       const pages = Array.from(context.pages.values());
-      pages.forEach((page) => {
+      pages.forEach(page => {
         // Page names should be safe for file names
         expect(page.name).toBeDefined();
       });
@@ -427,13 +408,9 @@ describe('Export Workflow Integration', () => {
     });
 
     it('should handle file paths correctly', async () => {
-      const paths = [
-        '/path/to/file.md',
-        '/another/path/document.pdf',
-        '/assets/image.png',
-      ];
+      const paths = ['/path/to/file.md', '/another/path/document.pdf', '/assets/image.png'];
 
-      paths.forEach((path) => {
+      paths.forEach(path => {
         mockFileSystem.writeFile(path, 'content');
       });
 

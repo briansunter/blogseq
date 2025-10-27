@@ -12,7 +12,7 @@ import {
   mockGraphResponse,
   type MockLogseqAPI,
   type MockFileAPI,
-  type MockDOMHelpers
+  type MockDOMHelpers,
 } from '../../test-utils';
 import { vi } from 'vitest';
 
@@ -30,13 +30,13 @@ describe('MarkdownExporter - Block Processing', () => {
       saveAs: vi.fn(),
       createObjectURL: vi.fn(() => 'blob://test-url'),
       revokeObjectURL: vi.fn(),
-      writeToClipboard: vi.fn()
+      writeToClipboard: vi.fn(),
     };
 
     mockDOMHelpers = {
       createElement: vi.fn(),
       appendChild: vi.fn(),
-      removeChild: vi.fn()
+      removeChild: vi.fn(),
     };
 
     exporter = new MarkdownExporter(mockAPI, mockFileAPI, mockDOMHelpers);
@@ -53,13 +53,17 @@ describe('MarkdownExporter - Block Processing', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'block-1',
-        content: 'Hello World'
+        content: 'Hello World',
       });
 
       mockCurrentPageResponse(mockAPI, page);
       mockPageBlocksResponse(mockAPI, [block]);
 
-      const result = await exporter.exportCurrentPage({ ...DEFAULT_OPTIONS, includePageName: false, includeProperties: false });
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+      });
       expect(result).toContain('Hello World');
     });
 
@@ -67,13 +71,17 @@ describe('MarkdownExporter - Block Processing', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'block-empty',
-        content: ''
+        content: '',
       });
 
       mockCurrentPageResponse(mockAPI, page);
       mockPageBlocksResponse(mockAPI, [block]);
 
-      const result = await exporter.exportCurrentPage({ ...DEFAULT_OPTIONS, includePageName: false, includeProperties: false });
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+      });
       expect(result.trim()).toBe('');
     });
 
@@ -83,7 +91,11 @@ describe('MarkdownExporter - Block Processing', () => {
       mockCurrentPageResponse(mockAPI, page);
       mockPageBlocksResponse(mockAPI, [null as unknown as BlockEntity]);
 
-      const result = await exporter.exportCurrentPage({ ...DEFAULT_OPTIONS, includePageName: false, includeProperties: false });
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+      });
       expect(result.trim()).toBe('');
     });
 
@@ -95,7 +107,11 @@ describe('MarkdownExporter - Block Processing', () => {
       mockCurrentPageResponse(mockAPI, page);
       mockPageBlocksResponse(mockAPI, [block]);
 
-      const result = await exporter.exportCurrentPage({ ...DEFAULT_OPTIONS, includePageName: false, includeProperties: false });
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+      });
       expect(result).toContain('No UUID');
     });
 
@@ -104,17 +120,21 @@ describe('MarkdownExporter - Block Processing', () => {
       const sharedUUID = 'shared-uuid-123';
       const block1 = createMockBlock({
         uuid: sharedUUID,
-        content: 'First appearance'
+        content: 'First appearance',
       });
       const block2 = createMockBlock({
         uuid: sharedUUID,
-        content: 'Second appearance'
+        content: 'Second appearance',
       });
 
       mockCurrentPageResponse(mockAPI, page);
       mockPageBlocksResponse(mockAPI, [block1, block2]);
 
-      const result = await exporter.exportCurrentPage({ ...DEFAULT_OPTIONS, includePageName: false, includeProperties: false });
+      const result = await exporter.exportCurrentPage({
+        ...DEFAULT_OPTIONS,
+        includePageName: false,
+        includeProperties: false,
+      });
 
       // Should only appear once
       const matches = result.match(/First appearance/g);
@@ -128,9 +148,9 @@ describe('MarkdownExporter - Block Processing', () => {
       const block = {
         ...createMockBlock({
           uuid: 'heading-1',
-          content: 'Main Heading'
+          content: 'Main Heading',
         }),
-        'logseq.property/heading': 1
+        'logseq.property/heading': 1,
       } as BlockEntity;
 
       mockCurrentPageResponse(mockAPI, page);
@@ -140,7 +160,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('# Main Heading');
@@ -151,9 +171,9 @@ describe('MarkdownExporter - Block Processing', () => {
       const block = {
         ...createMockBlock({
           uuid: 'heading-2',
-          content: 'Subtitle'
+          content: 'Subtitle',
         }),
-        'logseq.property/heading': 2
+        'logseq.property/heading': 2,
       } as BlockEntity;
 
       mockCurrentPageResponse(mockAPI, page);
@@ -163,7 +183,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('## Subtitle');
@@ -174,9 +194,9 @@ describe('MarkdownExporter - Block Processing', () => {
       const block = {
         ...createMockBlock({
           uuid: 'heading-3',
-          content: 'Section'
+          content: 'Section',
         }),
-        'logseq.property/heading': 3
+        'logseq.property/heading': 3,
       } as BlockEntity;
 
       mockCurrentPageResponse(mockAPI, page);
@@ -186,7 +206,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('### Section');
@@ -194,13 +214,16 @@ describe('MarkdownExporter - Block Processing', () => {
 
     it('should handle all heading levels 1-6', async () => {
       const page = createMockPage({ name: 'Test' });
-      const blocks = [1, 2, 3, 4, 5, 6].map(level => ({
-        ...createMockBlock({
-          uuid: `heading-${level}`,
-          content: `Level ${level}`
-        }),
-        'logseq.property/heading': level
-      } as BlockEntity));
+      const blocks = [1, 2, 3, 4, 5, 6].map(
+        level =>
+          ({
+            ...createMockBlock({
+              uuid: `heading-${level}`,
+              content: `Level ${level}`,
+            }),
+            'logseq.property/heading': level,
+          }) as BlockEntity
+      );
 
       mockCurrentPageResponse(mockAPI, page);
       mockPageBlocksResponse(mockAPI, blocks);
@@ -209,7 +232,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('# Level 1');
@@ -226,11 +249,9 @@ describe('MarkdownExporter - Block Processing', () => {
         ...createMockBlock({
           uuid: 'heading-with-children',
           content: 'Parent Heading',
-          children: [
-            createMockBlock({ uuid: 'child-1', content: 'Child content' })
-          ]
+          children: [createMockBlock({ uuid: 'child-1', content: 'Child content' })],
         }),
-        'logseq.property/heading': 2
+        'logseq.property/heading': 2,
       } as BlockEntity;
 
       mockCurrentPageResponse(mockAPI, page);
@@ -240,7 +261,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('## Parent Heading');
@@ -257,9 +278,9 @@ describe('MarkdownExporter - Block Processing', () => {
       const block = {
         ...createMockBlock({
           uuid: 'heading-no-flatten',
-          content: 'Heading'
+          content: 'Heading',
         }),
-        'logseq.property/heading': 2
+        'logseq.property/heading': 2,
       } as BlockEntity;
 
       mockCurrentPageResponse(mockAPI, page);
@@ -269,7 +290,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: false
+        flattenNested: false,
       });
 
       // When flattenNested is false, headings at depth 0 still work differently
@@ -281,9 +302,9 @@ describe('MarkdownExporter - Block Processing', () => {
       const block = {
         ...createMockBlock({
           uuid: 'empty-heading',
-          content: ''
+          content: '',
         }),
-        'logseq.property/heading': 2
+        'logseq.property/heading': 2,
       } as BlockEntity;
 
       mockCurrentPageResponse(mockAPI, page);
@@ -293,7 +314,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result.trim()).toBe('');
@@ -308,8 +329,8 @@ describe('MarkdownExporter - Block Processing', () => {
         content: 'Parent',
         children: [
           createMockBlock({ uuid: 'child-1', content: 'Child 1' }),
-          createMockBlock({ uuid: 'child-2', content: 'Child 2' })
-        ]
+          createMockBlock({ uuid: 'child-2', content: 'Child 2' }),
+        ],
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -319,7 +340,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('Parent');
@@ -335,8 +356,8 @@ describe('MarkdownExporter - Block Processing', () => {
         content: 'Parent',
         children: [
           createMockBlock({ uuid: 'child-1', content: 'Child 1' }),
-          createMockBlock({ uuid: 'child-2', content: 'Child 2' })
-        ]
+          createMockBlock({ uuid: 'child-2', content: 'Child 2' }),
+        ],
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -346,7 +367,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: false
+        flattenNested: false,
       });
 
       expect(result).toContain('Parent');
@@ -367,13 +388,11 @@ describe('MarkdownExporter - Block Processing', () => {
               createMockBlock({
                 uuid: 'level-3',
                 content: 'Level 3',
-                children: [
-                  createMockBlock({ uuid: 'level-4', content: 'Level 4' })
-                ]
-              })
-            ]
-          })
-        ]
+                children: [createMockBlock({ uuid: 'level-4', content: 'Level 4' })],
+              }),
+            ],
+          }),
+        ],
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -383,7 +402,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('Level 1');
@@ -402,11 +421,9 @@ describe('MarkdownExporter - Block Processing', () => {
           createMockBlock({
             uuid: 'level-2',
             content: 'Level 2',
-            children: [
-              createMockBlock({ uuid: 'level-3', content: 'Level 3' })
-            ]
-          })
-        ]
+            children: [createMockBlock({ uuid: 'level-3', content: 'Level 3' })],
+          }),
+        ],
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -416,12 +433,12 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: false
+        flattenNested: false,
       });
 
       expect(result).toContain('Level 1');
-      expect(result).toContain('- Level 2');  // First-level child: no indentation
-      expect(result).toContain('  - Level 3');  // Second-level child: 2 spaces
+      expect(result).toContain('- Level 2'); // First-level child: no indentation
+      expect(result).toContain('  - Level 3'); // Second-level child: 2 spaces
     });
 
     it('should handle blocks with no children', async () => {
@@ -429,7 +446,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const block = createMockBlock({
         uuid: 'no-children',
         content: 'Standalone',
-        children: []
+        children: [],
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -439,7 +456,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('Standalone');
@@ -449,7 +466,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'undefined-children',
-        content: 'No Children Defined'
+        content: 'No Children Defined',
       });
       delete block.children;
 
@@ -460,7 +477,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('No Children Defined');
@@ -473,9 +490,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const block = createMockBlock({
         uuid: 'prop-block',
         content: 'property:: value',
-        children: [
-          createMockBlock({ uuid: 'child', content: 'Child content' })
-        ]
+        children: [createMockBlock({ uuid: 'child', content: 'Child content' })],
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -485,7 +500,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).not.toContain('property::');
@@ -496,7 +511,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'multi-prop',
-        content: 'prop1:: value1\nprop2:: value2\nprop3:: value3'
+        content: 'prop1:: value1\nprop2:: value2\nprop3:: value3',
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -506,7 +521,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result.trim()).toBe('');
@@ -516,7 +531,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'mixed',
-        content: 'Regular content\nproperty:: value'
+        content: 'Regular content\nproperty:: value',
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -526,7 +541,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('Regular content');
@@ -539,7 +554,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const assetUuid = '550e8400-e29b-41d4-a716-446655440539';
       const block = createMockBlock({
         uuid: assetUuid,
-        content: 'Asset Title'
+        content: 'Asset Title',
       });
 
       mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
@@ -557,7 +572,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain(`![Asset Title](assets/${assetUuid}.png)`);
@@ -569,9 +584,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const block = createMockBlock({
         uuid: assetUuid,
         content: 'Asset',
-        children: [
-          createMockBlock({ uuid: 'child', content: 'Description' })
-        ]
+        children: [createMockBlock({ uuid: 'child', content: 'Description' })],
       });
 
       mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
@@ -589,7 +602,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('![');
@@ -601,7 +614,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const assetUuid = 'custom-path-asset';
       const block = createMockBlock({
         uuid: assetUuid,
-        content: 'Image'
+        content: 'Image',
       });
 
       mockAPI.DB.datascriptQuery.mockImplementation(async (query: string) => {
@@ -620,7 +633,7 @@ describe('MarkdownExporter - Block Processing', () => {
         includePageName: false,
         includeProperties: false,
         assetPath: 'images/',
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain(`images/${assetUuid}.png`);
@@ -632,7 +645,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'whitespace',
-        content: '   \n\t   '
+        content: '   \n\t   ',
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -642,7 +655,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result.trim()).toBe('');
@@ -653,7 +666,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const blocks = [
         createMockBlock({ uuid: 'sibling-1', content: 'First' }),
         createMockBlock({ uuid: 'sibling-2', content: 'Second' }),
-        createMockBlock({ uuid: 'sibling-3', content: 'Third' })
+        createMockBlock({ uuid: 'sibling-3', content: 'Third' }),
       ];
 
       mockCurrentPageResponse(mockAPI, page);
@@ -663,7 +676,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('First');
@@ -675,7 +688,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'special',
-        content: 'Content with **bold** and *italic* and `code`'
+        content: 'Content with **bold** and *italic* and `code`',
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -685,7 +698,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('**bold**');
@@ -699,11 +712,9 @@ describe('MarkdownExporter - Block Processing', () => {
         createMockBlock({
           uuid: 'root-1',
           content: 'Root 1',
-          children: [
-            createMockBlock({ uuid: 'child-1-1', content: 'Child 1-1' })
-          ]
+          children: [createMockBlock({ uuid: 'child-1-1', content: 'Child 1-1' })],
         }),
-        createMockBlock({ uuid: 'root-2', content: 'Root 2' })
+        createMockBlock({ uuid: 'root-2', content: 'Root 2' }),
       ];
 
       mockCurrentPageResponse(mockAPI, page);
@@ -713,7 +724,7 @@ describe('MarkdownExporter - Block Processing', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('Root 1');
@@ -728,13 +739,13 @@ describe('MarkdownExporter - Block Processing', () => {
       const refUuid = '550e8400-e29b-41d4-a716-446655440728';
       const block = createMockBlock({
         uuid: 'block-with-ref',
-        content: `Content with ((${refUuid})) reference`
+        content: `Content with ((${refUuid})) reference`,
       });
 
       mockAPI.Editor.getBlock.mockResolvedValue({
         uuid: refUuid,
         content: 'Referenced content',
-        properties: {}
+        properties: {},
       } as BlockEntity);
 
       mockCurrentPageResponse(mockAPI, page);
@@ -745,7 +756,7 @@ describe('MarkdownExporter - Block Processing', () => {
         includePageName: false,
         includeProperties: false,
         preserveBlockRefs: true,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).toContain('Referenced content');
@@ -756,7 +767,7 @@ describe('MarkdownExporter - Block Processing', () => {
       const page = createMockPage({ name: 'Test' });
       const block = createMockBlock({
         uuid: 'block-with-syntax',
-        content: 'TODO NOW [#A] Task with #tag and [[Page]]'
+        content: 'TODO NOW [#A] Task with #tag and [[Page]]',
       });
 
       mockCurrentPageResponse(mockAPI, page);
@@ -768,7 +779,7 @@ describe('MarkdownExporter - Block Processing', () => {
         includeProperties: false,
         removeLogseqSyntax: true,
         includeTags: false,
-        flattenNested: true
+        flattenNested: true,
       });
 
       expect(result).not.toContain('TODO');

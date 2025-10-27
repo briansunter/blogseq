@@ -1,18 +1,18 @@
-import type { Meta, StoryObj } from "@storybook/react";
-import React, { useEffect } from "react";
-import { ToastProvider, useToast } from "./Toast";
+import type { Meta, StoryObj } from '@storybook/react';
+import React, { useEffect } from 'react';
+import { ToastProvider, useToast } from './Toast';
 
 /**
  * Toast notifications provide feedback to users about actions and events.
  * They appear at the bottom-right of the screen and auto-dismiss after a few seconds.
  */
 const meta = {
-  title: "Components/Toast",
+  title: 'Components/Toast',
   component: ToastProvider,
   parameters: {
-    layout: "fullscreen",
+    layout: 'fullscreen',
   },
-  tags: ["autodocs"],
+  tags: ['autodocs'],
 } satisfies Meta<typeof ToastProvider>;
 
 export default meta;
@@ -22,7 +22,7 @@ type Story = StoryObj<typeof meta>;
  * Helper component to trigger toasts from stories
  */
 const ToastDemo: React.FC<{
-  type: "success" | "error" | "warning" | "info";
+  type: 'success' | 'error' | 'warning' | 'info';
   message: string;
   autoShow?: boolean;
 }> = ({ type, message, autoShow = true }) => {
@@ -32,16 +32,16 @@ const ToastDemo: React.FC<{
     if (autoShow) {
       const timer = setTimeout(() => {
         switch (type) {
-          case "success":
+          case 'success':
             showSuccess(message);
             break;
-          case "error":
+          case 'error':
             showError(message);
             break;
-          case "warning":
+          case 'warning':
             showWarning(message);
             break;
-          case "info":
+          case 'info':
             showInfo(message);
             break;
         }
@@ -158,10 +158,10 @@ export const MultipleToasts: Story = {
 
       useEffect(() => {
         const timers = [
-          setTimeout(() => showInfo("Starting export process..."), 500),
-          setTimeout(() => showSuccess("Page content processed"), 1500),
-          setTimeout(() => showWarning("Some assets not found"), 2500),
-          setTimeout(() => showError("Export failed due to network error"), 3500),
+          setTimeout(() => showInfo('Starting export process...'), 500),
+          setTimeout(() => showSuccess('Page content processed'), 1500),
+          setTimeout(() => showWarning('Some assets not found'), 2500),
+          setTimeout(() => showError('Export failed due to network error'), 3500),
         ];
         return () => timers.forEach(clearTimeout);
       }, [showSuccess, showError, showWarning, showInfo]);

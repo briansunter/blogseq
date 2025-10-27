@@ -70,20 +70,21 @@ src/tests/
 
 ```yaml
 Global Thresholds:
-  Statements:    80%
-  Branches:      75%  # Slightly lower due to error handling complexity
-  Functions:     80%
-  Lines:         80%
+  Statements: 80%
+  Branches: 75% # Slightly lower due to error handling complexity
+  Functions: 80%
+  Lines: 80%
 
 Per-File Settings:
-  perFile:       true        # Enforce per-file coverage
-  all:           true        # Include uncovered files
-  reportOnFailure: true      # Show failures if below threshold
+  perFile: true # Enforce per-file coverage
+  all: true # Include uncovered files
+  reportOnFailure: true # Show failures if below threshold
 ```
 
 ### Coverage Reports
 
 Generated reports include:
+
 - **Text**: Console output
 - **Text Summary**: Quick overview
 - **HTML**: Interactive coverage viewer
@@ -115,6 +116,7 @@ Runs on every push to `master` and `new` branches, and on pull requests.
 ```
 
 **Steps:**
+
 1. Checkout code
 2. Setup Node.js 20 + pnpm 8
 3. Install dependencies
@@ -139,6 +141,7 @@ Semantic Release
 ```
 
 **Features:**
+
 - Test and build must pass before release
 - Semantic versioning with conventional commits
 - Automatic changelog generation
@@ -199,23 +202,25 @@ Complete Logseq environment simulation:
 
 ```typescript
 // Create test context with full API mocks
-const context = createIntegrationTestContext()
+const context = createIntegrationTestContext();
 
 // Add pages and blocks dynamically
-const page = addPageToContext(context, 'Page Name')
-addBlocksToPage(context, pageUuid, ['Block 1', 'Block 2'])
-addNestedBlocksToPage(context, pageUuid, [{
-  content: 'Parent',
-  children: ['Child 1', 'Child 2']
-}])
+const page = addPageToContext(context, 'Page Name');
+addBlocksToPage(context, pageUuid, ['Block 1', 'Block 2']);
+addNestedBlocksToPage(context, pageUuid, [
+  {
+    content: 'Parent',
+    children: ['Child 1', 'Child 2'],
+  },
+]);
 
 // Use pre-built fixtures
-const context = setupIntegrationTest('simplePage')
-const context = setupIntegrationTest('multiPageGraph')
+const context = setupIntegrationTest('simplePage');
+const context = setupIntegrationTest('multiPageGraph');
 
 // Mock file system
-const fs = createMockFileSystem()
-fs.writeFile('/path/to/file.md', content)
+const fs = createMockFileSystem();
+fs.writeFile('/path/to/file.md', content);
 ```
 
 ### Global Mocks (setup.ts)
@@ -226,12 +231,12 @@ global.logseq = {
   Editor: { getCurrentPage, getPage, getBlock, getPageBlocksTree },
   App: { getCurrentGraph },
   DB: { datascriptQuery },
-  UI: { showMsg }
-}
+  UI: { showMsg },
+};
 
 // Browser APIs
-global.fetch = vi.fn()
-navigator.clipboard.writeText = vi.fn()
+global.fetch = vi.fn();
+navigator.clipboard.writeText = vi.fn();
 ```
 
 ## Test Suites
@@ -239,6 +244,7 @@ navigator.clipboard.writeText = vi.fn()
 ### Unit Tests (70%)
 
 #### MarkdownExporter Tests (54 tests)
+
 - Core export functionality
 - Block reference resolution
 - Asset detection
@@ -247,6 +253,7 @@ navigator.clipboard.writeText = vi.fn()
 - Error handling
 
 **Files:**
+
 - `markdownExporter.test.ts` - 50 tests
 - `markdownExporter.asset.test.ts` - 2 tests
 - `markdownExporter.realworld.test.ts` - 2 tests
@@ -254,6 +261,7 @@ navigator.clipboard.writeText = vi.fn()
 #### Hook Tests (NEW)
 
 **useExport.test.ts** (~25 tests)
+
 - Export state management
 - Preview generation
 - Asset population
@@ -262,6 +270,7 @@ navigator.clipboard.writeText = vi.fn()
 - Callback memoization
 
 **useBatchExport.test.ts** (~30 tests)
+
 - Batch export flow
 - Progress tracking
 - ZIP generation
@@ -270,6 +279,7 @@ navigator.clipboard.writeText = vi.fn()
 - Memory management
 
 **useAssets.test.ts** (~25 tests)
+
 - Asset downloading
 - Clipboard operations
 - Image MIME type handling
@@ -280,6 +290,7 @@ navigator.clipboard.writeText = vi.fn()
 ### Component Tests (20%)
 
 #### Toast Component Tests (`Toast.test.tsx`) (~30 tests)
+
 - Notification display (success, error, warning, info)
 - Auto-dismiss functionality
 - Manual dismissal
@@ -288,6 +299,7 @@ navigator.clipboard.writeText = vi.fn()
 - Accessibility features
 
 #### ErrorBoundary Component Tests (`ErrorBoundary.test.tsx`) (~30 tests)
+
 - Normal child rendering
 - Error catching
 - Error state management
@@ -297,6 +309,7 @@ navigator.clipboard.writeText = vi.fn()
 - TypeScript types
 
 #### Planned Component Tests
+
 - **ExportHeader**: Button interactions, icon rendering, accessibility
 - **SettingsBar**: Checkbox toggles, setting changes, validation
 - **PreviewContent**: Markdown rendering, syntax highlighting
@@ -305,6 +318,7 @@ navigator.clipboard.writeText = vi.fn()
 ### Integration Tests (10%)
 
 #### Export Workflow Tests (`export-workflow.integration.test.ts`) (~50 tests)
+
 - Simple page export
 - Page with headings
 - Cross-page references
@@ -325,37 +339,40 @@ navigator.clipboard.writeText = vi.fn()
 describe('Component Name', () => {
   beforeEach(() => {
     // Setup mocks and state
-  })
+  });
 
   afterEach(() => {
     // Cleanup and verification
-  })
+  });
 
   describe('Feature Group', () => {
     it('should specific behavior', () => {
       // Arrange
       // Act
       // Assert
-    })
-  })
-})
+    });
+  });
+});
 ```
 
 ### 2. Mocking Strategy
 
 **Mock at module boundaries:**
+
 ```typescript
-vi.mock('file-saver')
-vi.mock('jszip')
+vi.mock('file-saver');
+vi.mock('jszip');
 ```
 
 **Mock Logseq API selectively:**
+
 ```typescript
 // Mock only what you need
-logseq.Editor.getPage = vi.fn().mockResolvedValue(mockPage)
+logseq.Editor.getPage = vi.fn().mockResolvedValue(mockPage);
 ```
 
 **Avoid over-mocking:**
+
 ```typescript
 // Good: Test real behavior
 // Bad: Mock everything
@@ -364,10 +381,11 @@ logseq.Editor.getPage = vi.fn().mockResolvedValue(mockPage)
 ### 3. Test Fixtures
 
 Use pre-built fixtures from `componentFixtures` and `integrationFixtures`:
+
 ```typescript
 // Consistent, reusable test data
-const block = componentFixtures.nestedBlocks
-const context = setupIntegrationTest('pageWithHeadings')
+const block = componentFixtures.nestedBlocks;
+const context = setupIntegrationTest('pageWithHeadings');
 ```
 
 ### 4. Async Testing
@@ -375,13 +393,13 @@ const context = setupIntegrationTest('pageWithHeadings')
 ```typescript
 // Use act() for state updates
 await act(async () => {
-  await result.current.handleExport()
-})
+  await result.current.handleExport();
+});
 
 // Use waitFor for async assertions
 await waitFor(() => {
-  expect(screen.getByText('Success')).toBeInTheDocument()
-})
+  expect(screen.getByText('Success')).toBeInTheDocument();
+});
 ```
 
 ### 5. Coverage
@@ -396,6 +414,7 @@ await waitFor(() => {
 ### GitHub Actions Status Badges
 
 Add to README.md:
+
 ```markdown
 [![CI Status](https://github.com/briansunter/blogseq/workflows/CI/badge.svg)](https://github.com/briansunter/blogseq/actions)
 [![Release Status](https://github.com/briansunter/blogseq/workflows/Release/badge.svg)](https://github.com/briansunter/blogseq/actions)
@@ -412,22 +431,26 @@ View coverage: https://codecov.io/gh/briansunter/blogseq
 ## Debugging Tests
 
 ### Run Single Test File
+
 ```bash
 pnpm test -- Toast.test.tsx
 ```
 
 ### Run Tests Matching Pattern
+
 ```bash
 pnpm test -- --grep "should export"
 ```
 
 ### Debug Mode
+
 ```bash
 # Run in debug mode
 node --inspect-brk ./node_modules/vitest/vitest.mjs --run
 ```
 
 ### View Test UI
+
 ```bash
 pnpm test:ui  # Opens http://localhost:51204
 ```
@@ -435,6 +458,7 @@ pnpm test:ui  # Opens http://localhost:51204
 ## Future Enhancements
 
 ### Phase 3: Advanced Testing
+
 - [ ] E2E tests with Playwright
 - [ ] Performance benchmarks
 - [ ] Visual regression testing
@@ -442,6 +466,7 @@ pnpm test:ui  # Opens http://localhost:51204
 - [ ] Pre-commit hooks with husky
 
 ### Phase 4: Advanced Coverage
+
 - [ ] Coverage trend tracking
 - [ ] Coverage comments on PRs
 - [ ] Coverage badges
@@ -452,10 +477,10 @@ pnpm test:ui  # Opens http://localhost:51204
 ```json
 {
   "scripts": {
-    "test": "vitest",                     // Watch mode
-    "test:ui": "vitest --ui",             // Dashboard
-    "test:coverage": "vitest run --coverage",  // With coverage
-    "typecheck": "tsc --noEmit",          // TypeScript
+    "test": "vitest", // Watch mode
+    "test:ui": "vitest --ui", // Dashboard
+    "test:coverage": "vitest run --coverage", // With coverage
+    "typecheck": "tsc --noEmit" // TypeScript
   }
 }
 ```
@@ -463,20 +488,24 @@ pnpm test:ui  # Opens http://localhost:51204
 ## Troubleshooting
 
 ### Tests fail with "logseq is not defined"
+
 - Ensure `src/tests/setup.ts` is running
 - Check vitest.config.ts `setupFiles` setting
 
 ### Coverage below threshold
+
 - Run `pnpm test:coverage` to see detailed report
 - Add tests to uncovered files
 - Check HTML report for specific lines
 
 ### Tests timeout
+
 - Increase timeout in vitest.config.ts
 - Check for unresolved promises
 - Verify mocks are working
 
 ### Snapshot test failures
+
 - Review changes in git diff
 - Update snapshot with `u` key in watch mode
 - Use `--update` flag: `pnpm test -- --update`

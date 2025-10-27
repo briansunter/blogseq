@@ -166,7 +166,7 @@ describe('Export Settings', () => {
         'debug',
       ];
 
-      keys.forEach((key) => {
+      keys.forEach(key => {
         vi.clearAllMocks();
         updateExportSetting(key, 'test');
         expect((global as any).logseq.updateSettings).toHaveBeenCalled();
@@ -191,7 +191,7 @@ describe('Export Settings', () => {
 
   describe('Settings Schema', () => {
     it('should have schema for all settings', () => {
-      const keys = settingsSchema.map((s) => s.key);
+      const keys = settingsSchema.map(s => s.key);
 
       expect(keys).toContain('includePageName');
       expect(keys).toContain('flattenNested');
@@ -202,7 +202,7 @@ describe('Export Settings', () => {
     });
 
     it('should have proper schema structure', () => {
-      settingsSchema.forEach((setting) => {
+      settingsSchema.forEach(setting => {
         expect(setting).toHaveProperty('key');
         expect(setting).toHaveProperty('type');
         expect(setting).toHaveProperty('default');
@@ -213,25 +213,23 @@ describe('Export Settings', () => {
 
     it('should have correct types in schema', () => {
       const booleanSettings = settingsSchema.filter(
-        (s) => s.key === 'includePageName' || s.key === 'debug'
+        s => s.key === 'includePageName' || s.key === 'debug'
       );
-      booleanSettings.forEach((setting) => {
+      booleanSettings.forEach(setting => {
         expect(setting.type).toBe('boolean');
       });
 
-      const stringSettings = settingsSchema.filter(
-        (s) => s.key === 'assetPath'
-      );
-      stringSettings.forEach((setting) => {
+      const stringSettings = settingsSchema.filter(s => s.key === 'assetPath');
+      stringSettings.forEach(setting => {
         expect(setting.type).toBe('string');
       });
     });
 
     it('should have correct defaults in schema', () => {
       const schema = {
-        includePageName: settingsSchema.find((s) => s.key === 'includePageName'),
-        flattenNested: settingsSchema.find((s) => s.key === 'flattenNested'),
-        assetPath: settingsSchema.find((s) => s.key === 'assetPath'),
+        includePageName: settingsSchema.find(s => s.key === 'includePageName'),
+        flattenNested: settingsSchema.find(s => s.key === 'flattenNested'),
+        assetPath: settingsSchema.find(s => s.key === 'assetPath'),
       };
 
       expect(schema.includePageName?.default).toBe(false);
@@ -240,7 +238,7 @@ describe('Export Settings', () => {
     });
 
     it('should have descriptive titles and descriptions', () => {
-      settingsSchema.forEach((setting) => {
+      settingsSchema.forEach(setting => {
         expect(setting.title).toBeTruthy();
         expect(setting.title.length).toBeGreaterThan(0);
         expect(setting.description).toBeTruthy();

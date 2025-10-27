@@ -51,20 +51,14 @@ describe('useAppVisible Hook', () => {
       const mockHandler = vi.fn();
       (global as any).logseq.on('test-event', mockHandler);
 
-      expect((global as any).logseq.on).toHaveBeenCalledWith(
-        'test-event',
-        mockHandler
-      );
+      expect((global as any).logseq.on).toHaveBeenCalledWith('test-event', mockHandler);
     });
 
     it('should support event unregistration pattern', () => {
       const mockHandler = vi.fn();
       (global as any).logseq.off('test-event', mockHandler);
 
-      expect((global as any).logseq.off).toHaveBeenCalledWith(
-        'test-event',
-        mockHandler
-      );
+      expect((global as any).logseq.off).toHaveBeenCalledWith('test-event', mockHandler);
     });
 
     it('should handle event handler calls', () => {

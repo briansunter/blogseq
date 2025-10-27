@@ -12,7 +12,7 @@ import {
   mockGraphResponse,
   type MockLogseqAPI,
   type MockFileAPI,
-  type MockDOMHelpers
+  type MockDOMHelpers,
 } from '../../test-utils';
 import { vi } from 'vitest';
 
@@ -30,13 +30,13 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       saveAs: vi.fn(),
       createObjectURL: vi.fn(() => 'blob://test-url'),
       revokeObjectURL: vi.fn(),
-      writeToClipboard: vi.fn()
+      writeToClipboard: vi.fn(),
     };
 
     mockDOMHelpers = {
       createElement: vi.fn(),
       appendChild: vi.fn(),
-      removeChild: vi.fn()
+      removeChild: vi.fn(),
     };
 
     exporter = new MarkdownExporter(mockAPI, mockFileAPI, mockDOMHelpers);
@@ -59,7 +59,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('---');
@@ -76,7 +76,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('slug: my-test-page');
@@ -92,7 +92,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('slug: testpage--more');
@@ -109,7 +109,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       // Should have minimal or no frontmatter
@@ -123,7 +123,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test Page',
         originalName: 'Test Page',
         'journal?': false,
-        ':user.property/author-abc123': 'John Doe'
+        ':user.property/author-abc123': 'John Doe',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -133,7 +133,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: false
+        includeProperties: false,
       });
 
       expect(result).not.toContain('---');
@@ -151,7 +151,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         'journal?': false,
         ':user.property/author-abc123': 'Jane Smith',
         ':user.property/date-xyz789': '2024-01-15',
-        ':user.property/description-def456': 'Test description'
+        ':user.property/description-def456': 'Test description',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -163,7 +163,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
           return [
             [':user.property/author-abc123', 'author'],
             [':user.property/date-xyz789', 'date'],
-            [':user.property/description-def456', 'description']
+            [':user.property/description-def456', 'description'],
           ];
         }
         return [];
@@ -172,7 +172,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('author: Jane Smith');
@@ -189,7 +189,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         'journal?': false,
         ':user.property/title-abc123': 'My Title',
         ':logseq.property.embedding-xyz789': 'internal',
-        ':logseq.property/created-at-def456': 1234567890
+        ':logseq.property/created-at-def456': 1234567890,
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -206,7 +206,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('title: My Title');
@@ -222,7 +222,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         originalName: 'Test',
         'journal?': false,
         ':user.property/known-abc123': 'Value',
-        ':user.property/unknown-xyz789': 'Should Skip'
+        ':user.property/unknown-xyz789': 'Should Skip',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -239,7 +239,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('known: Value');
@@ -253,7 +253,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Default Title',
         originalName: 'Default Title',
         'journal?': false,
-        ':user.property/title-abc123': 'Custom Title Override'
+        ':user.property/title-abc123': 'Custom Title Override',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -270,7 +270,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('title: Custom Title Override');
@@ -287,7 +287,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         originalName: 'Test',
         'journal?': false,
         ':user.property/tags-abc123': ['javascript', 'typescript'],
-        ':user.property/blogTags-xyz789': ['web-dev', 'tutorial']
+        ':user.property/blogTags-xyz789': ['web-dev', 'tutorial'],
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -298,7 +298,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
             [':user.property/tags-abc123', 'tags'],
-            [':user.property/blogTags-xyz789', 'blogTags']
+            [':user.property/blogTags-xyz789', 'blogTags'],
           ];
         }
         return [];
@@ -307,7 +307,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('tags:');
@@ -326,7 +326,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         originalName: 'Test',
         'journal?': false,
         ':user.property/tags-abc123': ['react', 'duplicate'],
-        ':user.property/blogTags-xyz789': ['duplicate', 'vue']
+        ':user.property/blogTags-xyz789': ['duplicate', 'vue'],
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -337,7 +337,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
             [':user.property/tags-abc123', 'tags'],
-            [':user.property/blogTags-xyz789', 'blogTags']
+            [':user.property/blogTags-xyz789', 'blogTags'],
           ];
         }
         return [];
@@ -346,7 +346,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       const duplicateMatches = result.match(/- duplicate/g);
@@ -360,7 +360,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/tags-abc123': ['single-tag']
+        ':user.property/tags-abc123': ['single-tag'],
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -377,7 +377,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('tags:');
@@ -391,7 +391,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/tags-abc123': []
+        ':user.property/tags-abc123': [],
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -408,7 +408,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).not.toContain('tags:');
@@ -423,7 +423,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/text-abc123': 'Simple text value'
+        ':user.property/text-abc123': 'Simple text value',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -440,7 +440,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('text: Simple text value');
@@ -453,7 +453,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/items-abc123': ['item1', 'item2', 'item3']
+        ':user.property/items-abc123': ['item1', 'item2', 'item3'],
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -470,7 +470,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('items:');
@@ -486,7 +486,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/unique-abc123': new Set(['one', 'two', 'three'])
+        ':user.property/unique-abc123': new Set(['one', 'two', 'three']),
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -503,7 +503,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('unique:');
@@ -519,7 +519,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/reference-abc123': '[[Referenced Page]]'
+        ':user.property/reference-abc123': '[[Referenced Page]]',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -536,7 +536,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('reference: Referenced Page');
@@ -550,7 +550,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/image-abc123': '550e8400-e29b-41d4-a716-446655440574'
+        ':user.property/image-abc123': '550e8400-e29b-41d4-a716-446655440574',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -562,8 +562,10 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [[':user.property/image-abc123', 'image']];
         }
-        if (query.includes('550e8400-e29b-41d4-a716-446655440574') &&
-            query.includes(':logseq.property.asset/type')) {
+        if (
+          query.includes('550e8400-e29b-41d4-a716-446655440574') &&
+          query.includes(':logseq.property.asset/type')
+        ) {
           return [['png', { ':block/uuid': { $uuid: '550e8400-e29b-41d4-a716-446655440574' } }]];
         }
         return [];
@@ -572,7 +574,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('image: assets/550e8400-e29b-41d4-a716-446655440574.png');
@@ -585,7 +587,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/linked-abc123': { 'db/id': 999 }
+        ':user.property/linked-abc123': { 'db/id': 999 },
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -597,7 +599,10 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [[':user.property/linked-abc123', 'linked']];
         }
-        if (query.includes('[999 :block/uuid') || query.includes('[999 :logseq.property.asset/type')) {
+        if (
+          query.includes('[999 :block/uuid') ||
+          query.includes('[999 :logseq.property.asset/type')
+        ) {
           return [[{ $uuid: 'linked-asset-uuid' }, 'pdf', 'Linked Asset']];
         }
         return [];
@@ -606,7 +611,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('linked: assets/linked-asset-uuid.pdf');
@@ -619,7 +624,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/ref-abc123': { 'db/id': 888 }
+        ':user.property/ref-abc123': { 'db/id': 888 },
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -630,7 +635,11 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [[':user.property/ref-abc123', 'ref']];
         }
-        if (query.includes('[888 :block/uuid') || query.includes('[888 :logseq.property.asset/type') || query.includes('[888 :block/title')) {
+        if (
+          query.includes('[888 :block/uuid') ||
+          query.includes('[888 :logseq.property.asset/type') ||
+          query.includes('[888 :block/title')
+        ) {
           if (query.includes('?uuid ?type ?title')) {
             return []; // Not an asset
           }
@@ -644,7 +653,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('ref: Referenced Item');
@@ -659,7 +668,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/description-abc123': 'Line 1\nLine 2\nLine 3'
+        ':user.property/description-abc123': 'Line 1\nLine 2\nLine 3',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -676,7 +685,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('description: |');
@@ -693,7 +702,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         originalName: 'Test',
         'journal?': false,
         ':user.property/count-abc123': 42,
-        ':user.property/rating-xyz789': 4.5
+        ':user.property/rating-xyz789': 4.5,
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -704,7 +713,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
             [':user.property/count-abc123', 'count'],
-            [':user.property/rating-xyz789', 'rating']
+            [':user.property/rating-xyz789', 'rating'],
           ];
         }
         return [];
@@ -713,7 +722,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('count: 42');
@@ -728,7 +737,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         originalName: 'Test',
         'journal?': false,
         ':user.property/published-abc123': true,
-        ':user.property/draft-xyz789': false
+        ':user.property/draft-xyz789': false,
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -739,7 +748,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
             [':user.property/published-abc123', 'published'],
-            [':user.property/draft-xyz789', 'draft']
+            [':user.property/draft-xyz789', 'draft'],
           ];
         }
         return [];
@@ -748,7 +757,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('published: true');
@@ -767,7 +776,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       // Should still work with original page object
@@ -781,7 +790,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/author-abc123': 'John'
+        ':user.property/author-abc123': 'John',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -793,7 +802,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       // Should still generate basic frontmatter
@@ -807,7 +816,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/unmapped-abc123': 'Value'
+        ':user.property/unmapped-abc123': 'Value',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -819,7 +828,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       // Should skip unmapped properties
@@ -835,7 +844,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         'journal?': false,
         ':user.property/nullValue-abc123': null,
         ':user.property/undefinedValue-xyz789': undefined,
-        ':user.property/validValue-def456': 'Valid'
+        ':user.property/validValue-def456': 'Valid',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -847,7 +856,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
           return [
             [':user.property/nullValue-abc123', 'nullValue'],
             [':user.property/undefinedValue-xyz789', 'undefinedValue'],
-            [':user.property/validValue-def456', 'validValue']
+            [':user.property/validValue-def456', 'validValue'],
           ];
         }
         return [];
@@ -856,7 +865,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).not.toContain('nullValue');
@@ -877,7 +886,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('title: Test');
@@ -891,7 +900,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        ':user.property/cover-abc123': '550e8400-e29b-41d4-a716-446655440927'
+        ':user.property/cover-abc123': '550e8400-e29b-41d4-a716-446655440927',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -913,7 +922,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         ...DEFAULT_OPTIONS,
         includePageName: false,
         includeProperties: true,
-        assetPath: 'media/'
+        assetPath: 'media/',
       });
 
       expect(result).toContain('cover: media/550e8400-e29b-41d4-a716-446655440927.jpg');
@@ -928,7 +937,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         'journal?': false,
         ':user.property/author-abc123': 'John',
         ':user.property/date-xyz789': '2024-01-01',
-        ':user.property/category-def456': 'Tech'
+        ':user.property/category-def456': 'Tech',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -940,7 +949,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
           return [
             [':user.property/author-abc123', 'author'],
             [':user.property/date-xyz789', 'date'],
-            [':user.property/category-def456', 'category']
+            [':user.property/category-def456', 'category'],
           ];
         }
         return [];
@@ -949,7 +958,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('author: John');
@@ -965,7 +974,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         originalName: 'Test',
         'journal?': false,
         ':user.property/empty-abc123': '',
-        ':user.property/valid-xyz789': 'Not Empty'
+        ':user.property/valid-xyz789': 'Not Empty',
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -976,7 +985,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
             [':user.property/empty-abc123', 'empty'],
-            [':user.property/valid-xyz789', 'valid']
+            [':user.property/valid-xyz789', 'valid'],
           ];
         }
         return [];
@@ -985,7 +994,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       const result = await exporter.exportCurrentPage({
         ...DEFAULT_OPTIONS,
         includePageName: false,
-        includeProperties: true
+        includeProperties: true,
       });
 
       expect(result).toContain('valid: Not Empty');

@@ -1,4 +1,4 @@
-import { FileAPI } from "../../markdownExporter";
+import { FileAPI } from '../../markdownExporter';
 
 /**
  * Mock implementation of FileAPI
@@ -19,7 +19,7 @@ export class MockFileAPI implements FileAPI {
   // Mock storage
   private objectURLs = new Map<Blob, string>();
   private fileResponses = new Map<string, Response>();
-  private clipboardContent = "";
+  private clipboardContent = '';
   private nextObjectURLId = 0;
 
   /**
@@ -35,12 +35,12 @@ export class MockFileAPI implements FileAPI {
     }
 
     // Default: return a successful empty response for file:// URLs
-    if (url.startsWith("file://")) {
-      return this.createMockResponse("", 200);
+    if (url.startsWith('file://')) {
+      return this.createMockResponse('', 200);
     }
 
     // For other URLs, return 404
-    return this.createMockResponse("Not Found", 404);
+    return this.createMockResponse('Not Found', 404);
   }
 
   /**
@@ -112,24 +112,38 @@ export class MockFileAPI implements FileAPI {
   /**
    * Simulate a fetch error for a specific URL
    */
-  setFetchError(url: string, error: Error = new Error("Fetch failed")): this {
+  setFetchError(url: string, error: Error = new Error('Fetch failed')): this {
     this.fileResponses.set(url, {
       ok: false,
       status: 500,
-      statusText: "Error",
-      blob: async () => { throw error; },
-      text: async () => { throw error; },
-      json: async () => { throw error; },
+      statusText: 'Error',
+      blob: async () => {
+        throw error;
+      },
+      text: async () => {
+        throw error;
+      },
+      json: async () => {
+        throw error;
+      },
       headers: new Headers(),
       redirected: false,
-      type: "error",
+      type: 'error',
       url,
-      clone: function() { return this; },
+      clone: function () {
+        return this;
+      },
       body: null,
       bodyUsed: false,
-      arrayBuffer: async () => { throw error; },
-      formData: async () => { throw error; },
-      bytes: async () => { throw error; },
+      arrayBuffer: async () => {
+        throw error;
+      },
+      formData: async () => {
+        throw error;
+      },
+      bytes: async () => {
+        throw error;
+      },
     } as Response);
     return this;
   }
@@ -137,7 +151,7 @@ export class MockFileAPI implements FileAPI {
   /**
    * Simulate a clipboard write error
    */
-  throwErrorOnClipboard(error: Error = new Error("Clipboard error")): this {
+  throwErrorOnClipboard(error: Error = new Error('Clipboard error')): this {
     this.writeToClipboard = async (text: string) => {
       this.calls.writeToClipboard.push(text);
       throw error;
@@ -179,12 +193,11 @@ export class MockFileAPI implements FileAPI {
    * Read content from a saved blob
    */
   async readSavedBlobContent(index = -1): Promise<string> {
-    const savedFile = index < 0
-      ? this.calls.saveAs[this.calls.saveAs.length + index]
-      : this.calls.saveAs[index];
+    const savedFile =
+      index < 0 ? this.calls.saveAs[this.calls.saveAs.length + index] : this.calls.saveAs[index];
 
     if (!savedFile) {
-      throw new Error("No saved file at index " + index);
+      throw new Error('No saved file at index ' + index);
     }
 
     return savedFile.blob.text();
@@ -201,7 +214,7 @@ export class MockFileAPI implements FileAPI {
    * Check if a file was saved with a specific name
    */
   wasSavedAs(filename: string): boolean {
-    return this.calls.saveAs.some((f) => f.filename === filename);
+    return this.calls.saveAs.some(f => f.filename === filename);
   }
 
   // Reset methods
@@ -213,7 +226,7 @@ export class MockFileAPI implements FileAPI {
     this.resetCalls();
     this.objectURLs.clear();
     this.fileResponses.clear();
-    this.clipboardContent = "";
+    this.clipboardContent = '';
     this.nextObjectURLId = 0;
     return this;
   }
@@ -242,15 +255,17 @@ export class MockFileAPI implements FileAPI {
     return {
       ok: status >= 200 && status < 300,
       status,
-      statusText: status === 200 ? "OK" : "Error",
+      statusText: status === 200 ? 'OK' : 'Error',
       blob: async () => blob,
       text: async () => blob.text(),
       json: async () => JSON.parse(await blob.text()),
       headers: new Headers(),
       redirected: false,
-      type: "basic",
-      url: "",
-      clone: function() { return this; },
+      type: 'basic',
+      url: '',
+      clone: function () {
+        return this;
+      },
       body: null,
       bodyUsed: false,
       arrayBuffer: async () => new ArrayBuffer(0),
@@ -262,7 +277,7 @@ export class MockFileAPI implements FileAPI {
   /**
    * Create a mock Blob for testing
    */
-  static createBlob(content: string, type = "text/plain"): Blob {
+  static createBlob(content: string, type = 'text/plain'): Blob {
     return new Blob([content], { type });
   }
 
@@ -274,15 +289,17 @@ export class MockFileAPI implements FileAPI {
     return {
       ok: status >= 200 && status < 300,
       status,
-      statusText: status === 200 ? "OK" : "Error",
+      statusText: status === 200 ? 'OK' : 'Error',
       blob: async () => blob,
       text: async () => blob.text(),
       json: async () => JSON.parse(await blob.text()),
       headers: new Headers(),
       redirected: false,
-      type: "basic",
-      url: "",
-      clone: function() { return this; },
+      type: 'basic',
+      url: '',
+      clone: function () {
+        return this;
+      },
       body: null,
       bodyUsed: false,
       arrayBuffer: async () => new ArrayBuffer(0),

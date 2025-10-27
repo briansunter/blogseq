@@ -138,11 +138,7 @@ export function renderWithLogseq(
 
   // Create wrapper with providers
   const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const content = withToastProvider ? (
-      <ToastProvider>{children}</ToastProvider>
-    ) : (
-      <>{children}</>
-    );
+    const content = withToastProvider ? <ToastProvider>{children}</ToastProvider> : <>{children}</>;
 
     return wrapper ? React.createElement(wrapper, null, content) : content;
   };
