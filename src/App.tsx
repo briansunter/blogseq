@@ -24,6 +24,7 @@ function App() {
 
 function AppContent() {
   const innerRef = useRef<HTMLDivElement>(null);
+  const hasAutoExported = useRef<boolean>(false);
   const visible = useAppVisible();
   const { showSuccess, showError, showWarning } = useToast();
   const [currentPageName, setCurrentPageName] = useState<string>("");
@@ -64,11 +65,13 @@ function AppContent() {
     }
   }, []);
   
-  const handleExportWithUI = useCallback(async () => {
+  const handleExportWithUI = useCallback(async (showToast: boolean = true) => {
     const result = await handleExport();
     if (result.success) {
       setShowPreview(true);
-      showSuccess("Export successful!");
+      if (showToast) {
+        showSuccess("Export successful!");
+      }
     } else if (result.error === "NO_ACTIVE_PAGE") {
       showWarning("Please open a page first before exporting");
       setTimeout(() => window.logseq.hideMainUI(), 2000);
@@ -107,8 +110,18 @@ function AppContent() {
     return () => window.removeEventListener("logseq-export-page", handleExportEvent);
   }, [quickExport]);
 
+  // Reset auto-export flag when UI becomes hidden
+  useEffect(() => {
+    if (!visible) {
+      hasAutoExported.current = false;
+    }
+  }, [visible]);
+
   useEffect(() => {
     if (!visible) return;
+
+    // Skip if we've already auto-exported for this session
+    if (hasAutoExported.current) return;
 
     // Skip auto-export in Storybook/test environments
     const isStorybook = typeof window !== 'undefined' &&
@@ -119,7 +132,10 @@ function AppContent() {
     loadCurrentPage();
     const timer = setTimeout(async () => {
       const page = await logseq.Editor.getCurrentPage();
-      if (page) await handleExportWithUI();
+      if (page) {
+        hasAutoExported.current = true;
+        await handleExportWithUI(false); // Silent auto-export, no toast
+      }
     }, 100);
 
     return () => clearTimeout(timer);
