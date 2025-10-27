@@ -457,45 +457,35 @@ describe('MarkdownExporter', () => {
         name: 'Test Page',
         originalName: 'Test Page',
         'journal?': false,
-        properties: {
-          'user.property/title': 'My Article',
-          'user.property/date': '2024-01-15',
-          'user.property/tags': ['javascript', 'typescript'],
-          'user.property/author': 'John Doe'
-        }
+        ':user.property/title-abc123': 'My Article',
+        ':user.property/date-xyz789': '2024-01-15',
+        ':user.property/tags-def456': ['javascript', 'typescript'],
+        ':user.property/author-ghi789': 'John Doe'
       };
-      
+
       mockAPI.Editor.getPage.mockResolvedValue(pageWithProps);
       mockAPI.getPage.mockResolvedValue(pageWithProps);
       mockCurrentPageResponse(mockAPI, pageWithProps as PageEntity);
       mockPageBlocksResponse(mockAPI, [createMockBlock({ content: 'Content' })]);
-      
+
       // Mock the DataScript queries for property mapping
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [
-            ['user.property/title', 'title'],
-            ['user.property/date', 'date'],
-            ['user.property/tags', 'tags'],
-            ['user.property/author', 'author']
-          ];
-        }
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/title', 'title'],
-            ['user.property/date', 'date'],
-            ['user.property/tags', 'tags'],
-            ['user.property/author', 'author']
+            [':user.property/title-abc123', 'title'],
+            [':user.property/date-xyz789', 'date'],
+            [':user.property/tags-def456', 'tags'],
+            [':user.property/author-ghi789', 'author']
           ];
         }
         return [];
       });
-      
-      const result = await exporter.exportCurrentPage({ 
+
+      const result = await exporter.exportCurrentPage({
         includeProperties: true,
         includePageName: false
       });
-      
+
       expect(result).toContain('---');
       expect(result).toContain('title: My Article');
       expect(result).toContain('date: 2024-01-15');
@@ -509,32 +499,30 @@ describe('MarkdownExporter', () => {
         name: 'Page',
         originalName: 'Page',
         'journal?': false,
-        properties: {
-          'user.property/tags': ['duplicate', 'unique1'],
-          'user.property/blogTags': ['duplicate', 'unique2']
-        }
+        ':user.property/tags-abc123': ['duplicate', 'unique1'],
+        ':user.property/blogTags-xyz789': ['duplicate', 'unique2']
       };
-      
+
       mockAPI.Editor.getPage.mockResolvedValue(page);
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
-      
+
       // Mock DataScript queries for property mapping
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/tags', 'tags'],
-            ['user.property/blogTags', 'blogTags']
+            [':user.property/tags-abc123', 'tags'],
+            [':user.property/blogTags-xyz789', 'blogTags']
           ];
         }
         return [];
       });
-      
-      const result = await exporter.exportCurrentPage({ 
+
+      const result = await exporter.exportCurrentPage({
         includeProperties: true,
         includePageName: false
       });
-      
+
       // Count occurrences of 'duplicate' - should only appear once
       const duplicateCount = (result.match(/duplicate/g) || []).length;
       expect(duplicateCount).toBe(1);
@@ -548,35 +536,33 @@ describe('MarkdownExporter', () => {
         name: 'Page',
         originalName: 'Page',
         'journal?': false,
-        properties: {
-          'user.property/title': 'Keep this',
-          'logseq.property.embedding': 'internal',
-          'db/id': 123,
-          'user.property/author': 'Keep this too'
-        }
+        ':user.property/title-abc123': 'Keep this',
+        ':logseq.property.embedding-xyz789': 'internal',
+        'db/id': 123,
+        ':user.property/author-def456': 'Keep this too'
       };
-      
+
       mockAPI.Editor.getPage.mockResolvedValue(page);
       mockAPI.getPage.mockResolvedValue(page);
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
-      
+
       // Mock DataScript queries for property mapping
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/title', 'title'],
-            ['user.property/author', 'author']
+            [':user.property/title-abc123', 'title'],
+            [':user.property/author-def456', 'author']
           ];
         }
         return [];
       });
-      
-      const result = await exporter.exportCurrentPage({ 
+
+      const result = await exporter.exportCurrentPage({
         includeProperties: true,
         includePageName: false
       });
-      
+
       expect(result).toContain('title: Keep this');
       expect(result).toContain('author: Keep this too');
       expect(result).not.toContain('embedding');
@@ -590,17 +576,15 @@ describe('MarkdownExporter', () => {
         name: 'Page',
         originalName: 'Page',
         'journal?': false,
-        properties: {
-          'user.property/coverImage': 'a1234567-89ab-cdef-0123-456789abcdef'
-        }
+        ':user.property/coverImage-abc123': 'a1234567-89ab-cdef-0123-456789abcdef'
       };
-      
+
       // Mock asset type detection and property queries
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/coverImage', 'coverImage']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/coverImage-abc123', 'coverImage']];
         }
-        if (query.includes(':block/uuid #uuid "a1234567-89ab-cdef-0123-456789abcdef"') && 
+        if (query.includes(':block/uuid #uuid "a1234567-89ab-cdef-0123-456789abcdef"') &&
             query.includes(':logseq.property.asset/type')) {
           return [
             ['jpg', { ':block/uuid': { $uuid: 'a1234567-89ab-cdef-0123-456789abcdef' } }]
@@ -608,17 +592,18 @@ describe('MarkdownExporter', () => {
         }
         return [];
       });
-      
+
       mockAPI.Editor.getPage.mockResolvedValue(page);
       mockAPI.getPage.mockResolvedValue(page);
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
-      
-      const result = await exporter.exportCurrentPage({ 
+      mockGraphResponse(mockAPI, '/test/graph');
+
+      const result = await exporter.exportCurrentPage({
         includeProperties: true,
         includePageName: false
       });
-      
+
       expect(result).toContain('coverImage: assets/a1234567-89ab-cdef-0123-456789abcdef.jpg');
     });
 
@@ -629,32 +614,30 @@ describe('MarkdownExporter', () => {
         name: 'Page',
         originalName: 'Page',
         'journal?': false,
-        properties: {
-          'user.property/relatedPage': '[[Another Page]]',
-          'user.property/category': '[[Category/Subcategory]]'
-        }
+        ':user.property/relatedPage-abc123': '[[Another Page]]',
+        ':user.property/category-xyz789': '[[Category/Subcategory]]'
       };
-      
+
       mockAPI.Editor.getPage.mockResolvedValue(page);
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
-      
+
       // Mock DataScript queries for property mapping
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/relatedPage', 'relatedPage'],
-            ['user.property/category', 'category']
+            [':user.property/relatedPage-abc123', 'relatedPage'],
+            [':user.property/category-xyz789', 'category']
           ];
         }
         return [];
       });
-      
-      const result = await exporter.exportCurrentPage({ 
+
+      const result = await exporter.exportCurrentPage({
         includeProperties: true,
         includePageName: false
       });
-      
+
       expect(result).toContain('relatedPage: Another Page');
       expect(result).toContain('category: Category/Subcategory');
     });
@@ -666,31 +649,29 @@ describe('MarkdownExporter', () => {
         name: 'Page',
         originalName: 'Page',
         'journal?': false,
-        properties: {
-          'user.property/uniqueTags': new Set(['unique1', 'unique2'])
-        }
+        ':user.property/uniqueTags-abc123': new Set(['unique1', 'unique2'])
       };
-      
+
       mockAPI.Editor.getPage.mockResolvedValue(page);
-      
+
       // Mock property mapping queries
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/uniqueTags', 'uniqueTags']
+            [':user.property/uniqueTags-abc123', 'uniqueTags']
           ];
         }
         return [];
       });
-      
+
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
-      
-      const result = await exporter.exportCurrentPage({ 
+
+      const result = await exporter.exportCurrentPage({
         includeProperties: true,
         includePageName: false
       });
-      
+
       expect(result).toContain('uniqueTags:');
       expect(result).toContain('unique1');
       expect(result).toContain('unique2');
@@ -703,34 +684,32 @@ describe('MarkdownExporter', () => {
         name: 'Page',
         originalName: 'Page',
         'journal?': false,
-        properties: {
-          'user.property/linkedAsset': { 'db/id': 999 }
-        }
+        ':user.property/linkedAsset-abc123': { 'db/id': 999 }
       };
-      
+
       // Mock property mapping and database reference queries
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/linkedAsset', 'linkedAsset']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/linkedAsset-abc123', 'linkedAsset']];
         }
-        if (query.includes(':db/id 999')) {
+        if (query.includes('[999 :block/uuid') || query.includes('[999 :logseq.property.asset/type')) {
           return [
             [{ $uuid: 'linked-asset-uuid' }, 'pdf', 'Asset Title']
           ];
         }
         return [];
       });
-      
+
       mockAPI.Editor.getPage.mockResolvedValue(page);
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
       mockGraphResponse(mockAPI, '/test/graph');
-      
-      const result = await exporter.exportCurrentPage({ 
+
+      const result = await exporter.exportCurrentPage({
         includeProperties: true,
         includePageName: false
       });
-      
+
       expect(result).toContain('linkedAsset: assets/linked-asset-uuid.pdf');
     });
 
@@ -758,29 +737,40 @@ describe('MarkdownExporter', () => {
     });
 
     it('should collect property values to skip', async () => {
+      const uuid1 = 'a1234567-89ab-cdef-0123-456789abcde1';
+      const uuid2 = 'a1234567-89ab-cdef-0123-456789abcde2';
+      const uuid5 = 'a1234567-89ab-cdef-0123-456789abcde5';
+
       const page = {
         uuid: 'page-uuid',
         id: 1,
         name: 'Page',
         originalName: 'Page',
         'journal?': false,
-        properties: {
-          prop1: 'value1',
-          prop2: ['value2', 'value3'],
-          prop3: new Set(['value4'])
-        }
+        ':user.property/prop1-abc123': { 'db/id': 101 },
+        ':user.property/prop2-xyz789': [{ 'db/id': 102 }, { 'db/id': 103 }],
+        ':user.property/prop3-def456': new Set([{ 'db/id': 104 }])
       };
-      
+
+      // Mock DataScript to resolve db/ids to UUIDs
+      mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
+        if (query.includes('[101 :block/uuid')) return [[uuid1]];
+        if (query.includes('[102 :block/uuid')) return [[uuid2]];
+        if (query.includes('[103 :block/uuid')) return [[{ $uuid: 'uuid3' }]];
+        if (query.includes('[104 :block/uuid')) return [[{ $uuid: 'uuid4' }]];
+        return [];
+      });
+
       mockAPI.Editor.getPage.mockResolvedValue(page);
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, [
-        createMockBlock({ content: 'value1' }), // Should be skipped
-        createMockBlock({ content: 'value2' }), // Should be skipped
-        createMockBlock({ content: 'value5' })  // Should be included
+        createMockBlock({ uuid: uuid1, content: 'value1' }), // Should be skipped (UUID matches property value)
+        createMockBlock({ uuid: uuid2, content: 'value2' }), // Should be skipped (UUID matches property value)
+        createMockBlock({ uuid: uuid5, content: 'value5' })  // Should be included (UUID doesn't match any property)
       ]);
-      
+
       const result = await exporter.exportCurrentPage();
-      
+
       expect(result).not.toContain('value1');
       expect(result).not.toContain('value2');
       expect(result).toContain('value5');

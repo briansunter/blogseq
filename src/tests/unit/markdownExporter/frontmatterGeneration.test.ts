@@ -117,13 +117,17 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
     });
 
     it('should not generate frontmatter when includeProperties is false', async () => {
-      const page = createMockPage({
+      const page = {
+        uuid: 'page-uuid',
+        id: 1,
         name: 'Test Page',
-        properties: { 'user.property/author': 'John Doe' }
-      });
+        originalName: 'Test Page',
+        'journal?': false,
+        ':user.property/author-abc123': 'John Doe'
+      };
 
-      mockAPI.Editor.getPage.mockResolvedValue(page);
-      mockCurrentPageResponse(mockAPI, page);
+      mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
+      mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
 
       const result = await exporter.exportCurrentPage({
@@ -145,11 +149,9 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test Page',
         originalName: 'Test Page',
         'journal?': false,
-        properties: {
-          'user.property/author': 'Jane Smith',
-          'user.property/date': '2024-01-15',
-          'user.property/description': 'Test description'
-        }
+        ':user.property/author-abc123': 'Jane Smith',
+        ':user.property/date-xyz789': '2024-01-15',
+        ':user.property/description-def456': 'Test description'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -157,11 +159,11 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/author', 'author'],
-            ['user.property/date', 'date'],
-            ['user.property/description', 'description']
+            [':user.property/author-abc123', 'author'],
+            [':user.property/date-xyz789', 'date'],
+            [':user.property/description-def456', 'description']
           ];
         }
         return [];
@@ -185,11 +187,9 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/title': 'My Title',
-          'logseq.property.embedding': 'internal',
-          'logseq.property/created-at': 1234567890
-        }
+        ':user.property/title-abc123': 'My Title',
+        ':logseq.property.embedding-xyz789': 'internal',
+        ':logseq.property/created-at-def456': 1234567890
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -197,8 +197,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/title', 'title']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/title-abc123', 'title']];
         }
         return [];
       });
@@ -221,10 +221,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/known': 'Value',
-          'user.property/unknown': 'Should Skip'
-        }
+        ':user.property/known-abc123': 'Value',
+        ':user.property/unknown-xyz789': 'Should Skip'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -232,8 +230,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/known', 'known']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/known-abc123', 'known']];
         }
         return [];
       });
@@ -255,9 +253,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Default Title',
         originalName: 'Default Title',
         'journal?': false,
-        properties: {
-          'user.property/title': 'Custom Title Override'
-        }
+        ':user.property/title-abc123': 'Custom Title Override'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -265,8 +261,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/title', 'title']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/title-abc123', 'title']];
         }
         return [];
       });
@@ -290,10 +286,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/tags': ['javascript', 'typescript'],
-          'user.property/blogTags': ['web-dev', 'tutorial']
-        }
+        ':user.property/tags-abc123': ['javascript', 'typescript'],
+        ':user.property/blogTags-xyz789': ['web-dev', 'tutorial']
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -301,10 +295,10 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/tags', 'tags'],
-            ['user.property/blogTags', 'blogTags']
+            [':user.property/tags-abc123', 'tags'],
+            [':user.property/blogTags-xyz789', 'blogTags']
           ];
         }
         return [];
@@ -331,10 +325,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/tags': ['react', 'duplicate'],
-          'user.property/blogTags': ['duplicate', 'vue']
-        }
+        ':user.property/tags-abc123': ['react', 'duplicate'],
+        ':user.property/blogTags-xyz789': ['duplicate', 'vue']
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -342,10 +334,10 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/tags', 'tags'],
-            ['user.property/blogTags', 'blogTags']
+            [':user.property/tags-abc123', 'tags'],
+            [':user.property/blogTags-xyz789', 'blogTags']
           ];
         }
         return [];
@@ -368,9 +360,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/tags': ['single-tag']
-        }
+        ':user.property/tags-abc123': ['single-tag']
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -378,8 +368,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/tags', 'tags']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/tags-abc123', 'tags']];
         }
         return [];
       });
@@ -401,9 +391,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/tags': []
-        }
+        ':user.property/tags-abc123': []
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -411,8 +399,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/tags', 'tags']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/tags-abc123', 'tags']];
         }
         return [];
       });
@@ -435,9 +423,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/text': 'Simple text value'
-        }
+        ':user.property/text-abc123': 'Simple text value'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -445,8 +431,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/text', 'text']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/text-abc123', 'text']];
         }
         return [];
       });
@@ -467,9 +453,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/items': ['item1', 'item2', 'item3']
-        }
+        ':user.property/items-abc123': ['item1', 'item2', 'item3']
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -477,8 +461,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/items', 'items']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/items-abc123', 'items']];
         }
         return [];
       });
@@ -502,9 +486,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/unique': new Set(['one', 'two', 'three'])
-        }
+        ':user.property/unique-abc123': new Set(['one', 'two', 'three'])
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -512,8 +494,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/unique', 'unique']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/unique-abc123', 'unique']];
         }
         return [];
       });
@@ -537,9 +519,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/reference': '[[Referenced Page]]'
-        }
+        ':user.property/reference-abc123': '[[Referenced Page]]'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -547,8 +527,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/reference', 'reference']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/reference-abc123', 'reference']];
         }
         return [];
       });
@@ -570,9 +550,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/image': '550e8400-e29b-41d4-a716-446655440574'
-        }
+        ':user.property/image-abc123': '550e8400-e29b-41d4-a716-446655440574'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -581,8 +559,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockGraphResponse(mockAPI, '/test/graph');
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/image', 'image']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/image-abc123', 'image']];
         }
         if (query.includes('550e8400-e29b-41d4-a716-446655440574') &&
             query.includes(':logseq.property.asset/type')) {
@@ -607,9 +585,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/linked': { 'db/id': 999 }
-        }
+        ':user.property/linked-abc123': { 'db/id': 999 }
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -618,10 +594,10 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockGraphResponse(mockAPI, '/test/graph');
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/linked', 'linked']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/linked-abc123', 'linked']];
         }
-        if (query.includes(':db/id 999')) {
+        if (query.includes('[999 :block/uuid') || query.includes('[999 :logseq.property.asset/type')) {
           return [[{ $uuid: 'linked-asset-uuid' }, 'pdf', 'Linked Asset']];
         }
         return [];
@@ -643,9 +619,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/ref': { 'db/id': 888 }
-        }
+        ':user.property/ref-abc123': { 'db/id': 888 }
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -653,14 +627,14 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/ref', 'ref']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/ref-abc123', 'ref']];
         }
-        if (query.includes(':db/id 888')) {
+        if (query.includes('[888 :block/uuid') || query.includes('[888 :logseq.property.asset/type') || query.includes('[888 :block/title')) {
           if (query.includes('?uuid ?type ?title')) {
             return []; // Not an asset
           }
-          if (query.includes('?title :where')) {
+          if (query.includes('[888 :block/title ?title]')) {
             return [['Referenced Item']];
           }
         }
@@ -685,9 +659,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/description': 'Line 1\nLine 2\nLine 3'
-        }
+        ':user.property/description-abc123': 'Line 1\nLine 2\nLine 3'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -695,8 +667,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/description', 'description']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/description-abc123', 'description']];
         }
         return [];
       });
@@ -720,10 +692,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/count': 42,
-          'user.property/rating': 4.5
-        }
+        ':user.property/count-abc123': 42,
+        ':user.property/rating-xyz789': 4.5
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -731,10 +701,10 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/count', 'count'],
-            ['user.property/rating', 'rating']
+            [':user.property/count-abc123', 'count'],
+            [':user.property/rating-xyz789', 'rating']
           ];
         }
         return [];
@@ -757,10 +727,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/published': true,
-          'user.property/draft': false
-        }
+        ':user.property/published-abc123': true,
+        ':user.property/draft-xyz789': false
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -768,10 +736,10 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/published', 'published'],
-            ['user.property/draft', 'draft']
+            [':user.property/published-abc123', 'published'],
+            [':user.property/draft-xyz789', 'draft']
           ];
         }
         return [];
@@ -807,13 +775,17 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
     });
 
     it('should handle DataScript query errors gracefully', async () => {
-      const page = createMockPage({
+      const page = {
+        uuid: 'page-uuid',
+        id: 1,
         name: 'Test',
-        properties: { 'user.property/author': 'John' }
-      });
+        originalName: 'Test',
+        'journal?': false,
+        ':user.property/author-abc123': 'John'
+      };
 
-      mockAPI.Editor.getPage.mockResolvedValue(page);
-      mockCurrentPageResponse(mockAPI, page);
+      mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
+      mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockRejectedValue(new Error('Query failed'));
@@ -835,9 +807,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/unmapped': 'Value'
-        }
+        ':user.property/unmapped-abc123': 'Value'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -863,11 +833,9 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/nullValue': null,
-          'user.property/undefinedValue': undefined,
-          'user.property/validValue': 'Valid'
-        }
+        ':user.property/nullValue-abc123': null,
+        ':user.property/undefinedValue-xyz789': undefined,
+        ':user.property/validValue-def456': 'Valid'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -875,11 +843,11 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/nullValue', 'nullValue'],
-            ['user.property/undefinedValue', 'undefinedValue'],
-            ['user.property/validValue', 'validValue']
+            [':user.property/nullValue-abc123', 'nullValue'],
+            [':user.property/undefinedValue-xyz789', 'undefinedValue'],
+            [':user.property/validValue-def456', 'validValue']
           ];
         }
         return [];
@@ -923,9 +891,7 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/cover': '550e8400-e29b-41d4-a716-446655440927'
-        }
+        ':user.property/cover-abc123': '550e8400-e29b-41d4-a716-446655440927'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -934,8 +900,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockGraphResponse(mockAPI, '/test/graph');
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
-          return [['user.property/cover', 'cover']];
+        if (query.includes('[:find ?prop-key ?prop-title')) {
+          return [[':user.property/cover-abc123', 'cover']];
         }
         if (query.includes('550e8400-e29b-41d4-a716-446655440927')) {
           return [['jpg', {}]];
@@ -960,11 +926,9 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/author': 'John',
-          'user.property/date': '2024-01-01',
-          'user.property/category': 'Tech'
-        }
+        ':user.property/author-abc123': 'John',
+        ':user.property/date-xyz789': '2024-01-01',
+        ':user.property/category-def456': 'Tech'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -972,11 +936,11 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/author', 'author'],
-            ['user.property/date', 'date'],
-            ['user.property/category', 'category']
+            [':user.property/author-abc123', 'author'],
+            [':user.property/date-xyz789', 'date'],
+            [':user.property/category-def456', 'category']
           ];
         }
         return [];
@@ -1000,10 +964,8 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         name: 'Test',
         originalName: 'Test',
         'journal?': false,
-        properties: {
-          'user.property/empty': '',
-          'user.property/valid': 'Not Empty'
-        }
+        ':user.property/empty-abc123': '',
+        ':user.property/valid-xyz789': 'Not Empty'
       };
 
       mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
@@ -1011,10 +973,10 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockPageBlocksResponse(mockAPI, []);
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[:find ?ident ?title')) {
+        if (query.includes('[:find ?prop-key ?prop-title')) {
           return [
-            ['user.property/empty', 'empty'],
-            ['user.property/valid', 'valid']
+            [':user.property/empty-abc123', 'empty'],
+            [':user.property/valid-xyz789', 'valid']
           ];
         }
         return [];

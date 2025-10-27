@@ -142,11 +142,10 @@ export const SamplePages: Record<string, PageEntity> = {
     name: "Page With Properties",
     originalName: "Page With Properties",
     "journal?": false,
-    properties: {
-      "user.property/author": "Brian",
-      "user.property/tags": ["typescript", "testing"],
-      "user.property/date": "2024-01-01",
-    },
+    // Properties are at root level with colon prefixes, NOT nested
+    ":user.property/author-abc123": "Brian",
+    ":user.property/tags-def456": ["typescript", "testing"],
+    ":user.property/date-ghi789": "2024-01-01",
     children: [],
   },
 

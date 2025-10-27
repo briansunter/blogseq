@@ -599,8 +599,13 @@ export class MarkdownExporter {
         const results = await this.logseqAPI.datascriptQuery(query);
         for (const [propKey, propTitle] of results) {
           if (typeof propKey === 'string' && typeof propTitle === 'string') {
+            // DataScript returns idents with colons like ":user.property/title-abc123"
+            // Store both with and without colon for lookup flexibility
             propertyNameMap.set(propKey, propTitle);
-            propertyNameMap.set(`:${propKey}`, propTitle);
+            // If key already has colon, also store without colon
+            if (propKey.startsWith(':')) {
+              propertyNameMap.set(propKey.slice(1), propTitle);
+            }
           }
         }
         this.debug('Property name mappings:', propertyNameMap);
@@ -624,8 +629,11 @@ export class MarkdownExporter {
           const value = (pageEntity as Record<string, unknown>)[key];
           if (value === null || value === undefined) continue;
 
-          // Get clean name from map, or use the raw key
-          const cleanKey = propertyNameMap.get(key) || propertyNameMap.get(`:${key}`) || String(key);
+          // Strip leading colon for property name lookup
+          // Page keys are like ":user.property/title-abc123"
+          // Map keys are like "user.property/title-abc123" (from DataScript)
+          const keyWithoutColon = key.startsWith(':') ? key.slice(1) : key;
+          const cleanKey = propertyNameMap.get(keyWithoutColon) || propertyNameMap.get(key) || String(key);
           this.debug(`Property ${key} -> ${cleanKey}, value type: ${typeof value}`);
 
           // Handle tags specially
@@ -660,8 +668,9 @@ export class MarkdownExporter {
           const value = (pageEntity as Record<string, unknown>)[key];
           if (value === null || value === undefined) continue;
 
-          // Get clean name from map, or use the raw key
-          const cleanKey = propertyNameMap.get(key) || propertyNameMap.get(`:${key}`) || String(key);
+          // Strip leading colon for property name lookup
+          const keyWithoutColon = key.startsWith(':') ? key.slice(1) : key;
+          const cleanKey = propertyNameMap.get(keyWithoutColon) || propertyNameMap.get(key) || String(key);
 
           // Skip tags we already processed
           if (cleanKey === 'tags' || cleanKey.toLowerCase().includes('blogtags')) {
@@ -670,6 +679,12 @@ export class MarkdownExporter {
 
           // Skip other non-user properties
           if (!key.includes('user.property')) {
+            continue;
+          }
+
+          // Skip properties without a mapping (cleanKey will still have colon if not mapped)
+          if (cleanKey.startsWith(':')) {
+            this.debug(`Skipping unmapped property: ${key}`);
             continue;
           }
 

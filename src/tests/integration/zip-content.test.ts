@@ -119,10 +119,10 @@ describe('ZIP Content Tests', () => {
       mockAPI.setCurrentPage(SamplePages.withProperties);
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithProperties, [SampleBlocks.simple]);
 
-      // Add property definitions
-      mockAPI.addPropertyDefinition('user.property/author', 'author');
-      mockAPI.addPropertyDefinition('user.property/tags', 'tags');
-      mockAPI.addPropertyDefinition('user.property/date', 'date');
+      // Add property definitions (keys must match the root-level colon-prefixed keys in page)
+      mockAPI.addPropertyDefinition(':user.property/author-abc123', 'author');
+      mockAPI.addPropertyDefinition(':user.property/tags-def456', 'tags');
+      mockAPI.addPropertyDefinition(':user.property/date-ghi789', 'date');
 
       const markdown = await exporter.exportCurrentPage({ includeProperties: true });
       await exporter.downloadAsZip(markdown);
@@ -157,8 +157,8 @@ describe('ZIP Content Tests', () => {
       mockAPI.setCurrentPage(SamplePages.withProperties);
       mockAPI.setPageBlocksTree(TestUUIDs.pageWithProperties, [SampleBlocks.simple]);
 
-      // Add property definition
-      mockAPI.addPropertyDefinition('user.property/tags', 'tags');
+      // Add property definition (key must match the root-level colon-prefixed key in page)
+      mockAPI.addPropertyDefinition(':user.property/tags-def456', 'tags');
 
       const markdown = await exporter.exportCurrentPage({ includeProperties: true });
       await exporter.downloadAsZip(markdown);

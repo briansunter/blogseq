@@ -124,9 +124,17 @@ export class MockLogseqAPI implements LogseqAPI {
       }
     );
 
-    // Property definitions query
+    // Property definitions query (old format with ?ident ?title)
     this.addQueryPattern(
       /\[:find \?ident \?title.*\[\?e :db\/ident \?ident\].*\[\?e :block\/title \?title\]/s,
+      (_query: string, state: MockLogseqState) => {
+        return Array.from(state.propertyDefinitions.entries());
+      }
+    );
+
+    // Property definitions query (new format with ?prop-key ?prop-title)
+    this.addQueryPattern(
+      /\[:find \?prop-key \?prop-title.*\[\?prop-entity :db\/ident \?prop-key\].*\[\?prop-entity :block\/title \?prop-title\]/s,
       (_query: string, state: MockLogseqState) => {
         return Array.from(state.propertyDefinitions.entries());
       }
