@@ -603,55 +603,6 @@ More text`;
     });
   });
 
-  describe('isSystemProperty', () => {
-    it('should return false for user.property namespace', () => {
-      expect(MarkdownHelpers.isSystemProperty('user.property/custom')).toBe(false);
-    });
-
-    it('should return false for user namespace', () => {
-      expect(MarkdownHelpers.isSystemProperty('user/custom')).toBe(false);
-    });
-
-    it('should return true for logseq.property namespace', () => {
-      expect(MarkdownHelpers.isSystemProperty('logseq.property/heading')).toBe(true);
-    });
-
-    it('should return true for other system namespaces', () => {
-      expect(MarkdownHelpers.isSystemProperty('system.property/test')).toBe(true);
-    });
-
-    it('should handle colon prefix (DataScript format)', () => {
-      expect(MarkdownHelpers.isSystemProperty(':user.property/custom')).toBe(false);
-      expect(MarkdownHelpers.isSystemProperty(':logseq.property/heading')).toBe(true);
-    });
-
-    it('should handle properties without namespace', () => {
-      // Based on implementation: namespace would be the part before '/'
-      // If no '/', the whole string becomes namespace
-      expect(MarkdownHelpers.isSystemProperty('title')).toBe(true);
-    });
-
-    it('should handle user properties with colon', () => {
-      expect(MarkdownHelpers.isSystemProperty(':user/custom')).toBe(false);
-    });
-
-    it('should handle various system property names', () => {
-      expect(MarkdownHelpers.isSystemProperty('logseq.property/created-at')).toBe(true);
-      expect(MarkdownHelpers.isSystemProperty('logseq.property/updated-at')).toBe(true);
-      expect(MarkdownHelpers.isSystemProperty('logseq.property/tags')).toBe(true);
-    });
-
-    it('should handle various user property names', () => {
-      expect(MarkdownHelpers.isSystemProperty('user.property/rating')).toBe(false);
-      expect(MarkdownHelpers.isSystemProperty('user.property/priority')).toBe(false);
-    });
-
-    it('should be case sensitive', () => {
-      expect(MarkdownHelpers.isSystemProperty('USER.PROPERTY/custom')).toBe(true);
-      expect(MarkdownHelpers.isSystemProperty('User.Property/custom')).toBe(true);
-    });
-  });
-
   describe('isImageAsset', () => {
     it('should return true for png', () => {
       expect(MarkdownHelpers.isImageAsset('png')).toBe(true);

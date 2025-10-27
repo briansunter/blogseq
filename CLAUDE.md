@@ -93,3 +93,49 @@ The plugin detects assets through DataScript queries checking for:
 - Assets use `file://` protocol for local file access in preview
 - Preview uses ReactMarkdown with custom component overrides for styling
 - Export triggers auto-preview on UI open for immediate feedback
+
+### Logseq Page Property Structure
+
+**IMPORTANT**: When accessing page properties via `logseq.Editor.getPage()`, the JavaScript API returns properties **at the root level** with colon-prefixed keys, NOT nested under a `.properties` object.
+
+```typescript
+// ❌ WRONG - properties field does not exist
+const props = page.properties;
+
+// ✅ CORRECT - properties are root-level keys starting with colons
+const propertyKeys = Object.keys(page).filter(key =>
+  key.startsWith(':user.property/') ||
+  key.startsWith(':logseq.property/') ||
+  key === 'tags'
+);
+```
+
+**Property Value Format:**
+- Property values are often stored as **numeric db/ids** (e.g., `45204`)
+- These must be resolved to actual content or UUIDs using DataScript queries
+- Use direct entity ID syntax: `[:find ?uuid :where [45204 :block/uuid ?uuid]]`
+- NOT `:db/id` attribute syntax: `[?e :db/id 45204]` ❌ (causes parse errors)
+
+**Example Page Structure:**
+```typescript
+{
+  updatedAt: 1761556235265,
+  createdAt: 1738211909658,
+  ':logseq.property/status': 73,  // db/id reference
+  'tags': [135, 138, 27350],      // array of db/ids
+  ':user.property/blogTags-Mx0ii3sb': [45204, 45205, 47532],
+  ':user.property/publishDate-kRxfHtUv': 819,
+  ':user.property/bogtitle-FiJnwhpb': 45116,
+  'name': 'central pacific update',
+  'uuid': '679b0245-582a-4ff3-b13d-81bd8db0dfcb',
+  // ... other fields
+}
+```
+
+**Property Value Blocks:**
+- Logseq creates hidden blocks to store property values (tags, dates, custom values)
+- These blocks appear in `getPageBlocksTree()` results at the end
+- Must be filtered out by:
+  1. Collecting all property db/ids from the page
+  2. Resolving db/ids to block UUIDs
+  3. Skipping blocks matching those UUIDs during export

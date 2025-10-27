@@ -968,15 +968,7 @@ describe('MarkdownExporter', () => {
       expect(MarkdownHelpers.processAssetPaths(content, '/assets')).toContain('(/assets/test.png)');
     });
 
-    // cleanPropertyKey test removed - now using DataScript queries
-
-    it('should identify system properties', () => {
-      expect(MarkdownHelpers.isSystemProperty('logseq.property/embedding')).toBe(true);
-      expect(MarkdownHelpers.isSystemProperty('db/id')).toBe(true);
-      expect(MarkdownHelpers.isSystemProperty(':db/something')).toBe(true);
-      expect(MarkdownHelpers.isSystemProperty('user.property/custom')).toBe(false);
-      expect(MarkdownHelpers.isSystemProperty('user/custom')).toBe(false);
-    });
+    // cleanPropertyKey and isSystemProperty tests removed - now using DataScript queries
 
     it('should format YAML correctly', () => {
       const data = {

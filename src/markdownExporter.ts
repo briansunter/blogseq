@@ -159,14 +159,6 @@ export class MarkdownHelpers {
     return lines.join('\n') + '\n';
   }
 
-  // cleanPropertyKey removed - now using DataScript queries directly
-
-  static isSystemProperty(key: string): boolean {
-    // System properties are those not in user.property namespace
-    const namespace = key.split('/')[0].replace(':', '');
-    return namespace !== 'user.property' && namespace !== 'user';
-  }
-
   static isImageAsset(type: string): boolean {
     return this.IMAGE_TYPES.has(type.toLowerCase());
   }
@@ -247,13 +239,12 @@ export class MarkdownExporter {
     await this.cacheBlockReferences(pageBlocks);
     
     // Process blocks
-    const propertyValues = await this.collectPropertyValues(currentPage.uuid);
+    const propertyValueUUIDs = await this.collectPropertyValueUUIDs(currentPage.uuid);
 
     for (const block of pageBlocks) {
       if (!block) continue;
-      const content = block.content?.trim();
-      if (content && propertyValues.has(content)) {
-        this.debug(`Skipping property value: "${content}"`);
+      if (block.uuid && propertyValueUUIDs.has(block.uuid)) {
+        this.debug(`Skipping property value block: UUID=${block.uuid}, content="${block.content}"`);
         continue;
       }
 
@@ -575,69 +566,16 @@ export class MarkdownExporter {
   
   private async generateFrontmatter(page: BlockEntity | PageEntity, assetPath = 'assets/'): Promise<string> {
     try {
-      // Get the full page entity with all properties
+      // Get the full page entity
       let pageEntity = page;
       try {
         pageEntity = await this.logseqAPI.getPage(page.uuid) || page;
       } catch {
         // Use original page if getPage fails
       }
-      
-      // Query for ALL property definitions in the system
-      const propertyQuery = `
-        [:find ?ident ?title
-         :where
-         [?e :db/ident ?ident]
-         [?e :block/title ?title]]
-      `;
-      
-      const propertyMap = new Map<string, string>();
-      
-      try {
-        const propResults = await this.logseqAPI.datascriptQuery(propertyQuery);
-        if (propResults) {
-          for (const [ident, title] of propResults) {
-            if (typeof ident === 'string' && typeof title === 'string') {
-              // Store mapping from full ident to clean title
-              propertyMap.set(ident, title);
-              propertyMap.set(`:${ident}`, title);
-            }
-          }
-        }
-        this.debug('Property definitions from DB:', propertyMap);
-      } catch (err) {
-        this.debug('Could not query property definitions:', err);
-      }
-      
-      // Also query for the page's actual properties with their clean names
-      const pagePropsQuery = `
-        [:find ?prop-key ?prop-title
-         :where
-         [?page :block/uuid #uuid "${page.uuid}"]
-         [?page ?prop-key ?v]
-         [(namespace ?prop-key) ?ns]
-         [(= ?ns "user.property")]
-         [?prop-entity :db/ident ?prop-key]
-         [?prop-entity :block/title ?prop-title]]
-      `;
-      
-      try {
-        const pagePropsResults = await this.logseqAPI.datascriptQuery(pagePropsQuery);
-        if (pagePropsResults) {
-          for (const [propKey, propTitle] of pagePropsResults) {
-            if (typeof propKey === 'string' && typeof propTitle === 'string') {
-              propertyMap.set(propKey, propTitle);
-              propertyMap.set(`:${propKey}`, propTitle);
-            }
-          }
-        }
-        this.debug('Page-specific properties from DB:', pagePropsResults);
-      } catch (err) {
-        this.debug('Could not query page properties:', err);
-      }
-      
+
       const frontmatter: Record<string, unknown> = {};
-      
+
       // Set default title and slug from page name
       if ('name' in pageEntity && pageEntity.name) {
         frontmatter.title = String(pageEntity.name);
@@ -646,48 +584,95 @@ export class MarkdownExporter {
           .replace(/\s+/g, '-')
           .replace(/[^a-z0-9-]/g, '');
       }
-      
-      const props = (pageEntity as PageEntity).properties;
-      if (props) {
-        // Process tags first
-        const tags: string[] = [];
-        
-        for (const [key, value] of Object.entries(props)) {
-          if (value === null || value === undefined) continue;
-          
-          // Get clean name from property map
-          const cleanKey = propertyMap.get(key) || propertyMap.get(`:${key}`);
-          if (!cleanKey) {
-            this.debug(`Skipping unmapped property: ${key}`);
-            continue;
-          }
-          
-          if ((cleanKey === 'tags' || cleanKey === 'blogTags') && Array.isArray(value)) {
-            tags.push(...value);
+
+      // Query for property name mappings (db ident -> clean display name)
+      const propertyNameMap = new Map<string, string>();
+      try {
+        const query = `
+          [:find ?prop-key ?prop-title
+           :where
+           [?prop-entity :db/ident ?prop-key]
+           [?prop-entity :block/title ?prop-title]
+           [(namespace ?prop-key) ?ns]
+           [(= ?ns "user.property")]]
+        `;
+        const results = await this.logseqAPI.datascriptQuery(query);
+        for (const [propKey, propTitle] of results) {
+          if (typeof propKey === 'string' && typeof propTitle === 'string') {
+            propertyNameMap.set(propKey, propTitle);
+            propertyNameMap.set(`:${propKey}`, propTitle);
           }
         }
-        
+        this.debug('Property name mappings:', propertyNameMap);
+      } catch (err) {
+        this.debug('Failed to query property names:', err);
+      }
+
+      // Properties are at the root level with colon-prefixed keys
+      // Extract all keys that look like properties
+      const propertyKeys = Object.keys(pageEntity).filter(key =>
+        key.startsWith(':user.property/') ||
+        key.startsWith(':logseq.property/') ||
+        key === 'tags'
+      );
+
+      if (propertyKeys.length > 0) {
+        // Collect tags first
+        const tags: string[] = [];
+
+        for (const key of propertyKeys) {
+          const value = (pageEntity as Record<string, unknown>)[key];
+          if (value === null || value === undefined) continue;
+
+          // Get clean name from map, or use the raw key
+          const cleanKey = propertyNameMap.get(key) || propertyNameMap.get(`:${key}`) || String(key);
+          this.debug(`Property ${key} -> ${cleanKey}, value type: ${typeof value}`);
+
+          // Handle tags specially
+          if (cleanKey === 'tags' || cleanKey.toLowerCase().includes('blogtags')) {
+            if (Array.isArray(value)) {
+              // Resolve db IDs in tags
+              for (const v of value) {
+                if (typeof v === 'number') {
+                  try {
+                    const titleQuery = `[:find ?title :where [${v} :block/title ?title]]`;
+                    const result = await this.logseqAPI.datascriptQuery(titleQuery);
+                    if (result && result[0] && typeof result[0][0] === 'string') {
+                      tags.push(result[0][0]);
+                    }
+                  } catch {
+                    // Skip unresolvable tag
+                  }
+                } else if (typeof v === 'string') {
+                  tags.push(v);
+                }
+              }
+            }
+          }
+        }
+
         if (tags.length > 0) {
           frontmatter.tags = [...new Set(tags)];
         }
-        
+
         // Process other properties
-        for (const [key, value] of Object.entries(props)) {
-          // Allow false and 0 values, but skip null/undefined and system properties
-          if ((value === null || value === undefined) || MarkdownHelpers.isSystemProperty(key)) continue;
-          
-          // Get clean name from property map
-          const cleanKey = propertyMap.get(key) || propertyMap.get(`:${key}`);
-          if (!cleanKey) {
-            this.debug(`Skipping unmapped property: ${key}`);
+        for (const key of propertyKeys) {
+          const value = (pageEntity as Record<string, unknown>)[key];
+          if (value === null || value === undefined) continue;
+
+          // Get clean name from map, or use the raw key
+          const cleanKey = propertyNameMap.get(key) || propertyNameMap.get(`:${key}`) || String(key);
+
+          // Skip tags we already processed
+          if (cleanKey === 'tags' || cleanKey.toLowerCase().includes('blogtags')) {
             continue;
           }
-          
-          // Skip tags-related properties we already processed
-          if (cleanKey === 'blogTags' || cleanKey === 'tags') {
+
+          // Skip other non-user properties
+          if (!key.includes('user.property')) {
             continue;
           }
-          
+
           // Process and add the property
           if (!frontmatter[cleanKey] || cleanKey === 'title') {
             this.debug(`Processing property ${key} -> ${cleanKey}`);
@@ -696,8 +681,8 @@ export class MarkdownExporter {
           }
         }
       }
-      
-      return Object.keys(frontmatter).length > 0 
+
+      return Object.keys(frontmatter).length > 0
         ? MarkdownHelpers.formatYaml(frontmatter)
         : "";
     } catch (error) {
@@ -709,7 +694,7 @@ export class MarkdownExporter {
   private async processPropertyValue(value: unknown, assetPath: string): Promise<unknown> {
     if (typeof value === 'string') {
       const trimmed = value.trim();
-      
+
       // Handle [[Page]] refs
       if (trimmed.startsWith('[[') && trimmed.endsWith(']]')) {
         const inner = trimmed.slice(2, -2);
@@ -756,27 +741,33 @@ export class MarkdownExporter {
           return exportPath;
         }
       }
-      
+
       // Check if it's an asset by title
       const assetByTitle = await this.findAssetByTitle(trimmed);
       if (assetByTitle) {
         const path = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
         return `${path}${assetByTitle.uuid}.${assetByTitle.type}`;
       }
-      
+
       return value;
     }
-    
+
     if (Array.isArray(value) || value instanceof Set) {
       return Array.isArray(value) ? value : Array.from(value);
     }
-    
-    // Handle db/id references
+
+    // Handle plain numeric db/id references
+    if (typeof value === 'number') {
+      const resolved = await this.resolveDbReference(value, assetPath);
+      return resolved ?? value;
+    }
+
+    // Handle db/id references in object format
     if (value && typeof value === 'object' && 'db/id' in value) {
       const resolved = await this.resolveDbReference(value['db/id'] as number, assetPath);
       return resolved ?? value;
     }
-    
+
     return value;
   }
   
@@ -805,23 +796,23 @@ export class MarkdownExporter {
   
   private async resolveDbReference(dbId: number, assetPath: string): Promise<string | null> {
     try {
-      const query = `[:find ?uuid ?type ?title
-                      :where 
-                      [?e :db/id ${dbId}]
-                      [?e :block/uuid ?uuid]
-                      [?e :logseq.property.asset/type ?type]
-                      [?e :block/title ?title]]`;
-      const result = await this.logseqAPI.datascriptQuery(query);
-      
-      if (result?.[0]) {
-        const uuid = MarkdownHelpers.extractUuid(result[0][0] as string | { $uuid: string });
-        const type = result[0][1];
-        const title = result[0][2];
-        
+      // First try to resolve as asset using correct DataScript syntax
+      const assetQuery = `[:find ?uuid ?type ?title
+                          :where
+                          [${dbId} :block/uuid ?uuid]
+                          [${dbId} :logseq.property.asset/type ?type]
+                          [${dbId} :block/title ?title]]`;
+      const assetResult = await this.logseqAPI.datascriptQuery(assetQuery);
+
+      if (assetResult?.[0]) {
+        const uuid = MarkdownHelpers.extractUuid(assetResult[0][0] as string | { $uuid: string });
+        const type = assetResult[0][1];
+        const title = assetResult[0][2];
+
         if (uuid && type) {
           const path = assetPath.endsWith('/') ? assetPath : `${assetPath}/`;
           const exportPath = `${path}${uuid}.${type}`;
-          
+
           // Track asset
           this.referencedAssets.set(String(uuid), {
             uuid: String(uuid),
@@ -830,40 +821,123 @@ export class MarkdownExporter {
             originalPath: `${this.graphPath}/assets/${uuid}.${type}`,
             exportPath
           });
-          
+
           return exportPath;
         }
       }
-      
-      // Try to get title
-      const titleQuery = `[:find ?title :where [?e :db/id ${dbId}] [?e :block/title ?title]]`;
+
+      // Try to get content/title for non-asset blocks
+      const titleQuery = `[:find ?title :where [${dbId} :block/title ?title]]`;
       const titleResult = await this.logseqAPI.datascriptQuery(titleQuery);
-      return titleResult?.[0]?.[0] as string | null;
-    } catch {
-      // Intentionally swallow error - DB reference resolution is optional
+      if (titleResult?.[0]?.[0]) {
+        return titleResult[0][0] as string;
+      }
+
+      // Try to get content for blocks without title
+      const contentQuery = `[:find ?content :where [${dbId} :block/content ?content]]`;
+      const contentResult = await this.logseqAPI.datascriptQuery(contentQuery);
+      if (contentResult?.[0]?.[0]) {
+        return contentResult[0][0] as string;
+      }
+    } catch (error) {
+      this.debug(`Error resolving db/id ${dbId}:`, error);
     }
-    
+
     return null;
   }
   
-  private async collectPropertyValues(pageUuid: string): Promise<Set<string>> {
-    const values = new Set<string>();
+  private async collectPropertyValueUUIDs(pageUuid: string): Promise<Set<string>> {
+    const uuids = new Set<string>();
     const page = await this.logseqAPI.getPage(pageUuid);
-    const props = (page as LogseqEntity)?.properties;
-    
-    if (props && typeof props === 'object') {
-      for (const val of Object.values(props)) {
-        if (typeof val === 'string') {
-          values.add(val.trim());
-        } else if (Array.isArray(val)) {
-          val.forEach(v => typeof v === 'string' && values.add(v.trim()));
-        } else if (val instanceof Set) {
-          val.forEach(v => typeof v === 'string' && values.add(v.trim()));
+
+    console.log('=== PROPERTY VALUE COLLECTION DEBUG ===');
+    console.log('Page UUID:', pageUuid);
+    console.log('Full page object:', page);
+
+    if (!page || typeof page !== 'object') {
+      console.log('No page object found, returning empty set');
+      return uuids;
+    }
+
+    // Properties are at the root level with colon-prefixed keys
+    // Extract all keys that look like properties
+    const propertyKeys = Object.keys(page).filter(key =>
+      key.startsWith(':user.property/') ||
+      key.startsWith(':logseq.property/') ||
+      key === 'tags'
+    );
+
+    console.log('Property keys found:', propertyKeys);
+    console.log('Total property keys:', propertyKeys.length);
+
+    // Process each property value and resolve db/id to UUID
+    const processValue = async (v: unknown, depth = 0): Promise<void> => {
+      const indent = '  '.repeat(depth + 1);
+      console.log(`${indent}processValue called with:`, v, `Type: ${typeof v}`);
+
+      if (typeof v === 'number') {
+        console.log(`${indent}→ Detected number (db/id): ${v}`);
+        // Resolve db/id to UUID
+        try {
+          const query = `[:find ?uuid :where [${v} :block/uuid ?uuid]]`;
+          console.log(`${indent}→ Query: ${query}`);
+          const result = await this.logseqAPI.datascriptQuery(query);
+          console.log(`${indent}→ Query result:`, result);
+
+          if (result && result[0] && result[0][0]) {
+            const uuid = String(result[0][0]);
+            uuids.add(uuid);
+            console.log(`${indent}✓ Resolved db/id ${v} to UUID: ${uuid}`);
+          } else {
+            console.log(`${indent}✗ Could not resolve db/id ${v} (empty result)`);
+          }
+        } catch (err) {
+          console.log(`${indent}✗ Error resolving db/id ${v}:`, err);
         }
+      } else if (typeof v === 'object' && v !== null) {
+        console.log(`${indent}→ Detected object:`, Object.keys(v));
+        if ('id' in v || 'db/id' in v) {
+          const dbId = (v as { id?: number; 'db/id'?: number }).id || (v as { 'db/id'?: number })['db/id'];
+          console.log(`${indent}→ Found db/id in object: ${dbId}`);
+          if (typeof dbId === 'number') {
+            await processValue(dbId, depth + 1);
+          }
+        } else {
+          console.log(`${indent}→ Object has no id or db/id property`);
+        }
+      } else {
+        console.log(`${indent}→ Skipping value (type: ${typeof v})`);
+      }
+    };
+
+    for (const key of propertyKeys) {
+      const val = (page as Record<string, unknown>)[key];
+      console.log(`\nProcessing property: ${key}`);
+      console.log(`  Value:`, val);
+      console.log(`  Type: ${typeof val}, IsArray: ${Array.isArray(val)}`);
+
+      if (Array.isArray(val)) {
+        console.log(`  → Processing array with ${val.length} items`);
+        for (const v of val) {
+          await processValue(v);
+        }
+      } else if (val instanceof Set) {
+        console.log(`  → Processing set with ${val.size} items`);
+        for (const v of val) {
+          await processValue(v);
+        }
+      } else {
+        console.log(`  → Processing single value`);
+        await processValue(val);
       }
     }
-    
-    return values;
+
+    console.log(`\n=== COLLECTION SUMMARY ===`);
+    console.log(`Collected ${uuids.size} property value UUIDs to skip:`);
+    console.log(Array.from(uuids));
+    console.log('=== END DEBUG ===\n');
+
+    return uuids;
   }
   
   private async replaceAsync(
