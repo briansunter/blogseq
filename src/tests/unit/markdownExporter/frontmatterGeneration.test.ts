@@ -590,20 +590,35 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         ':user.property/linked-abc123': { 'db/id': 999 },
       };
 
-      mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
+      mockAPI.Editor.getPage.mockImplementation(async (id: string | number) => {
+        if (id === 'page-uuid' || id === 1) return page as PageEntity;
+        return null;
+      });
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
       mockGraphResponse(mockAPI, '/test/graph');
+
+      // Mock getBlock for db/id resolution
+      mockAPI.Editor.getBlock.mockImplementation(async (id: string | number) => {
+        if (id === 999) return createMockBlock({ uuid: 'linked-asset-uuid' });
+        return null;
+      });
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [[':user.property/linked-abc123', 'linked']];
         }
+
+        // Match the query used in resolveDbReference for assets
+        // [:find ?uuid ?type ?title :where [999 :block/uuid ?uuid] ...]
         if (
-          query.includes('[999 :block/uuid') ||
-          query.includes('[999 :logseq.property.asset/type')
+          query.includes('[999 :block/uuid ?uuid]') &&
+          query.includes(':logseq.property.asset/type')
         ) {
-          return [[{ $uuid: 'linked-asset-uuid' }, 'pdf', 'Linked Asset']];
+          // Return [uuid, type, title]
+          // Note: The code expects [uuid, type, title]
+          // result[0][0] is uuid (string or {$uuid}), result[0][1] is type, result[0][2] is title
+          return [['linked-asset-uuid', 'pdf', 'Linked Asset']];
         }
         return [];
       });
@@ -631,21 +646,15 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
 
+      // Mock getBlock for db/id resolution
+      mockAPI.Editor.getBlock.mockImplementation(async (id: string | number) => {
+        if (id === 888) return createMockBlock({ content: 'Referenced Item' });
+        return null;
+      });
+
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [[':user.property/ref-abc123', 'ref']];
-        }
-        if (
-          query.includes('[888 :block/uuid') ||
-          query.includes('[888 :logseq.property.asset/type') ||
-          query.includes('[888 :block/title')
-        ) {
-          if (query.includes('?uuid ?type ?title')) {
-            return []; // Not an asset
-          }
-          if (query.includes('[888 :block/title ?title]')) {
-            return [['Referenced Item']];
-          }
         }
         return [];
       });
@@ -705,7 +714,10 @@ describe('MarkdownExporter - Frontmatter Generation', () => {
         ':user.property/rating-xyz789': 4.5,
       };
 
-      mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
+      mockAPI.Editor.getPage.mockImplementation(async (id: string | number) => {
+        if (id === 'page-uuid' || id === 1) return page as PageEntity;
+        return null;
+      });
       mockCurrentPageResponse(mockAPI, page as PageEntity);
       mockPageBlocksResponse(mockAPI, []);
 

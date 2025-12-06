@@ -70,8 +70,8 @@ export class MockLogseqAPI implements LogseqAPI {
   // Call tracking for spies
   public calls = {
     getCurrentPage: [] as unknown[],
-    getPage: [] as string[],
-    getBlock: [] as Array<{ uuid: string; opts?: { includeChildren?: boolean } }>,
+    getPage: [] as Array<string | number>,
+    getBlock: [] as Array<{ id: string | number; opts?: { includeChildren?: boolean } }>,
     getPageBlocksTree: [] as string[],
     getCurrentGraph: [] as unknown[],
     datascriptQuery: [] as string[],
@@ -259,12 +259,13 @@ export class MockLogseqAPI implements LogseqAPI {
   }
 
   /**
-   * Get a page by UUID
+   * Get a page by UUID or EntityID
    */
-  async getPage(uuid: string): Promise<BlockEntity | PageEntity | null> {
-    this.calls.getPage.push(uuid);
+  async getPage(id: string | number): Promise<BlockEntity | PageEntity | null> {
+    this.calls.getPage.push(id);
 
     return this.handleMethodSimulation('getPage', () => {
+      const uuid = String(id);
       // Check pages
       const page = this.state.pages.get(uuid);
       if (page) return page;
@@ -280,12 +281,16 @@ export class MockLogseqAPI implements LogseqAPI {
   }
 
   /**
-   * Get a block by UUID
+   * Get a block by UUID or EntityID
    */
-  async getBlock(uuid: string, opts?: { includeChildren?: boolean }): Promise<BlockEntity | null> {
-    this.calls.getBlock.push({ uuid, opts });
+  async getBlock(
+    id: string | number,
+    opts?: { includeChildren?: boolean }
+  ): Promise<BlockEntity | null> {
+    this.calls.getBlock.push({ id, opts });
 
     return this.handleMethodSimulation('getBlock', () => {
+      const uuid = String(id);
       const block = this.state.blocks.get(uuid);
       if (!block) return null;
 
@@ -763,14 +768,18 @@ export class MockLogseqAPI implements LogseqAPI {
   wasCalledWith(method: 'getPage' | 'getBlock' | 'getPageBlocksTree', ...args: unknown[]): boolean {
     const callList = this.calls[method];
 
-    if (method === 'getPage' || method === 'getPageBlocksTree') {
+    if (method === 'getPage') {
+      return (callList as Array<string | number>).some(call => args.includes(call));
+    }
+
+    if (method === 'getPageBlocksTree') {
       return (callList as string[]).some(call => args.includes(call));
     }
 
     if (method === 'getBlock') {
-      return (callList as Array<{ uuid: string; opts?: { includeChildren?: boolean } }>).some(
-        call => args.includes(call.uuid)
-      );
+      return (
+        callList as Array<{ id: string | number; opts?: { includeChildren?: boolean } }>
+      ).some(call => args.includes(call.id));
     }
 
     return false;

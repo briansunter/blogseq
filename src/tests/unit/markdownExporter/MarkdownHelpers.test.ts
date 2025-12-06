@@ -302,6 +302,23 @@ TODO Task 1
       const result = MarkdownHelpers.cleanLogseqSyntax(content, defaultOptions);
       expect(result).toBe('content');
     });
+    it('should preserve tweet macros', () => {
+      const input = '{{tweet https://x.com/karpathy/status/1617979122625712128}}';
+      const result = MarkdownHelpers.cleanLogseqSyntax(input, {
+        ...defaultOptions,
+        removeLogseqSyntax: true,
+      });
+      expect(result).toBe(input);
+    });
+
+    it('should preserve video macros', () => {
+      const input = '{{video https://youtube.com/shorts/E3SxzRI-s_k?si=gP_sLJtg7igDrh03}}';
+      const result = MarkdownHelpers.cleanLogseqSyntax(input, {
+        ...defaultOptions,
+        removeLogseqSyntax: true,
+      });
+      expect(result).toBe(input);
+    });
   });
 
   describe('processAssetPaths', () => {

@@ -4,6 +4,7 @@ import type { PageEntity, BlockEntity } from '@logseq/libs/dist/LSPlugin';
 import {
   createMockLogseqAPI,
   createMockBlock,
+  createMockPage,
   setupGlobalMocks,
   resetAllMocks,
   type MockLogseqAPI,
@@ -134,6 +135,25 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
       mockAPI.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
       mockAPI.App.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
 
+      // Mock getBlock/getPage for db/id resolution
+      mockAPI.Editor.getBlock.mockImplementation(async (id: string | number) => {
+        if (id === 819) return createMockBlock({ content: '2025-09-23' });
+        if (id === 45116)
+          return createMockBlock({
+            title: 'Central Pacific Update',
+            content: 'Central Pacific Update',
+          });
+        if (id === 45110)
+          return createMockBlock({ content: 'https://briansunter.com/central-pacific-update' });
+        return null;
+      });
+
+      mockAPI.Editor.getPage.mockImplementation(async (id: string | number) => {
+        // Return default page if not handled specifically (to satisfy initial page load)
+        if (id === 'test-page-uuid' || id === 1) return pageWithDbIds;
+        return null;
+      });
+
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
         // Property name mappings
         if (query.includes('[:find ?prop-key ?prop-title')) {
@@ -141,28 +161,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
             [':user.property/publishDate-xyz', 'publishDate'],
             [':user.property/blogtitle-abc', 'blogtitle'],
             [':user.property/url-def', 'url'],
-          ];
-        }
-
-        // CRITICAL: Use correct DataScript syntax [dbId :attribute ?var]
-        // NOT [?e :db/id dbId] which causes "Cannot parse binding" errors
-        if (query.includes('[819 :block/title')) {
-          return [['2025-09-23']];
-        }
-        if (query.includes('[819 :block/content')) {
-          return [['2025-09-23']];
-        }
-        if (query.includes('[45116 :block/title')) {
-          return [['Central Pacific Update']];
-        }
-        if (query.includes('[45116 :block/content')) {
-          return [['Central Pacific Update']];
-        }
-        if (query.includes('[45110 :block/title')) {
-          return [['https://briansunter.com/central-pacific-update']];
-        }
-        if (query.includes('[45110 :block/content')) {
-          return [['https://briansunter.com/central-pacific-update']];
+          ] as any;
         }
 
         // UUID collection queries
@@ -199,21 +198,21 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
       } as unknown as PageEntity;
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithUnresolvableDbId);
-      mockAPI.Editor.getPage.mockResolvedValue(pageWithUnresolvableDbId);
-      mockAPI.getPage.mockResolvedValue(pageWithUnresolvableDbId);
-      mockAPI.getCurrentPage.mockResolvedValue(pageWithUnresolvableDbId);
+
+      mockAPI.Editor.getPage.mockImplementation(async (id: string | number) => {
+        if (id === 'test-page-uuid' || id === 1) return pageWithUnresolvableDbId;
+        return null; // 99999 returns null
+      });
+
+      mockAPI.Editor.getBlock.mockResolvedValue(null); // 99999 returns null
+
       mockAPI.Editor.getPageBlocksTree.mockResolvedValue([]);
-      mockAPI.getPageBlocksTree.mockResolvedValue([]);
       mockAPI.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
       mockAPI.App.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
         if (query.includes('[:find ?prop-key ?prop-title')) {
           return [[':user.property/mystery-prop', 'mystery']];
-        }
-        // No results for the mystery db/id
-        if (query.includes('[99999')) {
-          return [];
         }
         if (query.includes(':block/uuid')) {
           return [];
@@ -244,11 +243,34 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
       } as unknown as PageEntity;
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithTagDbIds);
-      mockAPI.Editor.getPage.mockResolvedValue(pageWithTagDbIds);
-      mockAPI.getPage.mockResolvedValue(pageWithTagDbIds);
-      mockAPI.getCurrentPage.mockResolvedValue(pageWithTagDbIds);
+
+      // Mock getPage for tag resolution
+      mockAPI.Editor.getPage.mockImplementation(async (id: string | number) => {
+        if (id === 'test-page-uuid' || id === 1) return pageWithTagDbIds;
+
+        // Tag pages
+        if (id === 135) return createMockPage({ name: 'newsletter' });
+        if (id === 138) return createMockPage({ name: 'public' });
+        if (id === 27350) return createMockPage({ name: 'fitness' });
+        if (id === 45204) return createMockPage({ name: 'blog' });
+        if (id === 45205) return createMockPage({ name: 'AI' });
+        if (id === 47532) return createMockPage({ name: 'coding' });
+
+        return null;
+      });
+
+      // Mock getBlock for UUID collection (used by collectPropertyValueUUIDs)
+      mockAPI.Editor.getBlock.mockImplementation(async (id: string | number) => {
+        if (id === 135) return createMockBlock({ uuid: 'uuid-135' });
+        if (id === 138) return createMockBlock({ uuid: 'uuid-138' });
+        if (id === 27350) return createMockBlock({ uuid: 'uuid-27350' });
+        if (id === 45204) return createMockBlock({ uuid: 'uuid-45204' });
+        if (id === 45205) return createMockBlock({ uuid: 'uuid-45205' });
+        if (id === 47532) return createMockBlock({ uuid: 'uuid-47532' });
+        return null;
+      });
+
       mockAPI.Editor.getPageBlocksTree.mockResolvedValue([]);
-      mockAPI.getPageBlocksTree.mockResolvedValue([]);
       mockAPI.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
       mockAPI.App.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
 
@@ -256,28 +278,6 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         if (query.includes('[:find ?prop-key ?prop-title :where')) {
           return [[':user.property/blogTags-xyz', 'blogTags']];
         }
-
-        // Resolve tags
-        if (query.includes('[135 :block/title')) return [['newsletter']];
-        if (query.includes('[138 :block/title')) return [['public']];
-        if (query.includes('[27350 :block/title')) return [['fitness']];
-
-        // Resolve blogTags
-        if (query.includes('[45204 :block/title')) return [['blog']];
-        if (query.includes('[45205 :block/title')) return [['AI']];
-        if (query.includes('[47532 :block/title')) return [['coding']];
-
-        // UUID collection for filtering
-        if (query.includes(':block/uuid')) {
-          // Simulate collecting UUIDs for these property value blocks
-          if (query.includes('[135 :block/uuid')) return [['uuid-135']];
-          if (query.includes('[138 :block/uuid')) return [['uuid-138']];
-          if (query.includes('[27350 :block/uuid')) return [['uuid-27350']];
-          if (query.includes('[45204 :block/uuid')) return [['uuid-45204']];
-          if (query.includes('[45205 :block/uuid')) return [['uuid-45205']];
-          if (query.includes('[47532 :block/uuid')) return [['uuid-47532']];
-        }
-
         return [];
       });
 
@@ -310,11 +310,24 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
       } as unknown as PageEntity;
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithDuplicateTags);
-      mockAPI.Editor.getPage.mockResolvedValue(pageWithDuplicateTags);
-      mockAPI.getPage.mockResolvedValue(pageWithDuplicateTags);
-      mockAPI.getCurrentPage.mockResolvedValue(pageWithDuplicateTags);
+
+      mockAPI.Editor.getPage.mockImplementation(async (id: string | number) => {
+        if (id === 'test-page-uuid' || id === 1) return pageWithDuplicateTags;
+
+        if (id === 100) return createMockPage({ name: 'tech' });
+        if (id === 101) return createMockPage({ name: 'javascript' });
+        if (id === 102) return createMockPage({ name: 'typescript' });
+        return null;
+      });
+
+      mockAPI.Editor.getBlock.mockImplementation(async (id: string | number) => {
+        if (id === 100) return createMockBlock({ uuid: 'uuid-100' });
+        if (id === 101) return createMockBlock({ uuid: 'uuid-101' });
+        if (id === 102) return createMockBlock({ uuid: 'uuid-102' });
+        return null;
+      });
+
       mockAPI.Editor.getPageBlocksTree.mockResolvedValue([]);
-      mockAPI.getPageBlocksTree.mockResolvedValue([]);
       mockAPI.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
       mockAPI.App.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
 
@@ -322,17 +335,6 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         if (query.includes('[:find ?prop-key ?prop-title :where')) {
           return [[':user.property/blogTags-xyz', 'blogTags']];
         }
-
-        if (query.includes('[100 :block/title')) return [['tech']];
-        if (query.includes('[101 :block/title')) return [['javascript']];
-        if (query.includes('[102 :block/title')) return [['typescript']];
-
-        if (query.includes(':block/uuid')) {
-          if (query.includes('[100 :block/uuid')) return [['uuid-100']];
-          if (query.includes('[101 :block/uuid')) return [['uuid-101']];
-          if (query.includes('[102 :block/uuid')) return [['uuid-102']];
-        }
-
         return [];
       });
 
@@ -369,11 +371,29 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
       ];
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(pageWithPropertyBlocks);
-      mockAPI.Editor.getPage.mockResolvedValue(pageWithPropertyBlocks);
-      mockAPI.getPage.mockResolvedValue(pageWithPropertyBlocks);
-      mockAPI.getCurrentPage.mockResolvedValue(pageWithPropertyBlocks);
+
+      mockAPI.Editor.getPage.mockImplementation(async (id: string | number) => {
+        if (id === 'test-page-uuid' || id === 1) return pageWithPropertyBlocks;
+
+        // Tags resolved via getPage
+        if (id === 45204) return createMockPage({ name: 'blog' });
+        if (id === 45205) return createMockPage({ name: 'fitness' });
+        return null;
+      });
+
+      // Mocks for collectPropertyValueUUIDs AND resolveDbReference
+      mockAPI.Editor.getBlock.mockImplementation(async (id: string | number) => {
+        // For resolveDbReference
+        if (id === 45110)
+          return createMockBlock({ uuid: 'uuid-45110', content: 'https://example.com' });
+
+        // For collectPropertyValueUUIDs
+        if (id === 45204) return createMockBlock({ uuid: 'uuid-45204' });
+        if (id === 45205) return createMockBlock({ uuid: 'uuid-45205' });
+        return null;
+      });
+
       mockAPI.Editor.getPageBlocksTree.mockResolvedValue(propertyValueBlocks);
-      mockAPI.getPageBlocksTree.mockResolvedValue(propertyValueBlocks);
       mockAPI.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
       mockAPI.App.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
 
@@ -384,19 +404,6 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
             [':user.property/url-abc', 'url'],
           ];
         }
-
-        // Resolve tag names for frontmatter
-        if (query.includes('[45204 :block/title')) return [['blog']];
-        if (query.includes('[45205 :block/title')) return [['fitness']];
-        if (query.includes('[45110 :block/title')) return [['https://example.com']];
-
-        // UUID collection - these UUIDs should be filtered out
-        if (query.includes(':block/uuid')) {
-          if (query.includes('[45204 :block/uuid')) return [['uuid-45204']];
-          if (query.includes('[45205 :block/uuid')) return [['uuid-45205']];
-          if (query.includes('[45110 :block/uuid')) return [['uuid-45110']];
-        }
-
         return [];
       });
 
@@ -414,6 +421,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         const body = bodyMatch[1];
         expect(body).not.toContain('\nblog\n');
         expect(body).not.toContain('\nfitness\n');
+        // https://example.com might appear in frontmatter as url, checking body only
         expect(body).not.toContain('\nhttps://example.com\n');
       }
 
@@ -446,16 +454,13 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
       mockAPI.getCurrentPage.mockResolvedValue(simplePage);
       mockAPI.Editor.getPageBlocksTree.mockResolvedValue(normalBlocks);
       mockAPI.getPageBlocksTree.mockResolvedValue(normalBlocks);
+      mockAPI.Editor.getBlock.mockResolvedValue(null);
       mockAPI.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
       mockAPI.App.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
 
       mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
         // No properties to map
         if (query.includes('[:find ?prop-key ?prop-title :where')) {
-          return [];
-        }
-        // No UUIDs to skip
-        if (query.includes(':block/uuid')) {
           return [];
         }
         return [];
@@ -487,6 +492,7 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
       mockAPI.Editor.getPage.mockResolvedValue(pageWithDbId);
       mockAPI.getPage.mockResolvedValue(pageWithDbId);
       mockAPI.getCurrentPage.mockResolvedValue(pageWithDbId);
+      mockAPI.Editor.getBlock.mockResolvedValue(null);
       mockAPI.Editor.getPageBlocksTree.mockResolvedValue([]);
       mockAPI.getPageBlocksTree.mockResolvedValue([]);
       mockAPI.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
@@ -500,16 +506,6 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         // Verify we NEVER see the incorrect syntax
         expect(query).not.toContain(':db/id 99999');
         expect(query).not.toContain('[?e :db/id');
-
-        if (query.includes('[99999')) {
-          // Correct syntax should be used
-          expect(query).toMatch(/\[99999 :/);
-          return [];
-        }
-
-        if (query.includes(':block/uuid')) {
-          return [];
-        }
 
         return [];
       });
@@ -555,11 +551,42 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
       ];
 
       mockAPI.Editor.getCurrentPage.mockResolvedValue(realWorldPage);
-      mockAPI.Editor.getPage.mockResolvedValue(realWorldPage);
-      mockAPI.getPage.mockResolvedValue(realWorldPage);
-      mockAPI.getCurrentPage.mockResolvedValue(realWorldPage);
+
+      mockAPI.Editor.getPage.mockImplementation(async (id: string | number) => {
+        if (id === '679b0245-582a-4ff3-b13d-81bd8db0dfcb' || id === 36485) return realWorldPage;
+
+        // Tag mappings
+        if (id === 135) return createMockPage({ name: 'Page' });
+        if (id === 138) return createMockPage({ name: 'Task' });
+        if (id === 27350) return createMockPage({ name: 'newsletter' });
+        if (id === 36755) return createMockPage({ name: 'public' });
+        if (id === 45204) return createMockPage({ name: 'newsletter' });
+        if (id === 45205) return createMockPage({ name: 'fitness' });
+        if (id === 47532) return createMockPage({ name: 'blog' });
+        if (id === 47533) return createMockPage({ name: 'AI' });
+
+        return null;
+      });
+
+      mockAPI.Editor.getBlock.mockImplementation(async (id: string | number) => {
+        // Property resolutions
+        if (id === 819) return createMockBlock({ content: '2025-09-23' });
+        if (id === 45110)
+          return createMockBlock({ content: 'https://briansunter.com/central-pacific-update' });
+        if (id === 45116) return createMockBlock({ content: 'Central Pacific Update' });
+        if (id === 45312) return createMockBlock({ content: 'Test Description' }); // Description
+        // For filtering
+        if (id === 45204) return createMockBlock({ uuid: 'uuid-45204' });
+        if (id === 45205) return createMockBlock({ uuid: 'uuid-45205' });
+        if (id === 47532) return createMockBlock({ uuid: 'uuid-47532' });
+        if (id === 47533) return createMockBlock({ uuid: 'uuid-47533' });
+
+        if (id === 9) return null; // Numeric rating, assume it's just a number
+
+        return null;
+      });
+
       mockAPI.Editor.getPageBlocksTree.mockResolvedValue(pageBlocks);
-      mockAPI.getPageBlocksTree.mockResolvedValue(pageBlocks);
       mockAPI.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
       mockAPI.App.getCurrentGraph.mockResolvedValue({ path: '/test/graph' });
 
@@ -577,32 +604,6 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
             [':user.property/coverimage-wTuZyU8U', 'coverimage'],
             [':logseq.property/description', 'description'],
           ];
-        }
-
-        // Tag resolutions
-        if (query.includes('[135 :block/title')) return [['Page']];
-        if (query.includes('[138 :block/title')) return [['Task']];
-        if (query.includes('[27350 :block/title')) return [['newsletter']];
-        if (query.includes('[36755 :block/title')) return [['public']];
-        if (query.includes('[45204 :block/title')) return [['newsletter']];
-        if (query.includes('[45205 :block/title')) return [['fitness']];
-        if (query.includes('[47532 :block/title')) return [['blog']];
-        if (query.includes('[47533 :block/title')) return [['AI']];
-
-        // Property value resolutions
-        if (query.includes('[819 :block/title')) return [['2025-09-23']];
-        if (query.includes('[45110 :block/title'))
-          return [['https://briansunter.com/central-pacific-update']];
-        if (query.includes('[45116 :block/title')) return [['Central Pacific Update']];
-        if (query.includes('[9 :block/title')) return []; // Numeric rating, can't resolve
-        if (query.includes('[9 :block/content')) return [];
-
-        // UUID collection for filtering
-        if (query.includes(':block/uuid')) {
-          if (query.includes('[45204 :block/uuid')) return [['uuid-45204']];
-          if (query.includes('[45205 :block/uuid')) return [['uuid-45205']];
-          if (query.includes('[47532 :block/uuid')) return [['uuid-47532']];
-          if (query.includes('[47533 :block/uuid')) return [['uuid-47533']];
         }
 
         return [];

@@ -42,11 +42,14 @@ export type LogseqEntity = Record<string, unknown> & {
   properties?: Record<string, unknown>;
 };
 
-// API types
+// API types - supports both UUID strings and EntityIDs (numbers) per Logseq API
 export type LogseqAPI = {
   getCurrentPage: () => Promise<BlockEntity | PageEntity | null>;
-  getPage: (uuid: string) => Promise<BlockEntity | PageEntity | null>;
-  getBlock: (uuid: string, opts?: { includeChildren?: boolean }) => Promise<BlockEntity | null>;
+  getPage: (id: string | number) => Promise<BlockEntity | PageEntity | null>;
+  getBlock: (
+    id: string | number,
+    opts?: { includeChildren?: boolean }
+  ) => Promise<BlockEntity | null>;
   getPageBlocksTree: (pageUuid: string) => Promise<BlockEntity[]>;
   getCurrentGraph: () => Promise<{ path: string } | null>;
   datascriptQuery: (query: string) => Promise<unknown[][]>;
@@ -677,14 +680,14 @@ export class MarkdownExporter {
           // Handle tags specially
           if (cleanKey === 'tags' || cleanKey.toLowerCase().includes('blogtags')) {
             if (Array.isArray(value)) {
-              // Resolve db IDs in tags
+              // Resolve db IDs in tags using getPage API (simpler than DataScript)
               for (const v of value) {
                 if (typeof v === 'number') {
                   try {
-                    const titleQuery = `[:find ?title :where [${v} :block/title ?title]]`;
-                    const result = await this.logseqAPI.datascriptQuery(titleQuery);
-                    if (result && result[0] && typeof result[0][0] === 'string') {
-                      tags.push(result[0][0]);
+                    // Use getPage API with EntityID instead of DataScript query
+                    const page = await this.logseqAPI.getPage(v);
+                    if (page && 'name' in page && page.name) {
+                      tags.push(String(page.name));
                     }
                   } catch {
                     // Skip unresolvable tag
@@ -848,7 +851,7 @@ export class MarkdownExporter {
 
   private async resolveDbReference(dbId: number, assetPath: string): Promise<string | null> {
     try {
-      // First try to resolve as asset using correct DataScript syntax
+      // First try to resolve as asset using DataScript (no API equivalent for asset type)
       const assetQuery = `[:find ?uuid ?type ?title
                           :where
                           [${dbId} :block/uuid ?uuid]
@@ -878,18 +881,16 @@ export class MarkdownExporter {
         }
       }
 
-      // Try to get content/title for non-asset blocks
-      const titleQuery = `[:find ?title :where [${dbId} :block/title ?title]]`;
-      const titleResult = await this.logseqAPI.datascriptQuery(titleQuery);
-      if (titleResult?.[0]?.[0]) {
-        return titleResult[0][0] as string;
+      // Use getBlock/getPage API instead of DataScript for non-asset resolution
+      // This is simpler and more reliable than raw queries
+      const block = await this.logseqAPI.getBlock(dbId);
+      if (block) {
+        return block.content || (block as unknown as { title?: string }).title || null;
       }
 
-      // Try to get content for blocks without title
-      const contentQuery = `[:find ?content :where [${dbId} :block/content ?content]]`;
-      const contentResult = await this.logseqAPI.datascriptQuery(contentQuery);
-      if (contentResult?.[0]?.[0]) {
-        return contentResult[0][0] as string;
+      const page = await this.logseqAPI.getPage(dbId);
+      if (page && 'name' in page && typeof page.name === 'string' && page.name) {
+        return page.name;
       }
     } catch (error) {
       this.debug(`Error resolving db/id ${dbId}:`, error);
@@ -902,93 +903,50 @@ export class MarkdownExporter {
     const uuids = new Set<string>();
     const page = await this.logseqAPI.getPage(pageUuid);
 
-    console.log('=== PROPERTY VALUE COLLECTION DEBUG ===');
-    console.log('Page UUID:', pageUuid);
-    console.log('Full page object:', page);
-
     if (!page || typeof page !== 'object') {
-      console.log('No page object found, returning empty set');
       return uuids;
     }
 
     // Properties are at the root level with colon-prefixed keys
-    // Extract all keys that look like properties
     const propertyKeys = Object.keys(page).filter(
       key =>
         key.startsWith(':user.property/') || key.startsWith(':logseq.property/') || key === 'tags'
     );
 
-    console.log('Property keys found:', propertyKeys);
-    console.log('Total property keys:', propertyKeys.length);
-
-    // Process each property value and resolve db/id to UUID
-    const processValue = async (v: unknown, depth = 0): Promise<void> => {
-      const indent = '  '.repeat(depth + 1);
-      console.log(`${indent}processValue called with:`, v, `Type: ${typeof v}`);
-
+    // Resolve db/id to UUID using getBlock API (simpler than DataScript)
+    const resolveDbId = async (v: unknown): Promise<void> => {
       if (typeof v === 'number') {
-        console.log(`${indent}→ Detected number (db/id): ${v}`);
-        // Resolve db/id to UUID
         try {
-          const query = `[:find ?uuid :where [${v} :block/uuid ?uuid]]`;
-          console.log(`${indent}→ Query: ${query}`);
-          const result = await this.logseqAPI.datascriptQuery(query);
-          console.log(`${indent}→ Query result:`, result);
-
-          if (result && result[0] && result[0][0]) {
-            const uuid = String(result[0][0]);
-            uuids.add(uuid);
-            console.log(`${indent}✓ Resolved db/id ${v} to UUID: ${uuid}`);
-          } else {
-            console.log(`${indent}✗ Could not resolve db/id ${v} (empty result)`);
+          const block = await this.logseqAPI.getBlock(v);
+          if (block?.uuid) {
+            uuids.add(block.uuid);
+            this.debug(`Resolved db/id ${v} to UUID: ${block.uuid}`);
           }
-        } catch (err) {
-          console.log(`${indent}✗ Error resolving db/id ${v}:`, err);
+        } catch {
+          // Entity may not exist or be accessible
         }
       } else if (typeof v === 'object' && v !== null) {
-        console.log(`${indent}→ Detected object:`, Object.keys(v));
-        if ('id' in v || 'db/id' in v) {
-          const dbId =
-            (v as { id?: number; 'db/id'?: number }).id || (v as { 'db/id'?: number })['db/id'];
-          console.log(`${indent}→ Found db/id in object: ${dbId}`);
-          if (typeof dbId === 'number') {
-            await processValue(dbId, depth + 1);
-          }
-        } else {
-          console.log(`${indent}→ Object has no id or db/id property`);
+        const dbId =
+          (v as { id?: number; 'db/id'?: number }).id || (v as { 'db/id'?: number })['db/id'];
+        if (typeof dbId === 'number') {
+          await resolveDbId(dbId);
         }
-      } else {
-        console.log(`${indent}→ Skipping value (type: ${typeof v})`);
       }
     };
 
     for (const key of propertyKeys) {
       const val = (page as Record<string, unknown>)[key];
-      console.log(`\nProcessing property: ${key}`);
-      console.log(`  Value:`, val);
-      console.log(`  Type: ${typeof val}, IsArray: ${Array.isArray(val)}`);
 
       if (Array.isArray(val)) {
-        console.log(`  → Processing array with ${val.length} items`);
-        for (const v of val) {
-          await processValue(v);
-        }
+        for (const v of val) await resolveDbId(v);
       } else if (val instanceof Set) {
-        console.log(`  → Processing set with ${val.size} items`);
-        for (const v of val) {
-          await processValue(v);
-        }
+        for (const v of val) await resolveDbId(v);
       } else {
-        console.log(`  → Processing single value`);
-        await processValue(val);
+        await resolveDbId(val);
       }
     }
 
-    console.log(`\n=== COLLECTION SUMMARY ===`);
-    console.log(`Collected ${uuids.size} property value UUIDs to skip:`);
-    console.log(Array.from(uuids));
-    console.log('=== END DEBUG ===\n');
-
+    this.debug(`Collected ${uuids.size} property value UUIDs to skip`);
     return uuids;
   }
 

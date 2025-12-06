@@ -771,12 +771,13 @@ describe('MarkdownExporter', () => {
       };
 
       // Mock DataScript to resolve db/ids to UUIDs
-      mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
-        if (query.includes('[101 :block/uuid')) return [[uuid1]];
-        if (query.includes('[102 :block/uuid')) return [[uuid2]];
-        if (query.includes('[103 :block/uuid')) return [[{ $uuid: 'uuid3' }]];
-        if (query.includes('[104 :block/uuid')) return [[{ $uuid: 'uuid4' }]];
-        return [];
+      // Mock getBlock for resolving db/ids in collectPropertyValueUUIDs
+      mockAPI.Editor.getBlock.mockImplementation(async (id: string | number) => {
+        if (id === 101) return createMockBlock({ uuid: uuid1 });
+        if (id === 102) return createMockBlock({ uuid: uuid2 });
+        if (id === 103) return createMockBlock({ uuid: 'uuid3' });
+        if (id === 104) return createMockBlock({ uuid: 'uuid4' });
+        return null;
       });
 
       mockAPI.Editor.getPage.mockResolvedValue(page);
