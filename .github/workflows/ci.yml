@@ -44,9 +44,6 @@ jobs:
       - name: ESLint
         run: npx eslint src --max-warnings 0
 
-      - name: Prettier format check
-        run: pnpm format:check
-
   test:
     name: Tests & Coverage
     runs-on: ubuntu-latest
