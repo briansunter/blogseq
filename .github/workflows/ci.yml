@@ -101,24 +101,28 @@ jobs:
             echo "Functions: ${FUNCTIONS}%"
             echo "Lines: ${LINES}%"
 
-            THRESHOLD=40
-            if (( $(echo "$STATEMENTS < $THRESHOLD" | bc -l) )); then
-              echo "❌ Statements coverage (${STATEMENTS}%) below threshold (${THRESHOLD}%)"
+            THRESHOLD_STATEMENTS=40
+            THRESHOLD_BRANCHES=85
+            THRESHOLD_FUNCTIONS=75
+            THRESHOLD_LINES=40
+
+            if (( $(echo "$STATEMENTS < $THRESHOLD_STATEMENTS" | bc -l) )); then
+              echo "❌ Statements coverage (${STATEMENTS}%) below threshold (${THRESHOLD_STATEMENTS}%)"
               exit 1
             fi
-            if (( $(echo "$BRANCHES < $THRESHOLD" | bc -l) )); then
-              echo "❌ Branches coverage (${BRANCHES}%) below threshold (${THRESHOLD}%)"
+            if (( $(echo "$BRANCHES < $THRESHOLD_BRANCHES" | bc -l) )); then
+              echo "❌ Branches coverage (${BRANCHES}%) below threshold (${THRESHOLD_BRANCHES}%)"
               exit 1
             fi
-            if (( $(echo "$FUNCTIONS < $THRESHOLD" | bc -l) )); then
-              echo "❌ Functions coverage (${FUNCTIONS}%) below threshold (${THRESHOLD}%)"
+            if (( $(echo "$FUNCTIONS < $THRESHOLD_FUNCTIONS" | bc -l) )); then
+              echo "❌ Functions coverage (${FUNCTIONS}%) below threshold (${THRESHOLD_FUNCTIONS}%)"
               exit 1
             fi
-            if (( $(echo "$LINES < $THRESHOLD" | bc -l) )); then
-              echo "❌ Lines coverage (${LINES}%) below threshold (${THRESHOLD}%)"
+            if (( $(echo "$LINES < $THRESHOLD_LINES" | bc -l) )); then
+              echo "❌ Lines coverage (${LINES}%) below threshold (${THRESHOLD_LINES}%)"
               exit 1
             fi
-            echo "✅ All coverage thresholds met (>= ${THRESHOLD}%)"
+            echo "✅ All coverage thresholds met"
           else
             echo "⚠️  Coverage report not found"
           fi
