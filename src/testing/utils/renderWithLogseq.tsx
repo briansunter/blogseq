@@ -3,65 +3,65 @@
  * Provides a custom render function that sets up all necessary providers
  */
 
+import type { BlockEntity, PageEntity } from "@logseq/libs/dist/LSPlugin";
+import { RenderOptions, RenderResult, render } from "@testing-library/react";
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React from 'react';
-import { render, RenderOptions, RenderResult } from '@testing-library/react';
-import { ToastProvider } from '../../components/Toast';
-import { MockLogseqAPI } from '../mock-logseq-sdk';
-import type { PageEntity, BlockEntity } from '@logseq/libs/dist/LSPlugin';
-import type { ExportSettings } from '../../types';
+import React from "react";
+import { ToastProvider } from "../../components/Toast";
+import type { ExportSettings } from "../../types";
+import { MockLogseqAPI } from "../mock-logseq-sdk";
 
 const DEFAULT_SETTINGS: ExportSettings = {
-  includePageName: false,
-  flattenNested: true,
-  preserveBlockRefs: true,
-  includeProperties: true,
-  assetPath: 'assets/',
-  debug: false,
+	includePageName: false,
+	flattenNested: true,
+	preserveBlockRefs: true,
+	includeProperties: true,
+	assetPath: "assets/",
+	debug: false,
 };
 
-export interface RenderWithLogseqOptions extends Omit<RenderOptions, 'wrapper'> {
-  /**
-   * Mock Logseq API configuration
-   */
-  mockLogseq?: {
-    pages?: PageEntity[];
-    blocks?: BlockEntity[];
-    graphPath?: string;
-    graphName?: string;
-  };
+export interface RenderWithLogseqOptions extends Omit<RenderOptions, "wrapper"> {
+	/**
+	 * Mock Logseq API configuration
+	 */
+	mockLogseq?: {
+		pages?: PageEntity[];
+		blocks?: BlockEntity[];
+		graphPath?: string;
+		graphName?: string;
+	};
 
-  /**
-   * Initial export settings
-   */
-  initialSettings?: Partial<ExportSettings>;
+	/**
+	 * Initial export settings
+	 */
+	initialSettings?: Partial<ExportSettings>;
 
-  /**
-   * Whether to wrap with ToastProvider (default: true)
-   */
-  withToastProvider?: boolean;
+	/**
+	 * Whether to wrap with ToastProvider (default: true)
+	 */
+	withToastProvider?: boolean;
 
-  /**
-   * Custom wrapper component
-   */
-  wrapper?: React.ComponentType<{ children: React.ReactNode }>;
+	/**
+	 * Custom wrapper component
+	 */
+	wrapper?: React.ComponentType<{ children: React.ReactNode }>;
 
-  /**
-   * Use existing mock API instance instead of creating new one
-   */
-  existingMockAPI?: MockLogseqAPI;
+	/**
+	 * Use existing mock API instance instead of creating new one
+	 */
+	existingMockAPI?: MockLogseqAPI;
 }
 
 export interface RenderWithLogseqResult extends RenderResult {
-  /**
-   * Mock Logseq API instance for assertions
-   */
-  mockAPI: MockLogseqAPI;
+	/**
+	 * Mock Logseq API instance for assertions
+	 */
+	mockAPI: MockLogseqAPI;
 
-  /**
-   * Cleanup function to remove mock API
-   */
-  cleanupMockAPI: () => void;
+	/**
+	 * Cleanup function to remove mock API
+	 */
+	cleanupMockAPI: () => void;
 }
 
 /**
@@ -82,85 +82,85 @@ export interface RenderWithLogseqResult extends RenderResult {
  * ```
  */
 export function renderWithLogseq(
-  ui: React.ReactElement,
-  options: RenderWithLogseqOptions = {}
+	ui: React.ReactElement,
+	options: RenderWithLogseqOptions = {},
 ): RenderWithLogseqResult {
-  const {
-    mockLogseq = {},
-    initialSettings,
-    withToastProvider = true,
-    wrapper,
-    existingMockAPI,
-    ...renderOptions
-  } = options;
+	const {
+		mockLogseq = {},
+		initialSettings,
+		withToastProvider = true,
+		wrapper,
+		existingMockAPI,
+		...renderOptions
+	} = options;
 
-  // Create or use existing mock Logseq API
-  let mockAPI: MockLogseqAPI;
-  if (existingMockAPI) {
-    mockAPI = existingMockAPI;
-  } else {
-    mockAPI = new MockLogseqAPI();
+	// Create or use existing mock Logseq API
+	let mockAPI: MockLogseqAPI;
+	if (existingMockAPI) {
+		mockAPI = existingMockAPI;
+	} else {
+		mockAPI = new MockLogseqAPI();
 
-    // Set up mock data
-    if (mockLogseq.graphPath) {
-      mockAPI.setCurrentGraph({
-        path: mockLogseq.graphPath,
-        name: mockLogseq.graphName || 'Test Graph',
-      });
-    }
+		// Set up mock data
+		if (mockLogseq.graphPath) {
+			mockAPI.setCurrentGraph({
+				path: mockLogseq.graphPath,
+				name: mockLogseq.graphName || "Test Graph",
+			});
+		}
 
-    if (mockLogseq.pages) {
-      mockLogseq.pages.forEach(page => {
-        mockAPI.addPage(page);
-      });
-      if (mockLogseq.pages.length > 0) {
-        mockAPI.setCurrentPage(mockLogseq.pages[0]);
-      }
-    }
+		if (mockLogseq.pages) {
+			mockLogseq.pages.forEach((page) => {
+				mockAPI.addPage(page);
+			});
+			if (mockLogseq.pages.length > 0) {
+				mockAPI.setCurrentPage(mockLogseq.pages[0]);
+			}
+		}
 
-    if (mockLogseq.blocks) {
-      mockLogseq.blocks.forEach(block => {
-        mockAPI.addBlock(block);
-      });
-    }
-  }
+		if (mockLogseq.blocks) {
+			mockLogseq.blocks.forEach((block) => {
+				mockAPI.addBlock(block);
+			});
+		}
+	}
 
-  // Install globally
-  (global as any).logseq = mockAPI;
-  (window as any).logseq = mockAPI;
+	// Install globally
+	(global as any).logseq = mockAPI;
+	(window as any).logseq = mockAPI;
 
-  // Set up initial settings if provided
-  if (initialSettings) {
-    const settings = { ...DEFAULT_SETTINGS, ...initialSettings };
-    const settingsKey = 'blogseq-export-settings';
-    localStorage.setItem(settingsKey, JSON.stringify(settings));
-  }
+	// Set up initial settings if provided
+	if (initialSettings) {
+		const settings = { ...DEFAULT_SETTINGS, ...initialSettings };
+		const settingsKey = "blogseq-export-settings";
+		localStorage.setItem(settingsKey, JSON.stringify(settings));
+	}
 
-  // Create wrapper with providers
-  const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const content = withToastProvider ? <ToastProvider>{children}</ToastProvider> : <>{children}</>;
+	// Create wrapper with providers
+	const AllProviders: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+		const content = withToastProvider ? <ToastProvider>{children}</ToastProvider> : <>{children}</>;
 
-    return wrapper ? React.createElement(wrapper, null, content) : content;
-  };
+		return wrapper ? React.createElement(wrapper, null, content) : content;
+	};
 
-  // Render component
-  const renderResult = render(ui, {
-    wrapper: AllProviders,
-    ...renderOptions,
-  });
+	// Render component
+	const renderResult = render(ui, {
+		wrapper: AllProviders,
+		...renderOptions,
+	});
 
-  // Cleanup function
-  const cleanupMockAPI = () => {
-    delete (global as any).logseq;
-    delete (window as any).logseq;
-    localStorage.clear();
-  };
+	// Cleanup function
+	const cleanupMockAPI = () => {
+		delete (global as any).logseq;
+		delete (window as any).logseq;
+		localStorage.clear();
+	};
 
-  return {
-    ...renderResult,
-    mockAPI,
-    cleanupMockAPI,
-  };
+	return {
+		...renderResult,
+		mockAPI,
+		cleanupMockAPI,
+	};
 }
 
 /**
@@ -176,16 +176,16 @@ export function renderWithLogseq(
  * ```
  */
 export function cleanupLogseqMocks(mockAPI?: MockLogseqAPI): void {
-  if (mockAPI) {
-    mockAPI.reset();
-  }
-  delete (global as any).logseq;
-  delete (window as any).logseq;
-  localStorage.clear();
+	if (mockAPI) {
+		mockAPI.reset();
+	}
+	delete (global as any).logseq;
+	delete (window as any).logseq;
+	localStorage.clear();
 }
 
 /**
  * Re-export testing utilities for convenience
  */
-export { screen, waitFor, within, fireEvent } from '@testing-library/react';
-export { default as userEvent } from '@testing-library/user-event';
+export { fireEvent, screen, waitFor, within } from "@testing-library/react";
+export { default as userEvent } from "@testing-library/user-event";

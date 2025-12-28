@@ -1,24 +1,24 @@
-import type { Meta, StoryObj } from '@storybook/react';
-import { PreviewContent } from './PreviewContent';
+import type { Meta, StoryObj } from "@storybook/react";
+import { PreviewContent } from "./PreviewContent";
 
 /**
  * The PreviewContent component renders markdown content in either raw or rendered mode.
  * It handles frontmatter, images, code blocks, and all standard markdown elements.
  */
 const meta = {
-  title: 'Components/PreviewContent',
-  component: PreviewContent,
-  parameters: {
-    layout: 'fullscreen',
-  },
-  tags: ['autodocs'],
-  argTypes: {
-    previewMode: {
-      control: 'radio',
-      options: ['raw', 'rendered'],
-      description: 'Display mode for the markdown content',
-    },
-  },
+	title: "Components/PreviewContent",
+	component: PreviewContent,
+	parameters: {
+		layout: "fullscreen",
+	},
+	tags: ["autodocs"],
+	argTypes: {
+		previewMode: {
+			control: "radio",
+			options: ["raw", "rendered"],
+			description: "Display mode for the markdown content",
+		},
+	},
 } satisfies Meta<typeof PreviewContent>;
 
 export default meta;
@@ -277,100 +277,100 @@ Testing special chars: & < > " ' \` @ # $ % ^ * ( ) [ ] { }
  * Default rendered view with frontmatter and rich content
  */
 export const Default: Story = {
-  args: {
-    preview: sampleMarkdownWithFrontmatter,
-    previewMode: 'rendered',
-    graphPath: '/Users/test/logseq-graph',
-  },
+	args: {
+		preview: sampleMarkdownWithFrontmatter,
+		previewMode: "rendered",
+		graphPath: "/Users/test/logseq-graph",
+	},
 };
 
 /**
  * Raw markdown view - shows unprocessed markdown
  */
 export const RawMode: Story = {
-  args: {
-    preview: sampleMarkdownWithFrontmatter,
-    previewMode: 'raw',
-    graphPath: '/Users/test/logseq-graph',
-  },
+	args: {
+		preview: sampleMarkdownWithFrontmatter,
+		previewMode: "raw",
+		graphPath: "/Users/test/logseq-graph",
+	},
 };
 
 /**
  * Simple content without frontmatter
  */
 export const SimpleContent: Story = {
-  args: {
-    preview: simpleMarkdown,
-    previewMode: 'rendered',
-    graphPath: '/Users/test/logseq-graph',
-  },
+	args: {
+		preview: simpleMarkdown,
+		previewMode: "rendered",
+		graphPath: "/Users/test/logseq-graph",
+	},
 };
 
 /**
  * Code-heavy content with syntax highlighting
  */
 export const CodeHeavy: Story = {
-  args: {
-    preview: codeHeavyMarkdown,
-    previewMode: 'rendered',
-    graphPath: '/Users/test/logseq-graph',
-  },
+	args: {
+		preview: codeHeavyMarkdown,
+		previewMode: "rendered",
+		graphPath: "/Users/test/logseq-graph",
+	},
 };
 
 /**
  * Long article with multiple sections
  */
 export const LongArticle: Story = {
-  args: {
-    preview: longArticle,
-    previewMode: 'rendered',
-    graphPath: '/Users/test/logseq-graph',
-  },
+	args: {
+		preview: longArticle,
+		previewMode: "rendered",
+		graphPath: "/Users/test/logseq-graph",
+	},
 };
 
 /**
  * Content with images (requires local assets)
  */
 export const WithImages: Story = {
-  args: {
-    preview: markdownWithImages,
-    previewMode: 'rendered',
-    graphPath: '/Users/test/logseq-graph',
-  },
+	args: {
+		preview: markdownWithImages,
+		previewMode: "rendered",
+		graphPath: "/Users/test/logseq-graph",
+	},
 };
 
 /**
  * Complex formatting with tables and nested elements
  */
 export const ComplexFormatting: Story = {
-  args: {
-    preview: complexFormatting,
-    previewMode: 'rendered',
-    graphPath: '/Users/test/logseq-graph',
-  },
+	args: {
+		preview: complexFormatting,
+		previewMode: "rendered",
+		graphPath: "/Users/test/logseq-graph",
+	},
 };
 
 /**
  * Empty content
  */
 export const Empty: Story = {
-  args: {
-    preview: '',
-    previewMode: 'rendered',
-    graphPath: '/Users/test/logseq-graph',
-  },
+	args: {
+		preview: "",
+		previewMode: "rendered",
+		graphPath: "/Users/test/logseq-graph",
+	},
 };
 
 /**
  * Only frontmatter, no content
  */
 export const OnlyFrontmatter: Story = {
-  args: {
-    preview: `---
+	args: {
+		preview: `---
 title: Empty Page
 author: Test User
 ---`,
-    previewMode: 'rendered',
-    graphPath: '/Users/test/logseq-graph',
-  },
+		previewMode: "rendered",
+		graphPath: "/Users/test/logseq-graph",
+	},
 };

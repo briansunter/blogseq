@@ -1,12 +1,12 @@
-import '@logseq/libs';
+import "@logseq/libs";
 
-import React from 'react';
-import * as ReactDOM from 'react-dom/client';
-import App from './App';
-import './index.css';
-import { settingsSchema } from './settings';
+import React from "react";
+import * as ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
 
-import { logseq as PL } from '../package.json';
+import { logseq as PL } from "../package.json";
+import { settingsSchema } from "./settings";
 
 // @ts-expect-error
 const css = (t, ...args) => String.raw(t, ...args);
@@ -14,40 +14,40 @@ const css = (t, ...args) => String.raw(t, ...args);
 const pluginId = PL.id;
 
 function main() {
-  console.info(`#${pluginId}: MAIN`);
+	console.info(`#${pluginId}: MAIN`);
 
-  // Register settings schema
-  logseq.useSettingsSchema(settingsSchema);
+	// Register settings schema
+	logseq.useSettingsSchema(settingsSchema);
 
-  const root = ReactDOM.createRoot(document.getElementById('app')!);
+	const root = ReactDOM.createRoot(document.getElementById("app")!);
 
-  root.render(
-    <React.StrictMode>
-      <App />
-    </React.StrictMode>
-  );
+	root.render(
+		<React.StrictMode>
+			<App />
+		</React.StrictMode>,
+	);
 
-  function createModel() {
-    return {
-      show() {
-        logseq.showMainUI();
-      },
-      async exportPage() {
-        // Trigger export from App component
-        window.dispatchEvent(new CustomEvent('logseq-export-page'));
-      },
-    };
-  }
+	function createModel() {
+		return {
+			show() {
+				logseq.showMainUI();
+			},
+			async exportPage() {
+				// Trigger export from App component
+				window.dispatchEvent(new CustomEvent("logseq-export-page"));
+			},
+		};
+	}
 
-  logseq.provideModel(createModel());
-  logseq.setMainUIInlineStyle({
-    zIndex: 11,
-  });
+	logseq.provideModel(createModel());
+	logseq.setMainUIInlineStyle({
+		zIndex: 11,
+	});
 
-  const openIconName = 'blogseq-export-open';
-  const exportIconName = 'blogseq-export-action';
+	const openIconName = "blogseq-export-open";
+	const exportIconName = "blogseq-export-action";
 
-  logseq.provideStyle(css`
+	logseq.provideStyle(css`
     .${openIconName}, .${exportIconName} {
       font-size: 20px;
       margin-top: 4px;
@@ -67,10 +67,10 @@ function main() {
     }
   `);
 
-  // Main UI button
-  logseq.App.registerUIItem('toolbar', {
-    key: openIconName,
-    template: `
+	// Main UI button
+	logseq.App.registerUIItem("toolbar", {
+		key: openIconName,
+		template: `
     <a data-on-click="show" title="BlogSeq Export">
         <div class="${openIconName}">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -80,12 +80,12 @@ function main() {
         </div>
     </a>    
 `,
-  });
+	});
 
-  // Quick export button
-  logseq.App.registerUIItem('toolbar', {
-    key: exportIconName,
-    template: `
+	// Quick export button
+	logseq.App.registerUIItem("toolbar", {
+		key: exportIconName,
+		template: `
     <a data-on-click="exportPage" title="Quick Export Current Page">
         <div class="${exportIconName}">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
@@ -96,37 +96,37 @@ function main() {
         </div>
     </a>    
 `,
-  });
+	});
 
-  // Register slash command for export
-  logseq.Editor.registerSlashCommand('Export page to markdown', async () => {
-    const { exporter } = await import('./markdownExporter');
-    const { getExportSettings } = await import('./settings');
-    try {
-      const settings = getExportSettings();
-      const markdown = await exporter.exportCurrentPage(settings);
-      await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
-      logseq.UI.showMsg('Page exported as ZIP successfully!', 'success');
-    } catch (error) {
-      console.error('Export failed:', error);
-      logseq.UI.showMsg('Export failed. Check console for details.', 'error');
-    }
-  });
+	// Register slash command for export
+	logseq.Editor.registerSlashCommand("Export page to markdown", async () => {
+		const { exporter } = await import("./markdownExporter");
+		const { getExportSettings } = await import("./settings");
+		try {
+			const settings = getExportSettings();
+			const markdown = await exporter.exportCurrentPage(settings);
+			await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
+			logseq.UI.showMsg("Page exported as ZIP successfully!", "success");
+		} catch (error) {
+			console.error("Export failed:", error);
+			logseq.UI.showMsg("Export failed. Check console for details.", "error");
+		}
+	});
 
-  // Register page menu item
-  logseq.App.registerPageMenuItem('Export to Markdown', async () => {
-    const { exporter } = await import('./markdownExporter');
-    const { getExportSettings } = await import('./settings');
-    try {
-      const settings = getExportSettings();
-      const markdown = await exporter.exportCurrentPage(settings);
-      await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
-      logseq.UI.showMsg('Page exported as ZIP successfully!', 'success');
-    } catch (error) {
-      console.error('Export failed:', error);
-      logseq.UI.showMsg('Export failed. Check console for details.', 'error');
-    }
-  });
+	// Register page menu item
+	logseq.App.registerPageMenuItem("Export to Markdown", async () => {
+		const { exporter } = await import("./markdownExporter");
+		const { getExportSettings } = await import("./settings");
+		try {
+			const settings = getExportSettings();
+			const markdown = await exporter.exportCurrentPage(settings);
+			await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
+			logseq.UI.showMsg("Page exported as ZIP successfully!", "success");
+		} catch (error) {
+			console.error("Export failed:", error);
+			logseq.UI.showMsg("Export failed. Check console for details.", "error");
+		}
+	});
 }
 
 logseq.ready(main).catch(console.error);
