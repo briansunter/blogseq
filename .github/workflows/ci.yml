@@ -41,8 +41,8 @@ jobs:
       - name: Type checking
         run: pnpm typecheck
 
-      - name: ESLint
-        run: npx eslint src --max-warnings 0
+      - name: Biome lint
+        run: pnpm lint
 
   test:
     name: Tests & Coverage

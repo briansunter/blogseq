@@ -16,10 +16,10 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint src --ext .ts,.tsx",
-    "lint:fix": "eslint src --ext .ts,.tsx --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx,json,css,md}\" \"*.{json,md}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,json,css,md}\" \"*.{json,md}\"",
+    "lint": "biome check src",
+    "lint:fix": "biome check --write src",
+    "format": "biome format --write src",
+    "format:check": "biome format --check src",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run src/tests/unit",
@@ -28,8 +28,8 @@
     "test:e2e": "vitest run src/tests/e2e",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest run --coverage",
-    "check:all": "pnpm typecheck && pnpm lint && pnpm format:check && pnpm test",
-    "fix-all": "pnpm lint:fix && pnpm format && pnpm test",
+    "check:all": "pnpm typecheck && pnpm lint && pnpm test",
+    "fix-all": "pnpm lint:fix && pnpm test",
     "prepare": "husky",
     "storybook": "STORYBOOK=true storybook dev -p 6006",
     "build-storybook": "STORYBOOK=true storybook build",
@@ -47,6 +47,7 @@
     "remark-frontmatter": "^5.0.0"
   },
   "devDependencies": {
+    "@biomejs/biome": "^2.3.10",
     "@semantic-release/changelog": "6.0.3",
     "@semantic-release/exec": "6.0.3",
     "@semantic-release/git": "10.0.1",
@@ -93,11 +94,10 @@
   },
   "lint-staged": {
     "src/**/*.{ts,tsx}": [
-      "eslint --fix",
-      "prettier --write"
+      "biome check --write --no-errors-on-unmatched"
     ],
     "*.json": [
-      "prettier --write"
+      "biome check --write --no-errors-on-unmatched"
     ]
   }
 }
