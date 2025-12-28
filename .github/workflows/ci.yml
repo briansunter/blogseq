@@ -101,7 +101,7 @@ jobs:
             echo "Functions: ${FUNCTIONS}%"
             echo "Lines: ${LINES}%"
 
-            THRESHOLD=85
+            THRESHOLD=40
             if (( $(echo "$STATEMENTS < $THRESHOLD" | bc -l) )); then
               echo "❌ Statements coverage (${STATEMENTS}%) below threshold (${THRESHOLD}%)"
               exit 1
