@@ -140,9 +140,9 @@ describe('MarkdownExporter - Property and db/id Resolution', () => {
         if (id === 819) return createMockBlock({ content: '2025-09-23' });
         if (id === 45116)
           return createMockBlock({
-            title: 'Central Pacific Update',
+            ':block/title': 'Central Pacific Update',
             content: 'Central Pacific Update',
-          });
+          } as unknown as BlockEntity);
         if (id === 45110)
           return createMockBlock({ content: 'https://briansunter.com/central-pacific-update' });
         return null;
