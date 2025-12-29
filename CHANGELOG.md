@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/briansunter/blogseq/compare/v1.1.0...v1.2.0) (2025-12-29)
+
+
+### Features
+
+* trigger release ([e33d659](https://github.com/briansunter/blogseq/commit/e33d6593136f99195807e8ccd97de92337532670))
+
 # [1.1.0](https://github.com/briansunter/blogseq/compare/v1.0.3...v1.1.0) (2025-10-25)
 
 - storybook ([9950371](https://github.com/briansunter/blogseq/commit/9950371450a80e5cfdabba264872e5cb0e4a0bbc))
