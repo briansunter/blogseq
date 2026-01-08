@@ -45,6 +45,7 @@ export type LogseqEntity = Record<string, unknown> & {
 // API types - supports both UUID strings and EntityIDs (numbers) per Logseq API
 export type LogseqAPI = {
 	getCurrentPage: () => Promise<BlockEntity | PageEntity | null>;
+	getCurrentBlock: () => Promise<BlockEntity | null>;
 	getPage: (id: string | number) => Promise<BlockEntity | PageEntity | null>;
 	getBlock: (
 		id: string | number,
@@ -186,6 +187,7 @@ export class MarkdownExporter {
 	constructor(
 		private logseqAPI: LogseqAPI = {
 			getCurrentPage: () => logseq.Editor.getCurrentPage(),
+			getCurrentBlock: () => logseq.Editor.getCurrentBlock(),
 			getPage: (uuid) => logseq.Editor.getPage(uuid),
 			getBlock: (uuid, opts) => logseq.Editor.getBlock(uuid, opts),
 			getPageBlocksTree: (uuid) => logseq.Editor.getPageBlocksTree(uuid),
@@ -211,6 +213,15 @@ export class MarkdownExporter {
 		if (this.debugEnabled) console.log(...args);
 	}
 
+	/**
+	 * Checks if the returned object from getCurrentPage() is actually a block.
+	 * When zoomed into a block, getCurrentPage() returns the block object with a "page" property.
+	 * When viewing a page, getCurrentPage() returns a page object without "page" property.
+	 */
+	private isBlock(entity: BlockEntity | PageEntity | null): entity is BlockEntity {
+		return entity !== null && typeof entity === "object" && "page" in entity;
+	}
+
 	async exportCurrentPage(options: ExportOptions = {}): Promise<string> {
 		const opts = { ...DEFAULT_OPTIONS, ...options };
 		this.debugEnabled = opts.debug || false;
@@ -219,6 +230,15 @@ export class MarkdownExporter {
 
 		const currentPage = await this.logseqAPI.getCurrentPage();
 		if (!currentPage) throw new Error("NO_ACTIVE_PAGE");
+
+		// Check if getCurrentPage() returned a focused block (when zoomed)
+		// When zoomed into a block, getCurrentPage() returns the block object with a "page" property
+		if (this.isBlock(currentPage)) {
+			this.debug("Detected zoomed block:", currentPage.uuid);
+			return this.exportFocusedBlock(currentPage, opts);
+		}
+
+		// Otherwise export as a page
 
 		const graph = await this.logseqAPI.getCurrentGraph();
 		if (graph?.path) this.graphPath = graph.path;
@@ -811,8 +831,39 @@ export class MarkdownExporter {
 			return value;
 		}
 
-		if (Array.isArray(value) || value instanceof Set) {
-			return Array.isArray(value) ? value : Array.from(value);
+		// Handle arrays - resolve each element if it's a numeric db/id
+		if (Array.isArray(value)) {
+			const resolved: unknown[] = [];
+			for (const item of value) {
+				if (typeof item === "number") {
+					// Try to resolve numeric db/id references (e.g., tag references)
+					const resolvedItem = await this.resolveDbReference(item, assetPath);
+					if (resolvedItem) {
+						resolved.push(resolvedItem);
+					} else {
+						resolved.push(item);
+					}
+				} else if (typeof item === "object" && item !== null && "db/id" in item) {
+					// Handle db/id references in object format
+					const resolvedItem = await this.resolveDbReference(
+						(item as any)["db/id"] as number,
+						assetPath,
+					);
+					if (resolvedItem) {
+						resolved.push(resolvedItem);
+					} else {
+						resolved.push(item);
+					}
+				} else {
+					// Recursively process non-numeric items
+					resolved.push(await this.processPropertyValue(item, assetPath));
+				}
+			}
+			return resolved;
+		}
+
+		if (value instanceof Set) {
+			return Array.from(value);
 		}
 
 		// Handle plain numeric db/id references
@@ -1110,6 +1161,45 @@ export class MarkdownExporter {
 			console.error("Error executing query:", error);
 			throw error;
 		}
+	}
+
+	/**
+	 * Export a focused block and its descendants.
+	 * Called when a block is in full-screen focus mode or actively editing.
+	 */
+	private async exportFocusedBlock(block: BlockEntity, opts: ExportOptions): Promise<string> {
+		// Get graph path for assets
+		const graph = await this.logseqAPI.getCurrentGraph();
+		if (graph?.path) this.graphPath = graph.path;
+
+		// Reset state
+		this.processedBlocks.clear();
+		this.blockRefCache.clear();
+		this.referencedAssets.clear();
+
+		// Fetch the block with all nested children
+		const blockWithChildren = await this.logseqAPI.getBlock(block.uuid, { includeChildren: true });
+		const blockToExport = blockWithChildren || block;
+
+		// Build markdown
+		let markdown = "";
+
+		// Generate frontmatter from block properties if requested
+		if (opts.includeProperties) {
+			const frontmatter = await this.generateFrontmatter(blockToExport, opts.assetPath);
+			if (frontmatter) {
+				markdown += frontmatter + "\n";
+			}
+		}
+
+		// Pre-cache references including all nested children
+		await this.cacheBlockReferences([blockToExport]);
+
+		// Export only the children of the focused block, not the block's own title/content
+		markdown += await this.processChildren(blockToExport, 0, opts);
+
+		// Post-process markdown
+		return MarkdownHelpers.postProcessMarkdown(markdown);
 	}
 
 	// Public accessors

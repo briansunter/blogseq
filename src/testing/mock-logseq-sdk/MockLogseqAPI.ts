@@ -39,6 +39,7 @@ export interface MockLogseqState {
 	pages: Map<string, PageEntity>;
 	blocks: Map<string, BlockEntity>;
 	currentPage: PageEntity | null;
+	currentBlock: BlockEntity | null;
 	currentGraph: { path: string; name?: string } | null;
 	assets: Map<
 		string,
@@ -70,6 +71,7 @@ export class MockLogseqAPI implements LogseqAPI {
 	// Call tracking for spies
 	public calls = {
 		getCurrentPage: [] as unknown[],
+		getCurrentBlock: [] as unknown[],
 		getPage: [] as Array<string | number>,
 		getBlock: [] as Array<{ id: string | number; opts?: { includeChildren?: boolean } }>,
 		getPageBlocksTree: [] as string[],
@@ -83,6 +85,7 @@ export class MockLogseqAPI implements LogseqAPI {
 			pages: new Map(),
 			blocks: new Map(),
 			currentPage: null,
+			currentBlock: null,
 			currentGraph: null,
 			assets: new Map(),
 			propertyDefinitions: new Map(),
@@ -329,6 +332,14 @@ export class MockLogseqAPI implements LogseqAPI {
 	}
 
 	/**
+	 * Get the currently focused block
+	 */
+	async getCurrentBlock(): Promise<BlockEntity | null> {
+		this.calls.getCurrentBlock.push(undefined);
+		return this.handleMethodSimulation("getCurrentBlock", () => this.state.currentBlock);
+	}
+
+	/**
 	 * Execute a DataScript query
 	 */
 	async datascriptQuery(query: string): Promise<unknown[][]> {
@@ -456,6 +467,14 @@ export class MockLogseqAPI implements LogseqAPI {
 	}
 
 	/**
+	 * Set the current block
+	 */
+	setCurrentBlock(block: BlockEntity | null): this {
+		this.state.currentBlock = block;
+		return this;
+	}
+
+	/**
 	 * Add a page to the state
 	 */
 	addPage(page: PageEntity): this {
@@ -570,6 +589,7 @@ export class MockLogseqAPI implements LogseqAPI {
 				propertyDefinitions: seed.propertyDefinitions || new Map(),
 				messages: seed.messages || [],
 				currentPage: seed.currentPage || null,
+				currentBlock: seed.currentBlock || null,
 				currentGraph: seed.currentGraph || null,
 			};
 		} else {
@@ -610,6 +630,7 @@ export class MockLogseqAPI implements LogseqAPI {
 			propertyDefinitions: new Map(state.propertyDefinitions),
 			messages: [...state.messages],
 			currentPage: state.currentPage,
+			currentBlock: state.currentBlock,
 			currentGraph: state.currentGraph,
 		};
 	}
@@ -620,6 +641,7 @@ export class MockLogseqAPI implements LogseqAPI {
 	resetCalls(): this {
 		this.calls = {
 			getCurrentPage: [],
+			getCurrentBlock: [],
 			getPage: [],
 			getBlock: [],
 			getPageBlocksTree: [],

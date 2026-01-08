@@ -6,12 +6,15 @@ import {
 	createMockBlock,
 	createMockLogseqAPI,
 	createMockPage,
+	expectAssetPath,
 	expectMarkdownHeading,
 	FIXTURES,
 	MockDOMHelpers,
 	MockFileAPI,
 	MockLogseqAPI,
 	mockAssetQuery,
+	mockBlockReference,
+	mockCurrentBlockResponse,
 	mockCurrentPageResponse,
 	mockGraphResponse,
 	mockPageBlocksResponse,
@@ -1108,5 +1111,263 @@ Normal text #tag1 #[[complex tag]]`;
 			expect(result).toContain("![Image](assets/a1b2c3d4-e5f6-7890-abcd-ef1234567890.png)");
 			expect(result).toContain("Parent content");
 		});
+	});
+});
+
+describe("focused block export", () => {
+	let exporter: MarkdownExporter;
+	let mockAPI: MockLogseqAPI;
+	let mockFileAPI: MockFileAPI;
+	let mockDOMHelpers: MockDOMHelpers;
+
+	beforeEach(() => {
+		mockAPI = createMockLogseqAPI();
+		mockFileAPI = {
+			fetch: vi.fn(),
+			saveAs: vi.fn(),
+			createObjectURL: vi.fn(() => "blob://test-url"),
+			revokeObjectURL: vi.fn(),
+			writeToClipboard: vi.fn(),
+		};
+		mockDOMHelpers = {
+			createElement: vi.fn(),
+			appendChild: vi.fn(),
+			removeChild: vi.fn(),
+		};
+
+		exporter = new MarkdownExporter(mockAPI, mockFileAPI, mockDOMHelpers);
+		resetAllMocks(mockAPI);
+	});
+
+	it("should export page returned by getCurrentPage", async () => {
+		const currentPage = createMockPage({
+			uuid: "page-uuid",
+			name: "Test Page",
+		});
+		const block = createMockBlock({
+			uuid: "block-uuid",
+			content: "Page content",
+		});
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(currentPage);
+		mockAPI.Editor.getPageBlocksTree.mockResolvedValue([block]);
+		mockGraphResponse(mockAPI, "/test/graph");
+
+		const result = await exporter.exportCurrentPage({
+			includePageName: false,
+			includeProperties: false,
+		});
+
+		expect(result).toContain("Page content");
+	});
+
+	it("should export page with children blocks", async () => {
+		const currentPage = createMockPage({
+			uuid: "page-uuid",
+			name: "Test Page",
+		});
+		const parentBlock = createMockBlock({
+			uuid: "parent-block",
+			content: "Parent block",
+		});
+		const childBlock = createMockBlock({
+			uuid: "child-block",
+			content: "Child block",
+		});
+
+		parentBlock.children = [childBlock];
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(currentPage);
+		mockAPI.Editor.getPageBlocksTree.mockResolvedValue([parentBlock]);
+		mockGraphResponse(mockAPI, "/test/graph");
+
+		const result = await exporter.exportCurrentPage({
+			includePageName: false,
+			includeProperties: false,
+		});
+
+		expect(result).toContain("Parent block");
+		expect(result).toContain("Child block");
+	});
+
+	it("should export page with nested children blocks", async () => {
+		const currentPage = createMockPage({
+			uuid: "page-uuid",
+			name: "Test Page",
+		});
+		const parentBlock = createMockBlock({
+			uuid: "parent-block",
+			content: "Level 1",
+		});
+		const childBlock = createMockBlock({
+			uuid: "child-block",
+			content: "Level 2",
+		});
+		const grandchildBlock = createMockBlock({
+			uuid: "grandchild-block",
+			content: "Level 3",
+		});
+
+		parentBlock.children = [childBlock];
+		childBlock.children = [grandchildBlock];
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(currentPage);
+		mockAPI.Editor.getPageBlocksTree.mockResolvedValue([parentBlock]);
+		mockGraphResponse(mockAPI, "/test/graph");
+
+		const result = await exporter.exportCurrentPage({
+			includePageName: false,
+			includeProperties: false,
+		});
+
+		expect(result).toContain("Level 1");
+		expect(result).toContain("Level 2");
+		expect(result).toContain("Level 3");
+	});
+
+	it("should handle block with heading property", async () => {
+		const currentPage = createMockPage({
+			uuid: "page-uuid",
+			name: "Test Page",
+		});
+		const blockWithHeading = createMockBlock({
+			uuid: "block-uuid",
+			content: "Regular content",
+		});
+		// Add heading property
+		(blockWithHeading as any)["logseq.property/heading"] = 2;
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(currentPage);
+		mockAPI.Editor.getPageBlocksTree.mockResolvedValue([blockWithHeading]);
+		mockGraphResponse(mockAPI, "/test/graph");
+
+		const result = await exporter.exportCurrentPage({
+			includePageName: false,
+			includeProperties: false,
+		});
+
+		expectMarkdownHeading(result, 2, "Regular content");
+	});
+
+	it("should generate frontmatter for page exports", async () => {
+		const currentPage = createMockPage({
+			uuid: "page-uuid",
+			name: "Test Page",
+		});
+		const block = createMockBlock({
+			uuid: "block-uuid",
+			content: "Block content",
+		});
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(currentPage);
+		mockAPI.Editor.getPageBlocksTree.mockResolvedValue([block]);
+		mockGraphResponse(mockAPI, "/test/graph");
+
+		const result = await exporter.exportCurrentPage({
+			includeProperties: true,
+		});
+
+		expect(result).toMatch(/^---$/m);
+	});
+
+	it("should include assets in page export", async () => {
+		const currentPage = createMockPage({
+			uuid: "page-uuid",
+			name: "Test Page",
+		});
+		const blockWithAsset = createMockBlock({
+			uuid: "block-uuid",
+			content: "![Image](../assets/a1b2c3d4-e5f6-7890-abcd-ef1234567890.png)",
+		});
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(currentPage);
+		mockAPI.Editor.getPageBlocksTree.mockResolvedValue([blockWithAsset]);
+		mockGraphResponse(mockAPI, "/test/graph");
+		mockAssetQuery(mockAPI, "a1b2c3d4-e5f6-7890-abcd-ef1234567890", "image");
+
+		const result = await exporter.exportCurrentPage({
+			assetPath: "assets/",
+		});
+
+		expectAssetPath(result, "assets/", "a1b2c3d4-e5f6-7890-abcd-ef1234567890.png");
+	});
+
+	it("should preserve block references in page", async () => {
+		const currentPage = createMockPage({
+			uuid: "page-uuid",
+			name: "Test Page",
+		});
+		const blockWithRef = createMockBlock({
+			uuid: "block-uuid",
+			content: "Content with ((referenced-block)) reference",
+		});
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(currentPage);
+		mockAPI.Editor.getPageBlocksTree.mockResolvedValue([blockWithRef]);
+		mockGraphResponse(mockAPI, "/test/graph");
+
+		const result = await exporter.exportCurrentPage({
+			preserveBlockRefs: true,
+			removeLogseqSyntax: false,
+		});
+
+		// With preserveBlockRefs, block references should be preserved
+		expect(result).toContain("Content with ((referenced-block)) reference");
+	});
+
+	it("should handle block with page references", async () => {
+		const currentPage = createMockPage({
+			uuid: "page-uuid",
+			name: "Test Page",
+		});
+		const blockWithPageRef = createMockBlock({
+			uuid: "block-uuid",
+			content: "Check out [[Another Page]] for more info",
+		});
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(currentPage);
+		mockAPI.Editor.getPageBlocksTree.mockResolvedValue([blockWithPageRef]);
+		mockGraphResponse(mockAPI, "/test/graph");
+
+		const result = await exporter.exportCurrentPage({
+			preserveBlockRefs: true,
+			removeLogseqSyntax: false,
+		});
+
+		expect(result).toContain("Check out [[Another Page]] for more info");
+	});
+
+	it("should respect flattenNested option for page", async () => {
+		const currentPage = createMockPage({
+			uuid: "page-uuid",
+			name: "Test Page",
+		});
+		const parentBlock = createMockBlock({
+			uuid: "parent-block",
+			content: "Parent",
+		});
+		const childBlock = createMockBlock({
+			uuid: "child-block",
+			content: "> Child content",
+		});
+
+		parentBlock.children = [childBlock];
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(currentPage);
+		mockAPI.Editor.getPageBlocksTree.mockResolvedValue([parentBlock]);
+		mockGraphResponse(mockAPI, "/test/graph");
+
+		const resultWithFlatten = await exporter.exportCurrentPage({
+			flattenNested: true,
+		});
+		const resultWithoutFlatten = await exporter.exportCurrentPage({
+			flattenNested: false,
+		});
+
+		// Both should contain the content but may have different formatting
+		expect(resultWithFlatten).toContain("Parent");
+		expect(resultWithFlatten).toContain("Child content");
+		expect(resultWithoutFlatten).toContain("Parent");
+		expect(resultWithoutFlatten).toContain("Child content");
 	});
 });

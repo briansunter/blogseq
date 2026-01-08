@@ -52,7 +52,21 @@ function AppContent() {
 	const loadCurrentPage = useCallback(async () => {
 		try {
 			const page = await logseq.Editor.getCurrentPage();
-			if (page && typeof page === "object" && "name" in page) {
+			if (!page) {
+				setCurrentPageName("");
+				setShowPreview(false);
+				return;
+			}
+
+			// Check if getCurrentPage() returned a block (when zoomed)
+			// Blocks have a "page" property, pages don't
+			if (typeof page === "object" && "page" in page) {
+				setCurrentPageName("(Block)");
+				return;
+			}
+
+			// Otherwise it's a page
+			if ("name" in page) {
 				const pageName = (page as { name: string }).name;
 				setCurrentPageName(typeof pageName === "string" ? pageName : "");
 			} else {

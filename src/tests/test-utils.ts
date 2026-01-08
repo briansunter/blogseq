@@ -6,13 +6,20 @@ import { MockLogseqAPI as SDKMockLogseqAPI } from "../testing/mock-logseq-sdk/Mo
 
 export type MockLogseqAPI = {
 	getCurrentPage: Mock;
+	getCurrentBlock: Mock;
 	getPage: Mock;
 	getBlock: Mock;
 	getPageBlocksTree: Mock;
 	getCurrentGraph: Mock;
 	datascriptQuery: Mock;
 	showMsg: Mock;
-	Editor: { getCurrentPage: Mock; getPage: Mock; getBlock: Mock; getPageBlocksTree: Mock };
+	Editor: {
+		getCurrentPage: Mock;
+		getCurrentBlock: Mock;
+		getPage: Mock;
+		getBlock: Mock;
+		getPageBlocksTree: Mock;
+	};
 	App: { getCurrentGraph: Mock };
 	DB: { datascriptQuery: Mock };
 	UI: { showMsg: Mock };
@@ -41,6 +48,7 @@ export const createMockLogseqAPI = (): MockLogseqAPI => {
 
 	// Create mock wrappers that delegate to the instance methods
 	const getCurrentPageMock = vi.fn(() => mockInstance.getCurrentPage());
+	const getCurrentBlockMock = vi.fn(() => mockInstance.getCurrentBlock());
 	const getPageMock = vi.fn((uuid: string) => mockInstance.getPage(uuid));
 	const getBlockMock = vi.fn((uuid: string) => mockInstance.getBlock(uuid));
 	const getPageBlocksTreeMock = vi.fn((uuid: string) => mockInstance.getPageBlocksTree(uuid));
@@ -52,6 +60,7 @@ export const createMockLogseqAPI = (): MockLogseqAPI => {
 
 	const api = {
 		getCurrentPage: getCurrentPageMock,
+		getCurrentBlock: getCurrentBlockMock,
 		getPage: getPageMock,
 		getBlock: getBlockMock,
 		getPageBlocksTree: getPageBlocksTreeMock,
@@ -60,6 +69,7 @@ export const createMockLogseqAPI = (): MockLogseqAPI => {
 		showMsg: showMsgMock,
 		Editor: {
 			getCurrentPage: getCurrentPageMock,
+			getCurrentBlock: getCurrentBlockMock,
 			getPage: getPageMock,
 			getBlock: getBlockMock,
 			getPageBlocksTree: getPageBlocksTreeMock,
@@ -198,6 +208,18 @@ export const mockCurrentPageResponse = (mockAPI: MockLogseqAPI, page: PageEntity
 		mockInstance.addPage(page);
 	}
 	mockAPI.Editor.getCurrentPage.mockResolvedValue(page);
+};
+
+export const mockCurrentBlockResponse = (
+	mockAPI: MockLogseqAPI,
+	block: BlockEntity | null,
+): void => {
+	const mockInstance = (mockAPI as any)._mockInstance as SDKMockLogseqAPI;
+	if (mockInstance && block) {
+		mockInstance.setCurrentBlock(block);
+		mockInstance.addBlock(block);
+	}
+	mockAPI.Editor.getCurrentBlock.mockResolvedValue(block);
 };
 
 export const mockPageBlocksResponse = (mockAPI: MockLogseqAPI, blocks: BlockEntity[]): void => {
