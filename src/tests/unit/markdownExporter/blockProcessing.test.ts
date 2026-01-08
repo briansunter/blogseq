@@ -898,4 +898,178 @@ describe("MarkdownExporter - Block Processing", () => {
 			expect(result).not.toContain("## Content");
 		});
 	});
+
+	describe("Code Block Formatting", () => {
+		it("should render code blocks with language specifier", async () => {
+			const page = createMockPage({ name: "Test" });
+			const codeBlock = createMockBlock({
+				uuid: "code-1",
+				content: '(print "hello")',
+			});
+			(codeBlock as any)[":logseq.property.node/display-type"] = ":code";
+			(codeBlock as any)[":logseq.property.code/lang"] = "Clojure";
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [codeBlock]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+			});
+
+			expect(result).toContain("```Clojure");
+			expect(result).toContain('(print "hello")');
+			expect(result).toContain("```");
+		});
+
+		it("should render code blocks without language (generic code block)", async () => {
+			const page = createMockPage({ name: "Test" });
+			const codeBlock = createMockBlock({
+				uuid: "code-2",
+				content: "console.log('test')",
+			});
+			(codeBlock as any)["logseq.property.node/display-type"] = "code"; // Test string format
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [codeBlock]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+			});
+
+			expect(result).toContain("```\n");
+			expect(result).toContain("console.log('test')");
+		});
+
+		it("should render multi-line code blocks", async () => {
+			const page = createMockPage({ name: "Test" });
+			const codeBlock = createMockBlock({
+				uuid: "code-3",
+				content: "function test() {\n  return true;\n}",
+			});
+			(codeBlock as any)[":logseq.property.node/display-type"] = ":code";
+			(codeBlock as any)[":logseq.property.code/lang"] = "javascript";
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [codeBlock]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+			});
+
+			expect(result).toContain("```javascript");
+			expect(result).toContain("function test() {");
+			expect(result).toContain("  return true;");
+			expect(result).toContain("}");
+		});
+
+		it("should process children of code blocks", async () => {
+			const page = createMockPage({ name: "Test" });
+			const codeBlock = createMockBlock({
+				uuid: "code-4",
+				content: "const x = 1;",
+				children: [createMockBlock({ uuid: "child-1", content: "Code explanation" })],
+			});
+			(codeBlock as any)[":logseq.property.node/display-type"] = ":code";
+			(codeBlock as any)[":logseq.property.code/lang"] = "typescript";
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [codeBlock]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+				flattenNested: false,
+			});
+
+			expect(result).toContain("```typescript");
+			expect(result).toContain("const x = 1;");
+			expect(result).toContain("- Code explanation");
+		});
+
+		it("should not affect non-code blocks", async () => {
+			const page = createMockPage({ name: "Test" });
+			const normalBlock = createMockBlock({
+				uuid: "normal-1",
+				content: "Regular content",
+			});
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [normalBlock]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+			});
+
+			expect(result).toContain("Regular content");
+			expect(result).not.toMatch(/^```/m);
+		});
+
+		it("should prioritize code over heading if both properties exist", async () => {
+			const page = createMockPage({ name: "Test" });
+			const block = createMockBlock({
+				uuid: "conflict-1",
+				content: "const test = 'value';",
+			});
+			(block as any)[":logseq.property.node/display-type"] = ":code";
+			(block as any)[":logseq.property.code/lang"] = "javascript";
+			(block as any)[":logseq.property/heading"] = 2; // H2 heading
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [block]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+				flattenNested: true,
+			});
+
+			// Should render as code block, not heading
+			expect(result).toContain("```javascript");
+			expect(result).not.toContain("## const test");
+		});
+
+		it("should handle various programming languages", async () => {
+			const page = createMockPage({ name: "Test" });
+			const languages = [
+				{ lang: "python", code: "print('hello')" },
+				{ lang: "rust", code: "fn main() {}" },
+				{ lang: "go", code: "func main() {}" },
+				{ lang: "typescript", code: "const x: number = 1;" },
+			];
+
+			const blocks = languages.map((item, i) => {
+				const block = createMockBlock({
+					uuid: `lang-${i}`,
+					content: item.code,
+				});
+				(block as any)[":logseq.property.node/display-type"] = ":code";
+				(block as any)[":logseq.property.code/lang"] = item.lang;
+				return block;
+			});
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, blocks);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+			});
+
+			languages.forEach((item) => {
+				expect(result).toContain("```" + item.lang);
+				expect(result).toContain(item.code);
+			});
+		});
+	});
 });

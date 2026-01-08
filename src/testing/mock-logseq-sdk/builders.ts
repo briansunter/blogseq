@@ -312,6 +312,20 @@ export class BlockBuilder {
 	}
 
 	/**
+	 * Mark block as a code block
+	 */
+	asCodeBlock(language?: string): this {
+		if (!this.block.properties) {
+			this.block.properties = {};
+		}
+		this.block.properties["logseq.property.node/display-type"] = ":code";
+		if (language) {
+			this.block.properties["logseq.property.code/lang"] = language;
+		}
+		return this;
+	}
+
+	/**
 	 * Clone this builder to create variations
 	 */
 	clone(): BlockBuilder {

@@ -799,4 +799,108 @@ More text`;
 			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(false);
 		});
 	});
+
+	describe("isCodeBlock", () => {
+		it("should detect code block with root-level property", () => {
+			const block = {
+				"logseq.property.node/display-type": ":code",
+				content: "code",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isCodeBlock(block)).toBe(true);
+		});
+
+		it("should detect code block with colon-prefixed property", () => {
+			const block = {
+				":logseq.property.node/display-type": ":code",
+				content: "code",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isCodeBlock(block)).toBe(true);
+		});
+
+		it("should detect code block with properties object", () => {
+			const block = {
+				properties: {
+					"logseq.property.node/display-type": "code",
+				},
+				content: "code",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isCodeBlock(block)).toBe(true);
+		});
+
+		it("should return false for non-code blocks", () => {
+			const block = {
+				content: "normal block",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isCodeBlock(block)).toBe(false);
+		});
+
+		it("should handle string 'code' value", () => {
+			const block = {
+				"logseq.property.node/display-type": "code",
+				content: "code",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isCodeBlock(block)).toBe(true);
+		});
+
+		it("should return false for other display types", () => {
+			const block = {
+				"logseq.property.node/display-type": "quote",
+				content: "quote",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isCodeBlock(block)).toBe(false);
+		});
+	});
+
+	describe("getCodeLanguage", () => {
+		it("should extract language from root-level property", () => {
+			const block = {
+				"logseq.property.code/lang": "javascript",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.getCodeLanguage(block)).toBe("javascript");
+		});
+
+		it("should extract language from colon-prefixed property", () => {
+			const block = {
+				":logseq.property.code/lang": "python",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.getCodeLanguage(block)).toBe("python");
+		});
+
+		it("should extract language from properties object", () => {
+			const block = {
+				properties: {
+					"logseq.property.code/lang": "rust",
+				},
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.getCodeLanguage(block)).toBe("rust");
+		});
+
+		it("should return null when no language specified", () => {
+			const block = {
+				content: "code",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.getCodeLanguage(block)).toBeNull();
+		});
+
+		it("should return null for empty string language", () => {
+			const block = {
+				"logseq.property.code/lang": "",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.getCodeLanguage(block)).toBeNull();
+		});
+
+		it("should handle case sensitivity", () => {
+			const block = {
+				"logseq.property.code/lang": "JavaScript",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.getCodeLanguage(block)).toBe("JavaScript");
+		});
+
+		it("should return null for non-string language values", () => {
+			const block = {
+				"logseq.property.code/lang": 123,
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.getCodeLanguage(block)).toBeNull();
+		});
+	});
 });

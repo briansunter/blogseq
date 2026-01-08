@@ -174,6 +174,49 @@ export class MarkdownHelpers {
 		return displayType === ":quote" || displayType === "quote";
 	}
 
+	static isCodeBlock(block: BlockEntity): boolean {
+		// Check multiple possible property locations (same pattern as isQuoteBlock)
+
+		// 1. Root level property (most common in DB version)
+		let displayType = (block as Record<string, unknown>)["logseq.property.node/display-type"];
+
+		// 2. Properties object
+		if (!displayType && (block as Record<string, unknown>).properties) {
+			displayType = ((block as Record<string, unknown>).properties as Record<string, unknown>)[
+				"logseq.property.node/display-type"
+			];
+		}
+
+		// 3. Colon-prefixed format
+		if (!displayType) {
+			displayType = (block as Record<string, unknown>)[":logseq.property.node/display-type"];
+		}
+
+		// Handle both :code and "code" formats
+		return displayType === ":code" || displayType === "code";
+	}
+
+	static getCodeLanguage(block: BlockEntity): string | null {
+		// Check multiple possible property locations for code language
+
+		// 1. Root level property
+		let lang = (block as Record<string, unknown>)["logseq.property.code/lang"];
+
+		// 2. Properties object
+		if (!lang && (block as Record<string, unknown>).properties) {
+			lang = ((block as Record<string, unknown>).properties as Record<string, unknown>)[
+				"logseq.property.code/lang"
+			];
+		}
+
+		// 3. Colon-prefixed format
+		if (!lang) {
+			lang = (block as Record<string, unknown>)[":logseq.property.code/lang"];
+		}
+
+		return typeof lang === "string" && lang.length > 0 ? lang : null;
+	}
+
 	static formatYaml(data: Record<string, unknown>): string {
 		const lines = ["---"];
 
@@ -347,6 +390,9 @@ export class MarkdownExporter {
 		// Check if this is a quote block
 		const isQuote = MarkdownHelpers.isQuoteBlock(block);
 
+		// Check if this is a code block
+		const isCodeBlock = MarkdownHelpers.isCodeBlock(block);
+
 		// Format as markdown
 		const headingLevel = MarkdownHelpers.getHeadingLevel(block);
 
@@ -363,6 +409,14 @@ export class MarkdownExporter {
 				.join("\n");
 			// Process children at depth+1 for proper list indentation (same as regular blocks)
 			return quotedContent + "\n\n" + (await this.processChildren(block, depth + 1, options));
+		}
+
+		// Handle code blocks - check this BEFORE headings
+		if (isCodeBlock && content) {
+			const lang = MarkdownHelpers.getCodeLanguage(block);
+			const langTag = lang ? lang : "";
+			const codeBlock = "```" + langTag + "\n" + content + "\n```";
+			return codeBlock + "\n\n" + (await this.processChildren(block, depth + 1, options));
 		}
 
 		if (headingLevel !== null && content && options.flattenNested) {
