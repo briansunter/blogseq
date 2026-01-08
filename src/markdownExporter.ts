@@ -152,6 +152,28 @@ export class MarkdownHelpers {
 		return typeof level === "number" && level >= 1 && level <= 6 ? level : null;
 	}
 
+	static isQuoteBlock(block: BlockEntity): boolean {
+		// Check multiple possible property locations (same pattern as getHeadingLevel)
+
+		// 1. Root level property (most common in DB version)
+		let displayType = (block as Record<string, unknown>)["logseq.property.node/display-type"];
+
+		// 2. Properties object
+		if (!displayType && (block as Record<string, unknown>).properties) {
+			displayType = ((block as Record<string, unknown>).properties as Record<string, unknown>)[
+				"logseq.property.node/display-type"
+			];
+		}
+
+		// 3. Colon-prefixed format
+		if (!displayType) {
+			displayType = (block as Record<string, unknown>)[":logseq.property.node/display-type"];
+		}
+
+		// Handle both :quote and "quote" formats
+		return displayType === ":quote" || displayType === "quote";
+	}
+
 	static formatYaml(data: Record<string, unknown>): string {
 		const lines = ["---"];
 
@@ -322,12 +344,25 @@ export class MarkdownExporter {
 
 		content = await this.trackAssets(content, options.assetPath ?? "assets/");
 
+		// Check if this is a quote block
+		const isQuote = MarkdownHelpers.isQuoteBlock(block);
+
 		// Format as markdown
 		const headingLevel = MarkdownHelpers.getHeadingLevel(block);
 
 		// Debug logging for heading detection
 		if (this.debugEnabled && headingLevel !== null) {
 			this.debug(`Block with heading level ${headingLevel}:`, block.content);
+		}
+
+		// Handle quote blocks - check this BEFORE headings
+		if (isQuote && content) {
+			const quotedContent = content
+				.split("\n")
+				.map((line) => `> ${line}`)
+				.join("\n");
+			// Process children at depth+1 for proper list indentation (same as regular blocks)
+			return quotedContent + "\n\n" + (await this.processChildren(block, depth + 1, options));
 		}
 
 		if (headingLevel !== null && content && options.flattenNested) {

@@ -786,4 +786,116 @@ describe("MarkdownExporter - Block Processing", () => {
 			expect(result).not.toContain("#tag");
 		});
 	});
+
+	describe("Quote Block Formatting", () => {
+		it("should render single-line quote blocks with > prefix", async () => {
+			const page = createMockPage({ name: "Test" });
+			const quoteBlock = createMockBlock({
+				uuid: "quote-1",
+				content: "This is a quote",
+			});
+			(quoteBlock as any)[":logseq.property.node/display-type"] = ":quote";
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [quoteBlock]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+			});
+
+			expect(result).toContain("> This is a quote");
+		});
+
+		it("should render multi-line quote blocks with > on each line", async () => {
+			const page = createMockPage({ name: "Test" });
+			const quoteBlock = createMockBlock({
+				uuid: "quote-2",
+				content: "Line one\nLine two\nLine three",
+			});
+			(quoteBlock as any)["logseq.property.node/display-type"] = "quote"; // Test string format
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [quoteBlock]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+			});
+
+			expect(result).toContain("> Line one");
+			expect(result).toContain("> Line two");
+			expect(result).toContain("> Line three");
+		});
+
+		it("should process children of quote blocks", async () => {
+			const page = createMockPage({ name: "Test" });
+			const quoteBlock = createMockBlock({
+				uuid: "quote-3",
+				content: "Main quote",
+				children: [createMockBlock({ uuid: "child-1", content: "Attribution or context" })],
+			});
+			(quoteBlock as any)[":logseq.property.node/display-type"] = ":quote";
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [quoteBlock]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+				flattenNested: false,
+			});
+
+			expect(result).toContain("> Main quote");
+			expect(result).toContain("- Attribution or context");
+		});
+
+		it("should not affect non-quote blocks", async () => {
+			const page = createMockPage({ name: "Test" });
+			const normalBlock = createMockBlock({
+				uuid: "normal-1",
+				content: "Regular block",
+			});
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [normalBlock]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+			});
+
+			expect(result).toContain("Regular block");
+			// Should not have quote prefix
+			expect(result).not.toMatch(/^> Regular block/m);
+		});
+
+		it("should prioritize quote over heading if both properties exist", async () => {
+			const page = createMockPage({ name: "Test" });
+			const block = createMockBlock({
+				uuid: "conflict-1",
+				content: "Content with both properties",
+			});
+			(block as any)[":logseq.property.node/display-type"] = ":quote";
+			(block as any)[":logseq.property/heading"] = 2; // H2 heading
+
+			mockCurrentPageResponse(mockAPI, page);
+			mockPageBlocksResponse(mockAPI, [block]);
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: false,
+				flattenNested: true,
+			});
+
+			// Should render as quote, not heading
+			expect(result).toContain("> Content with both properties");
+			expect(result).not.toContain("## Content");
+		});
+	});
 });

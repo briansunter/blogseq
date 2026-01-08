@@ -706,4 +706,97 @@ More text`;
 			expect(MarkdownHelpers.isImageAsset("xls")).toBe(false);
 		});
 	});
+
+	describe("isQuoteBlock", () => {
+		it("should detect quote block with root-level property", () => {
+			const block = {
+				"logseq.property.node/display-type": ":quote",
+				content: "quote",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(true);
+		});
+
+		it("should detect quote block with colon-prefixed property", () => {
+			const block = {
+				":logseq.property.node/display-type": ":quote",
+				content: "quote",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(true);
+		});
+
+		it("should detect quote block with properties object", () => {
+			const block = {
+				properties: {
+					"logseq.property.node/display-type": "quote",
+				},
+				content: "quote",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(true);
+		});
+
+		it("should return false for non-quote blocks", () => {
+			const block = {
+				content: "normal block",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(false);
+		});
+
+		it("should handle string 'quote' value", () => {
+			const block = {
+				"logseq.property.node/display-type": "quote",
+				content: "quote",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(true);
+		});
+
+		it("should return false for other display types", () => {
+			const block = {
+				"logseq.property.node/display-type": "card",
+				content: "card display",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(false);
+		});
+
+		it("should prioritize direct property over properties object", () => {
+			const block = {
+				"logseq.property.node/display-type": ":quote",
+				properties: {
+					"logseq.property.node/display-type": "card",
+				},
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(true);
+		});
+
+		it("should handle null display type", () => {
+			const block = {
+				"logseq.property.node/display-type": null,
+				content: "block",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(false);
+		});
+
+		it("should handle undefined display type", () => {
+			const block = {
+				"logseq.property.node/display-type": undefined,
+				content: "block",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(false);
+		});
+
+		it("should be case sensitive for 'quote' value", () => {
+			const block = {
+				"logseq.property.node/display-type": "Quote",
+				content: "block",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(false);
+		});
+
+		it("should return false for empty string display type", () => {
+			const block = {
+				"logseq.property.node/display-type": "",
+				content: "block",
+			} as unknown as BlockEntity;
+			expect(MarkdownHelpers.isQuoteBlock(block)).toBe(false);
+		});
+	});
 });

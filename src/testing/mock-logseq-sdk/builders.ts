@@ -301,6 +301,17 @@ export class BlockBuilder {
 	}
 
 	/**
+	 * Mark block as a quote block
+	 */
+	asQuoteBlock(): this {
+		if (!this.block.properties) {
+			this.block.properties = {};
+		}
+		this.block.properties["logseq.property.node/display-type"] = ":quote";
+		return this;
+	}
+
+	/**
 	 * Clone this builder to create variations
 	 */
 	clone(): BlockBuilder {
