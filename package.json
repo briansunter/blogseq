@@ -32,8 +32,7 @@
 		"fix-all": "pnpm lint:fix && pnpm test",
 		"prepare": "husky",
 		"storybook": "STORYBOOK=true storybook dev -p 6006",
-		"build-storybook": "STORYBOOK=true storybook build",
-		"preinstall": "npx only-allow pnpm"
+		"build-storybook": "STORYBOOK=true storybook build"
 	},
 	"license": "MIT",
 	"dependencies": {
