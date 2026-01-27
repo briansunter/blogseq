@@ -41,10 +41,10 @@ export default defineConfig({
         'src/utils/theme.ts'
       ],
       thresholds: {
-        statements: 40,
+        statements: 85,
         branches: 85,
-        functions: 75,
-        lines: 40,
+        functions: 85,
+        lines: 85,
         perFile: false,
         autoUpdate: false
       },
