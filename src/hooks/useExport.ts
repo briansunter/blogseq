@@ -1,8 +1,9 @@
 import { useCallback, useState } from "react";
-import { exporter } from "../markdownExporter";
+import { createExporter } from "../markdownExporter";
 import { Asset, ExportSettings } from "../types";
 
 export const useExport = (settings: ExportSettings) => {
+	const [exporter] = useState(() => createExporter());
 	const [isExporting, setIsExporting] = useState(false);
 	const [preview, setPreview] = useState("");
 	const [assets, setAssets] = useState<Asset[]>([]);
@@ -27,6 +28,9 @@ export const useExport = (settings: ExportSettings) => {
 			setGraphPath(path);
 			return { success: true, markdown };
 		} catch (error) {
+			setPreview("");
+			setAssets([]);
+			setGraphPath("");
 			const errorMessage = error instanceof Error ? error.message : String(error);
 			return { success: false, error: errorMessage };
 		} finally {
@@ -38,7 +42,6 @@ export const useExport = (settings: ExportSettings) => {
 		try {
 			const markdown = await exporter.exportCurrentPage(settings);
 			await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
-			logseq.UI.showMsg("Page exported as ZIP successfully!", "success");
 			window.logseq.hideMainUI();
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : String(error);
@@ -65,10 +68,16 @@ export const useExport = (settings: ExportSettings) => {
 	}, [preview]);
 
 	const downloadAsZip = useCallback(async () => {
-		// Re-export to ensure assets are tracked properly
-		const markdown = await exporter.exportCurrentPage(settings);
-		await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
-	}, [settings]);
+		setIsExporting(true);
+		try {
+			const markdown = preview || (await exporter.exportCurrentPage(settings));
+			await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
+		} catch {
+			logseq.UI.showMsg("Export failed. Check console for details.", "error");
+		} finally {
+			setIsExporting(false);
+		}
+	}, [exporter, preview, settings]);
 
 	return {
 		isExporting,

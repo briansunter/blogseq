@@ -331,9 +331,8 @@ describe("MarkdownExporter - Reference Resolution", () => {
 				includeTags: false,
 			});
 
-			// removeLogseqSyntax IS applied to resolved block content
-			// Priority markers like NOW and [#A] are removed, but TODO keyword remains
-			expect(result).toContain("TODO");
+			// removeLogseqSyntax is applied to resolved block content, including task markers.
+			expect(result).not.toContain("TODO");
 			expect(result).toContain("Task content");
 			expect(result).not.toContain("NOW");
 			expect(result).not.toContain("[#A]");

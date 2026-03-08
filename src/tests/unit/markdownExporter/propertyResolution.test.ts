@@ -178,7 +178,7 @@ describe("MarkdownExporter - Property and db/id Resolution", () => {
 			});
 
 			expect(result).toContain("---");
-			expect(result).toContain("publishDate: 2025-09-23");
+			expect(result).toContain('publishDate: "2025-09-23"');
 			expect(result).toContain("blogtitle: Central Pacific Update");
 			expect(result).toContain("url: https://briansunter.com/central-pacific-update");
 			// Should NOT contain raw db/ids
@@ -615,7 +615,7 @@ describe("MarkdownExporter - Property and db/id Resolution", () => {
 			});
 
 			// Verify frontmatter has resolved values
-			expect(result).toContain("publishDate: 2025-09-23");
+			expect(result).toContain('publishDate: "2025-09-23"');
 			expect(result).toContain("blogtitle: Central Pacific Update");
 			expect(result).toContain("url: https://briansunter.com/central-pacific-update");
 			expect(result).toContain("rating: 9");

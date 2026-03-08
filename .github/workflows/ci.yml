@@ -40,6 +40,9 @@ jobs:
       - name: Biome lint
         run: bun run lint
 
+      - name: Biome format check
+        run: bun run format:check
+
   test:
     name: Tests & Coverage
     runs-on: ubuntu-latest

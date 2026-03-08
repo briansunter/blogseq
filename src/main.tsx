@@ -8,8 +8,8 @@ import "./index.css";
 import { logseq as PL } from "../package.json";
 import { settingsSchema } from "./settings";
 
-// @ts-expect-error
-const css = (t, ...args) => String.raw(t, ...args);
+const css = (strings: TemplateStringsArray, ...values: unknown[]) =>
+	String.raw({ raw: strings }, ...values);
 
 const pluginId = PL.id;
 
@@ -100,13 +100,13 @@ function main() {
 
 	// Register slash command for export
 	logseq.Editor.registerSlashCommand("Export page to markdown", async () => {
-		const { exporter } = await import("./markdownExporter");
+		const { createExporter } = await import("./markdownExporter");
 		const { getExportSettings } = await import("./settings");
 		try {
+			const exporter = createExporter();
 			const settings = getExportSettings();
 			const markdown = await exporter.exportCurrentPage(settings);
 			await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
-			logseq.UI.showMsg("Page exported as ZIP successfully!", "success");
 		} catch (error) {
 			console.error("Export failed:", error);
 			logseq.UI.showMsg("Export failed. Check console for details.", "error");
@@ -115,13 +115,13 @@ function main() {
 
 	// Register page menu item
 	logseq.App.registerPageMenuItem("Export to Markdown", async () => {
-		const { exporter } = await import("./markdownExporter");
+		const { createExporter } = await import("./markdownExporter");
 		const { getExportSettings } = await import("./settings");
 		try {
+			const exporter = createExporter();
 			const settings = getExportSettings();
 			const markdown = await exporter.exportCurrentPage(settings);
 			await exporter.downloadAsZip(markdown, undefined, settings.assetPath);
-			logseq.UI.showMsg("Page exported as ZIP successfully!", "success");
 		} catch (error) {
 			console.error("Export failed:", error);
 			logseq.UI.showMsg("Export failed. Check console for details.", "error");

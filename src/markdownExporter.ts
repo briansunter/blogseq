@@ -2,6 +2,29 @@ import { BlockEntity, PageEntity } from "@logseq/libs/dist/LSPlugin";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 
+const DEFAULT_ASSET_PATH = "assets/";
+
+export function normalizeAssetPath(assetPath = DEFAULT_ASSET_PATH): string {
+	const normalized = assetPath
+		.trim()
+		.replace(/\\/g, "/")
+		.replace(/^\.\//, "")
+		.replace(/(?:^|\/)\.\.(?=\/|$)/g, "")
+		.replace(/^\/+/, "")
+		.replace(/\/{2,}/g, "/")
+		.replace(/^\/|\/$/g, "");
+
+	return normalized ? `${normalized}/` : DEFAULT_ASSET_PATH;
+}
+
+export function sanitizeFileName(name: string): string {
+	return String(name).replace(/[^a-z0-9]/gi, "-");
+}
+
+function escapeDatascriptString(value: string): string {
+	return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 // Core types
 export type ExportOptions = {
 	includeTags?: boolean;
@@ -23,7 +46,7 @@ export const DEFAULT_OPTIONS: Required<ExportOptions> = {
 	removeLogseqSyntax: true,
 	resolvePlainUuids: true,
 	includePageName: true,
-	assetPath: "assets/",
+	assetPath: DEFAULT_ASSET_PATH,
 	debug: false,
 };
 
@@ -221,19 +244,74 @@ export class MarkdownHelpers {
 		const lines = ["---"];
 
 		for (const [key, value] of Object.entries(data)) {
-			if (Array.isArray(value)) {
-				lines.push(`${key}:`);
-				value.forEach((item) => lines.push(`  - ${item}`));
-			} else if (typeof value === "string" && value.includes("\n")) {
-				lines.push(`${key}: |`);
-				value.split("\n").forEach((line) => lines.push(`  ${line}`));
-			} else {
-				lines.push(`${key}: ${value}`);
-			}
+			lines.push(...this.formatYamlProperty(key, value));
 		}
 
 		lines.push("---");
 		return lines.join("\n") + "\n";
+	}
+
+	private static formatYamlProperty(key: string, value: unknown): string[] {
+		const yamlKey = this.formatYamlKey(key);
+
+		if (Array.isArray(value)) {
+			if (value.length === 0) {
+				return [`${yamlKey}: []`];
+			}
+
+			return [`${yamlKey}:`, ...value.flatMap((item) => this.formatYamlArrayItem(item))];
+		}
+
+		if (typeof value === "string" && value.includes("\n")) {
+			return [`${yamlKey}: |-`, ...value.split("\n").map((line) => `  ${line}`)];
+		}
+
+		return [`${yamlKey}: ${this.formatYamlScalar(value)}`];
+	}
+
+	private static formatYamlArrayItem(value: unknown): string[] {
+		if (typeof value === "string" && value.includes("\n")) {
+			return ["  - |-", ...value.split("\n").map((line) => `    ${line}`)];
+		}
+
+		return [`  - ${this.formatYamlScalar(value)}`];
+	}
+
+	private static formatYamlScalar(value: unknown): string {
+		if (value === null || value === undefined) {
+			return "null";
+		}
+
+		if (typeof value === "number" || typeof value === "boolean") {
+			return String(value);
+		}
+
+		if (typeof value === "string") {
+			return this.needsYamlQuoting(value) ? JSON.stringify(value) : value;
+		}
+
+		if (value instanceof Date) {
+			return JSON.stringify(value.toISOString());
+		}
+
+		return JSON.stringify(value);
+	}
+
+	private static formatYamlKey(key: string): string {
+		return /^[A-Za-z0-9_-]+$/.test(key) ? key : JSON.stringify(key);
+	}
+
+	private static needsYamlQuoting(value: string): boolean {
+		return (
+			value.length === 0 ||
+			/^\s|\s$/.test(value) ||
+			/^(?:true|false|null|~|yes|no|on|off)$/i.test(value) ||
+			/^[+-]?(?:\d+|\d*\.\d+)$/.test(value) ||
+			/^\d{4}-\d{2}-\d{2}(?:[Tt ][\d:.+-Zz]*)?$/.test(value) ||
+			/^[-?:,[\]{}#&*!|>'"%@`]/.test(value) ||
+			/(^|\s)#/.test(value) ||
+			/:($|\s)/.test(value)
+		);
 	}
 
 	static isImageAsset(type: string): boolean {
@@ -256,9 +334,9 @@ export class MarkdownExporter {
 			getPage: (uuid) => logseq.Editor.getPage(uuid),
 			getBlock: (uuid, opts) => logseq.Editor.getBlock(uuid, opts),
 			getPageBlocksTree: (uuid) => logseq.Editor.getPageBlocksTree(uuid),
-			getCurrentGraph: () => logseq.App.getCurrentGraph(),
-			datascriptQuery: (query) => logseq.DB.datascriptQuery(query),
-			showMsg: (msg, type) => logseq.UI.showMsg(msg, type),
+			getCurrentGraph: () => logseq.App?.getCurrentGraph?.() ?? Promise.resolve(null),
+			datascriptQuery: (query) => logseq.DB?.datascriptQuery?.(query) ?? Promise.resolve([]),
+			showMsg: (msg, type) => logseq.UI?.showMsg?.(msg, type),
 		},
 		private fileAPI: FileAPI = {
 			fetch: (url) => fetch(url),
@@ -278,6 +356,14 @@ export class MarkdownExporter {
 		if (this.debugEnabled) console.log(...args);
 	}
 
+	private getResolvedOptions(options: ExportOptions): Required<ExportOptions> {
+		return {
+			...DEFAULT_OPTIONS,
+			...options,
+			assetPath: normalizeAssetPath(options.assetPath ?? DEFAULT_OPTIONS.assetPath),
+		};
+	}
+
 	/**
 	 * Checks if the returned object from getCurrentPage() is actually a block.
 	 * When zoomed into a block, getCurrentPage() returns the block object with a "page" property.
@@ -288,7 +374,7 @@ export class MarkdownExporter {
 	}
 
 	async exportCurrentPage(options: ExportOptions = {}): Promise<string> {
-		const opts = { ...DEFAULT_OPTIONS, ...options };
+		const opts = this.getResolvedOptions(options);
 		this.debugEnabled = opts.debug || false;
 
 		this.debug("Starting export with options:", opts);
@@ -303,12 +389,24 @@ export class MarkdownExporter {
 			return this.exportFocusedBlock(currentPage, opts);
 		}
 
-		// Otherwise export as a page
+		return this.exportPageEntity(currentPage, opts);
+	}
 
+	async exportPage(pageId: string | number, options: ExportOptions = {}): Promise<string> {
+		const opts = this.getResolvedOptions(options);
+		this.debugEnabled = opts.debug || false;
+
+		const page = await this.logseqAPI.getPage(pageId);
+		if (!page || this.isBlock(page)) {
+			throw new Error("PAGE_NOT_FOUND");
+		}
+
+		return this.exportPageEntity(page, opts);
+	}
+
+	private async exportPageEntity(page: PageEntity, opts: Required<ExportOptions>): Promise<string> {
 		const graph = await this.logseqAPI.getCurrentGraph();
 		if (graph?.path) this.graphPath = graph.path;
-
-		const pageBlocks = await this.logseqAPI.getPageBlocksTree(currentPage.uuid);
 
 		// Reset state
 		this.processedBlocks.clear();
@@ -319,13 +417,15 @@ export class MarkdownExporter {
 		let markdown = "";
 
 		if (opts.includeProperties) {
-			const frontmatter = await this.generateFrontmatter(currentPage, opts.assetPath);
+			const frontmatter = await this.generateFrontmatter(page, opts.assetPath);
 			if (frontmatter) markdown = frontmatter + "\n";
 		}
 
 		if (opts.includePageName) {
-			markdown += `# ${currentPage.name}\n\n`;
+			markdown += `# ${page.name}\n\n`;
 		}
+
+		const pageBlocks = await this.logseqAPI.getPageBlocksTree(page.uuid);
 
 		if (!pageBlocks || pageBlocks.length === 0) {
 			return markdown.trim() || "";
@@ -335,7 +435,7 @@ export class MarkdownExporter {
 		await this.cacheBlockReferences(pageBlocks);
 
 		// Process blocks
-		const propertyValueUUIDs = await this.collectPropertyValueUUIDs(currentPage.uuid);
+		const propertyValueUUIDs = await this.collectPropertyValueUUIDs(page.uuid);
 
 		for (const block of pageBlocks) {
 			if (!block) continue;
@@ -364,7 +464,7 @@ export class MarkdownExporter {
 		if (block.uuid) {
 			const assetInfo = await this.detectAsset(block.uuid);
 			if (assetInfo) {
-				const assetPath = options.assetPath ?? "assets/";
+				const assetPath = options.assetPath ?? DEFAULT_ASSET_PATH;
 				const markdown = this.createAssetLink(block.uuid, assetInfo, assetPath);
 				return markdown + "\n\n" + (await this.processChildren(block, depth, options));
 			}
@@ -378,14 +478,18 @@ export class MarkdownExporter {
 
 		// Process content
 		if (options.preserveBlockRefs) {
-			content = await this.resolveReferences(content, options.assetPath ?? "assets/", options);
+			content = await this.resolveReferences(
+				content,
+				options.assetPath ?? DEFAULT_ASSET_PATH,
+				options,
+			);
 		}
 
 		if (options.removeLogseqSyntax) {
 			content = MarkdownHelpers.cleanLogseqSyntax(content, options);
 		}
 
-		content = await this.trackAssets(content, options.assetPath ?? "assets/");
+		content = await this.trackAssets(content, options.assetPath ?? DEFAULT_ASSET_PATH);
 
 		// Check if this is a quote block
 		const isQuote = MarkdownHelpers.isQuoteBlock(block);
@@ -455,6 +559,7 @@ export class MarkdownExporter {
 		content: string,
 		assetPath: string,
 		options?: ExportOptions,
+		resolving = new Set<string>(),
 	): Promise<string> {
 		let result = content;
 
@@ -463,7 +568,7 @@ export class MarkdownExporter {
 			result,
 			/\[\[([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\]\]/gi,
 			async (_, uuid) => {
-				const resolved = await this.resolveUuid(String(uuid), assetPath);
+				const resolved = await this.resolveUuid(String(uuid), assetPath, resolving);
 				return resolved ?? `[[${uuid}]]`;
 			},
 		);
@@ -474,7 +579,7 @@ export class MarkdownExporter {
 			/\(\(([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\)\)/gi,
 			async (_, uuid) => {
 				const uuidStr = String(uuid);
-				const resolved = await this.resolveUuid(uuidStr, assetPath);
+				const resolved = await this.resolveUuid(uuidStr, assetPath, resolving);
 				return resolved ?? `[Unresolved: ${uuidStr.substring(0, 8)}...]`;
 			},
 		);
@@ -491,7 +596,7 @@ export class MarkdownExporter {
 					const preceding = result[offsetNum - 1];
 					if (["/", "-", "_"].includes(preceding)) return matchStr;
 
-					const resolved = await this.resolveUuid(uuidStr, assetPath);
+					const resolved = await this.resolveUuid(uuidStr, assetPath, resolving);
 					return resolved ?? matchStr;
 				},
 			);
@@ -500,7 +605,18 @@ export class MarkdownExporter {
 		return result;
 	}
 
-	private async resolveUuid(uuid: string, assetPath: string): Promise<string | null> {
+	private async resolveUuid(
+		uuid: string,
+		assetPath: string,
+		resolving = new Set<string>(),
+	): Promise<string | null> {
+		if (resolving.has(uuid)) {
+			return null;
+		}
+
+		const nextResolving = new Set(resolving);
+		nextResolving.add(uuid);
+
 		// Check cache - return any cached value
 		const cached = this.blockRefCache.get(uuid);
 		if (cached !== undefined) {
@@ -529,9 +645,14 @@ export class MarkdownExporter {
 		try {
 			const block = await this.logseqAPI.getBlock(uuid, { includeChildren: false });
 			if (block?.content) {
-				let content = await this.resolveReferences(block.content, assetPath, {
-					resolvePlainUuids: true,
-				});
+				let content = await this.resolveReferences(
+					block.content,
+					assetPath,
+					{
+						resolvePlainUuids: true,
+					},
+					nextResolving,
+				);
 				content = MarkdownHelpers.cleanLogseqSyntax(content, {
 					includeTags: false,
 					includeProperties: false,
@@ -619,7 +740,7 @@ export class MarkdownExporter {
 			`asset-${uuid.substring(0, 8)}`;
 
 		const titleStr = typeof title === "string" ? title : String(title);
-		const path = assetPath.endsWith("/") ? assetPath : `${assetPath}/`;
+		const path = normalizeAssetPath(assetPath);
 		const exportPath = `${path}${uuid}.${info.type}`;
 
 		// Track asset
@@ -640,11 +761,12 @@ export class MarkdownExporter {
 	}
 
 	private async trackAssets(content: string, assetPath: string): Promise<string> {
-		const path = assetPath.endsWith("/") ? assetPath : `${assetPath}/`;
+		const path = normalizeAssetPath(assetPath);
 
 		return content.replace(
 			/(!)?\[([^\]]*)\]\(\.\.\/assets\/([^)]+)\)/g,
 			(_, isImg, title, file) => {
+				const fileName = String(file).split("/").pop() || String(file);
 				const match = file.match(
 					/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})\.(\w+)/i,
 				);
@@ -660,7 +782,7 @@ export class MarkdownExporter {
 						});
 					}
 				}
-				return `${isImg || ""}[${title}](${path}${file})`;
+				return `${isImg || ""}[${title}](${path}${fileName})`;
 			},
 		);
 	}
@@ -674,7 +796,6 @@ export class MarkdownExporter {
 		for (const block of blocks) {
 			if (block && block.uuid && !visited.has(block.uuid)) {
 				visited.add(block.uuid);
-				this.blockRefCache.set(block.uuid, block.content || "");
 
 				const uuids = Array.from((block.content || "").matchAll(uuidPattern))
 					.map((m) => m[0])
@@ -701,15 +822,6 @@ export class MarkdownExporter {
 			}
 		} catch {
 			// Intentionally swallow error - page pre-caching is optional
-		}
-
-		try {
-			const block = await this.logseqAPI.getBlock(uuid, { includeChildren: false });
-			if (block?.content) {
-				this.blockRefCache.set(uuid, block.content);
-			}
-		} catch {
-			// Intentionally swallow error - block pre-caching is optional
 		}
 	}
 
@@ -871,7 +983,7 @@ export class MarkdownExporter {
 				if (MarkdownHelpers.isUuid(inner)) {
 					const assetInfo = await this.detectAsset(inner);
 					if (assetInfo) {
-						const path = assetPath.endsWith("/") ? assetPath : `${assetPath}/`;
+						const path = normalizeAssetPath(assetPath);
 						const exportPath = `${path}${inner}.${assetInfo.type}`;
 
 						// Track asset
@@ -894,7 +1006,7 @@ export class MarkdownExporter {
 			if (MarkdownHelpers.isUuid(trimmed)) {
 				const assetInfo = await this.detectAsset(trimmed);
 				if (assetInfo) {
-					const path = assetPath.endsWith("/") ? assetPath : `${assetPath}/`;
+					const path = normalizeAssetPath(assetPath);
 					const exportPath = `${path}${trimmed}.${assetInfo.type}`;
 
 					// Track asset
@@ -913,8 +1025,18 @@ export class MarkdownExporter {
 			// Check if it's an asset by title
 			const assetByTitle = await this.findAssetByTitle(trimmed);
 			if (assetByTitle) {
-				const path = assetPath.endsWith("/") ? assetPath : `${assetPath}/`;
-				return `${path}${assetByTitle.uuid}.${assetByTitle.type}`;
+				const path = normalizeAssetPath(assetPath);
+				const exportPath = `${path}${assetByTitle.uuid}.${assetByTitle.type}`;
+
+				this.referencedAssets.set(assetByTitle.uuid, {
+					uuid: assetByTitle.uuid,
+					title: assetByTitle.title || trimmed,
+					type: assetByTitle.type,
+					originalPath: `${this.graphPath}/assets/${assetByTitle.uuid}.${assetByTitle.type}`,
+					exportPath,
+				});
+
+				return exportPath;
 			}
 
 			return value;
@@ -952,7 +1074,11 @@ export class MarkdownExporter {
 		}
 
 		if (value instanceof Set) {
-			return Array.from(value);
+			const resolved: unknown[] = [];
+			for (const item of value) {
+				resolved.push(await this.processPropertyValue(item, assetPath));
+			}
+			return resolved;
 		}
 
 		// Handle plain numeric db/id references
@@ -970,11 +1096,13 @@ export class MarkdownExporter {
 		return value;
 	}
 
-	private async findAssetByTitle(title: string): Promise<{ uuid: string; type: string } | null> {
+	private async findAssetByTitle(
+		title: string,
+	): Promise<{ uuid: string; type: string; title?: string } | null> {
 		try {
 			const query = `[:find ?uuid ?type
                       :where 
-                      [?e :block/title "${title}"]
+                      [?e :block/title "${escapeDatascriptString(title)}"]
                       [?e :block/uuid ?uuid]
                       [?e :logseq.property.asset/type ?type]]`;
 			const result = await this.logseqAPI.datascriptQuery(query);
@@ -983,7 +1111,7 @@ export class MarkdownExporter {
 				const uuid = MarkdownHelpers.extractUuid(result[0][0] as string | { $uuid: string });
 				const type = result[0][1];
 				if (uuid && type) {
-					return { uuid: String(uuid), type: String(type) };
+					return { uuid: String(uuid), type: String(type), title };
 				}
 			}
 		} catch {
@@ -1009,7 +1137,7 @@ export class MarkdownExporter {
 				const title = assetResult[0][2];
 
 				if (uuid && type) {
-					const path = assetPath.endsWith("/") ? assetPath : `${assetPath}/`;
+					const path = normalizeAssetPath(assetPath);
 					const exportPath = `${path}${uuid}.${type}`;
 
 					// Track asset
@@ -1123,7 +1251,7 @@ export class MarkdownExporter {
 	async downloadMarkdown(content: string, filename?: string): Promise<void> {
 		const currentPage = await this.logseqAPI.getCurrentPage();
 		const pageName = currentPage?.name || "export";
-		const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, "-")}.md`;
+		const safeFileName = filename || `${sanitizeFileName(String(pageName))}.md`;
 
 		const blob = new Blob([content], { type: "text/markdown;charset=utf-8" });
 		const url = this.fileAPI.createObjectURL(blob);
@@ -1155,7 +1283,7 @@ export class MarkdownExporter {
 	async downloadAsZip(content: string, filename?: string, assetPath = "assets/"): Promise<void> {
 		const currentPage = await this.logseqAPI.getCurrentPage();
 		const pageName = currentPage?.name || "export";
-		const safeFileName = filename || `${String(pageName).replace(/[^a-z0-9]/gi, "-")}`;
+		const safeFileName = filename || sanitizeFileName(String(pageName));
 
 		const zip = new JSZip();
 		zip.file(`${safeFileName}.md`, content);
@@ -1163,21 +1291,18 @@ export class MarkdownExporter {
 		let successCount = 0;
 		const failedAssets: string[] = [];
 
-		console.log(`Starting ZIP export with ${this.referencedAssets.size} assets`);
+		this.debug(`Starting ZIP export with ${this.referencedAssets.size} assets`);
 
 		if (this.referencedAssets.size > 0) {
-			// Clean up the asset path - remove ../ and any leading/trailing slashes
-			let folderName = assetPath.replace(/\.\.\//g, "").replace(/^\/+|\/+$/g, "");
-			// Default to 'assets' if empty
-			folderName = folderName || "assets";
-			console.log(`Creating folder: ${folderName}`);
+			const folderName = normalizeAssetPath(assetPath).slice(0, -1);
+			this.debug(`Creating folder: ${folderName}`);
 
 			const assetsFolder = zip.folder(folderName);
 
 			for (const [uuid, assetInfo] of this.referencedAssets) {
 				try {
 					const assetUrl = `file://${assetInfo.originalPath}`;
-					console.log(`Fetching asset: ${assetInfo.title} from ${assetUrl}`);
+					this.debug(`Fetching asset: ${assetInfo.title} from ${assetUrl}`);
 					const response = await this.fileAPI.fetch(assetUrl);
 
 					if (response.ok) {
@@ -1186,9 +1311,6 @@ export class MarkdownExporter {
 						const assetFileName = `${uuid}.${assetInfo.type}`;
 						assetsFolder?.file(assetFileName, assetBlob);
 						successCount++;
-						console.log(
-							`✅ Added asset to ZIP: ${assetInfo.title} as ${folderName}/${assetFileName}`,
-						);
 						this.debug(`✅ Added asset: ${assetInfo.title}`);
 					} else {
 						throw new Error(`Failed to fetch: ${response.status}`);
@@ -1284,8 +1406,8 @@ export class MarkdownExporter {
 		// Pre-cache references including all nested children
 		await this.cacheBlockReferences([blockToExport]);
 
-		// Export only the children of the focused block, not the block's own title/content
-		markdown += await this.processChildren(blockToExport, 0, opts);
+		// Include the focused block itself, then its descendants.
+		markdown += await this.processBlock(blockToExport, 0, opts);
 
 		// Post-process markdown
 		return MarkdownHelpers.postProcessMarkdown(markdown);
@@ -1301,4 +1423,8 @@ export class MarkdownExporter {
 	}
 }
 
-export const exporter = new MarkdownExporter();
+export function createExporter(): MarkdownExporter {
+	return new MarkdownExporter();
+}
+
+export const exporter = createExporter();

@@ -14,6 +14,9 @@ export const useAssets = () => {
 					const blob = xhr.response;
 					saveAs(blob, asset.fileName);
 					logseq.UI.showMsg(`Downloaded ${asset.fileName}`, "success");
+				} else {
+					navigator.clipboard.writeText(asset.fullPath);
+					logseq.UI.showMsg(`Could not download. Path copied: ${asset.fullPath}`, "info");
 				}
 			};
 
@@ -23,7 +26,7 @@ export const useAssets = () => {
 			};
 
 			xhr.send();
-		} catch (error) {
+		} catch (_error) {
 			await navigator.clipboard.writeText(asset.fullPath);
 			logseq.UI.showMsg(`Path copied: ${asset.fullPath}`, "info");
 		}
@@ -57,6 +60,13 @@ export const useAssets = () => {
 								// Silently fail if clipboard is unavailable
 							}
 						}
+					} else {
+						try {
+							await navigator.clipboard.writeText(asset.fullPath);
+							logseq.UI.showMsg(`Path copied: ${asset.fullPath}`, "info");
+						} catch {
+							// Silently fail if clipboard is unavailable
+						}
 					}
 				};
 
@@ -78,7 +88,7 @@ export const useAssets = () => {
 					// Silently fail if clipboard is unavailable
 				}
 			}
-		} catch (error) {
+		} catch (_error) {
 			try {
 				await navigator.clipboard.writeText(asset.fullPath);
 				logseq.UI.showMsg(`Path copied: ${asset.fullPath}`, "info");

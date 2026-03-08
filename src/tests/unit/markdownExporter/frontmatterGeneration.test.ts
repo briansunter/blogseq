@@ -97,6 +97,45 @@ describe("MarkdownExporter - Frontmatter Generation", () => {
 			expect(result).toContain("slug: testpage--more");
 		});
 
+		it("should quote YAML-unsafe scalar values", async () => {
+			const page = {
+				uuid: "page-uuid",
+				id: 1,
+				name: "Launch: Day #1",
+				originalName: "Launch: Day #1",
+				"journal?": false,
+				":user.property/date-xyz789": "2024-01-15",
+				":user.property/published-abc123": "true",
+				":user.property/excerpt-def456": "Alpha #1: ready",
+			};
+
+			mockAPI.Editor.getPage.mockResolvedValue(page as PageEntity);
+			mockCurrentPageResponse(mockAPI, page as PageEntity);
+			mockPageBlocksResponse(mockAPI, []);
+
+			mockAPI.datascriptQuery.mockImplementation(async (query: string) => {
+				if (query.includes("[:find ?prop-key ?prop-title")) {
+					return [
+						[":user.property/date-xyz789", "date"],
+						[":user.property/published-abc123", "published"],
+						[":user.property/excerpt-def456", "excerpt"],
+					];
+				}
+				return [];
+			});
+
+			const result = await exporter.exportCurrentPage({
+				...DEFAULT_OPTIONS,
+				includePageName: false,
+				includeProperties: true,
+			});
+
+			expect(result).toContain('title: "Launch: Day #1"');
+			expect(result).toContain('date: "2024-01-15"');
+			expect(result).toContain('published: "true"');
+			expect(result).toContain('excerpt: "Alpha #1: ready"');
+		});
+
 		it("should return empty string when page has no properties and no name", async () => {
 			const page = createMockPage({ properties: {} });
 			delete (page as Partial<PageEntity>).name;
@@ -175,7 +214,7 @@ describe("MarkdownExporter - Frontmatter Generation", () => {
 			});
 
 			expect(result).toContain("author: Jane Smith");
-			expect(result).toContain("date: 2024-01-15");
+			expect(result).toContain('date: "2024-01-15"');
 			expect(result).toContain("description: Test description");
 		});
 
@@ -973,7 +1012,7 @@ describe("MarkdownExporter - Frontmatter Generation", () => {
 			});
 
 			expect(result).toContain("author: John");
-			expect(result).toContain("date: 2024-01-01");
+			expect(result).toContain('date: "2024-01-01"');
 			expect(result).toContain("category: Tech");
 		});
 
@@ -1010,7 +1049,7 @@ describe("MarkdownExporter - Frontmatter Generation", () => {
 
 			expect(result).toContain("valid: Not Empty");
 			// Empty string should still be included (it's a valid YAML value)
-			expect(result).toMatch(/empty:\s*$/m);
+			expect(result).toContain('empty: ""');
 		});
 	});
 });

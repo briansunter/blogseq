@@ -9,6 +9,17 @@ interface PreviewContentProps {
 	graphPath: string;
 }
 
+const resolvePreviewAssetUrl = (
+	path: string | undefined,
+	graphPath: string,
+): string | undefined => {
+	if (!path || !graphPath) return path;
+	if (/^[a-z]+:\/\//i.test(path) || path.startsWith("/") || path.startsWith("#")) return path;
+
+	const fileName = path.split("/").pop();
+	return fileName ? `file://${graphPath}/assets/${fileName}` : path;
+};
+
 export const PreviewContent: React.FC<PreviewContentProps> = ({
 	preview,
 	previewMode,
@@ -38,25 +49,24 @@ export const PreviewContent: React.FC<PreviewContentProps> = ({
 				remarkPlugins={[remarkFrontmatter]}
 				components={{
 					img: ({ src, alt, ...props }) => {
-						let imageSrc = src;
-						if (src && src.includes("assets/") && graphPath) {
-							const match = src.match(/assets\/([^/]+)$/);
-							if (match) {
-								const fileName = match[1];
-								imageSrc = `file://${graphPath}/assets/${fileName}`;
-							}
-						}
+						const imageSrc = resolvePreviewAssetUrl(src, graphPath);
 						return (
-							<div className="my-6">
-								<img
-									src={imageSrc}
-									alt={alt || "Image"}
-									{...props}
-									className="w-full h-auto rounded shadow-lg border border-gray-800"
-								/>
-							</div>
+							<img
+								src={imageSrc}
+								alt={alt || "Image"}
+								{...props}
+								className="my-6 w-full h-auto rounded shadow-lg border border-gray-800"
+							/>
 						);
 					},
+					a: ({ href, ...props }) => (
+						<a
+							{...props}
+							href={resolvePreviewAssetUrl(href, graphPath)}
+							target="_blank"
+							rel="noreferrer"
+						/>
+					),
 					h1: ({ ...props }) => (
 						<h1
 							{...props}

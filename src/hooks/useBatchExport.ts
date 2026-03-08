@@ -1,17 +1,14 @@
-import { BlockEntity } from "@logseq/libs/dist/LSPlugin";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import { useCallback, useState } from "react";
+import { createExporter, normalizeAssetPath } from "../markdownExporter";
+import { getExportSettings } from "../settings";
 
 export interface BatchExportResult {
 	pageName: string;
 	success: boolean;
 	markdown?: string;
 	error?: string;
-}
-
-interface BlockNode extends BlockEntity {
-	children?: BlockNode[];
 }
 
 export const useBatchExport = () => {
@@ -29,6 +26,9 @@ export const useBatchExport = () => {
 		try {
 			const zip = new JSZip();
 			const results: BatchExportResult[] = [];
+			const addedAssets = new Set<string>();
+			const settings = { ...getExportSettings(), includePageName: true, includeProperties: false };
+			const assetFolderName = normalizeAssetPath(settings.assetPath).slice(0, -1);
 
 			for (let i = 0; i < pageNames.length; i++) {
 				const pageName = pageNames[i];
@@ -49,13 +49,28 @@ export const useBatchExport = () => {
 						continue;
 					}
 
-					// Get page blocks
-					const tree = await logseq.Editor.getPageBlocksTree(page.uuid);
-
-					// Convert blocks to markdown (simplified version without MarkdownExporter)
-					const markdown = convertBlocksToMarkdown(tree as BlockNode[], pageName);
+					const exporter = createExporter();
+					const markdown = await exporter.exportPage(pageName, settings);
 
 					zip.file(`${pageName}.md`, markdown);
+
+					if (exporter.getReferencedAssets().size > 0) {
+						const assetsFolder = zip.folder(assetFolderName);
+						for (const [uuid, assetInfo] of exporter.getReferencedAssets()) {
+							if (addedAssets.has(uuid)) continue;
+
+							try {
+								const response = await fetch(`file://${assetInfo.originalPath}`);
+								if (!response.ok) continue;
+
+								assetsFolder?.file(`${uuid}.${assetInfo.type}`, await response.blob());
+								addedAssets.add(uuid);
+							} catch {
+								// Continue batch export even if an individual asset fails
+							}
+						}
+					}
+
 					results.push({
 						pageName,
 						success: true,
@@ -91,26 +106,3 @@ export const useBatchExport = () => {
 		exportPagesToZip,
 	};
 };
-
-// Simplified block to markdown conversion
-function convertBlocksToMarkdown(blocks: BlockNode[], pageName: string): string {
-	const lines: string[] = [`# ${pageName}`, ""];
-
-	const processBlock = (block: BlockNode, depth = 1): void => {
-		if (!block.content) return;
-
-		const prefix = depth === 1 ? "- " : "  ".repeat(depth - 1) + "- ";
-
-		lines.push(
-			prefix + (typeof block.content === "string" ? block.content : String(block.content)),
-		);
-
-		if (block.children && Array.isArray(block.children)) {
-			block.children.forEach((child: BlockNode) => processBlock(child, depth + 1));
-		}
-	};
-
-	blocks.forEach((block) => processBlock(block));
-
-	return lines.join("\n").trim();
-}

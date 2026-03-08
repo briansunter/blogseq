@@ -412,28 +412,45 @@ describe("MarkdownExporter", () => {
 		});
 
 		it("should find asset by title", async () => {
-			const page = createMockPage();
+			const page = createMockPage({
+				uuid: "page-uuid",
+				name: "Page",
+			}) as PageEntity & {
+				":user.property/cover-abc123": string;
+			};
+			page[":user.property/cover-abc123"] = "Test Asset";
 
 			mockAPI.DB.datascriptQuery.mockImplementation((query: string) => {
+				if (query.includes("[:find ?prop-key ?prop-title")) {
+					return Promise.resolve([[":user.property/cover-abc123", "cover"]]);
+				}
 				if (query.includes(':block/title "Test Asset"')) {
-					return Promise.resolve([
-						[{ $uuid: "title-asset-uuid" }, "png", { ":block/title": "Test Asset" }],
-					]);
+					return Promise.resolve([[{ $uuid: "title-asset-uuid" }, "png"]]);
 				}
 				return Promise.resolve([]);
 			});
 
-			mockAPI.Editor.getPage.mockResolvedValue({
-				uuid: "page-uuid",
-				name: "Page",
-				properties: { image: "Test Asset" },
-			});
+			mockAPI.Editor.getPage.mockResolvedValue(page);
 
 			mockCurrentPageResponse(mockAPI, page);
 			mockPageBlocksResponse(mockAPI, []);
+			mockGraphResponse(mockAPI, "/test/graph");
 
-			await exporter.exportCurrentPage({ includeProperties: true });
-			expect(mockAPI.DB.datascriptQuery).toHaveBeenCalled();
+			mockFileAPI.fetch.mockResolvedValue({
+				ok: true,
+				status: 200,
+				blob: vi.fn().mockResolvedValue(new Blob(["asset-data"])),
+			} as unknown as Response);
+
+			const markdown = await exporter.exportCurrentPage({ includeProperties: true });
+			expect(markdown).toContain("cover: assets/title-asset-uuid.png");
+			expect(exporter.getReferencedAssets().get("title-asset-uuid")?.title).toBe("Test Asset");
+
+			await exporter.downloadAsZip(markdown);
+
+			expect(mockFileAPI.fetch).toHaveBeenCalledWith(
+				"file:///test/graph/assets/title-asset-uuid.png",
+			);
 		});
 
 		it("should handle direct asset blocks (asset as the block itself)", async () => {
@@ -510,7 +527,7 @@ describe("MarkdownExporter", () => {
 
 			expect(result).toContain("---");
 			expect(result).toContain("title: My Article");
-			expect(result).toContain("date: 2024-01-15");
+			expect(result).toContain('date: "2024-01-15"');
 			expect(result).toContain("author: John Doe");
 		});
 
@@ -1369,5 +1386,25 @@ describe("focused block export", () => {
 		expect(resultWithFlatten).toContain("Child content");
 		expect(resultWithoutFlatten).toContain("Parent");
 		expect(resultWithoutFlatten).toContain("Child content");
+	});
+
+	it("should include the focused block content when exporting a zoomed block", async () => {
+		const focusedBlock = createMockBlock({
+			uuid: "focused-block",
+			content: "Focused content",
+			children: [createMockBlock({ uuid: "child-block", content: "Nested child" })],
+		});
+
+		mockAPI.Editor.getCurrentPage.mockResolvedValue(focusedBlock);
+		mockAPI.Editor.getBlock.mockResolvedValue(focusedBlock);
+		mockGraphResponse(mockAPI, "/test/graph");
+
+		const result = await exporter.exportCurrentPage({
+			includePageName: false,
+			includeProperties: false,
+		});
+
+		expect(result).toContain("Focused content");
+		expect(result).toContain("Nested child");
 	});
 });
