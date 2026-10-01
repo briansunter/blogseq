@@ -1,4 +1,13 @@
-import React, { createContext, FC, ReactNode, useCallback, useContext, useState } from "react";
+import React, {
+	createContext,
+	FC,
+	ReactNode,
+	useCallback,
+	useContext,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 
 interface Toast {
 	id: string;
@@ -17,6 +26,7 @@ export const ToastContext = createContext<ToastContextType | undefined>(undefine
 
 export const ToastProvider: FC<{ children: ReactNode }> = ({ children }) => {
 	const [toasts, setToasts] = useState<Toast[]>([]);
+	const nextId = useRef(0);
 
 	const removeToast = useCallback((id: string) => {
 		setToasts((prev) => prev.filter((t) => t.id !== id));
@@ -24,7 +34,7 @@ export const ToastProvider: FC<{ children: ReactNode }> = ({ children }) => {
 
 	const addToast = useCallback(
 		(message: string, type: Toast["type"] = "info", duration = 4000) => {
-			const id = Date.now().toString();
+			const id = String(nextId.current++);
 			setToasts((prev) => [...prev, { id, message, type, duration }]);
 
 			if (duration > 0) {
@@ -48,12 +58,16 @@ export const useToast = () => {
 		throw new Error("useToast must be used within ToastProvider");
 	}
 
-	return {
-		showSuccess: (msg: string) => context.addToast(msg, "success"),
-		showError: (msg: string) => context.addToast(msg, "error"),
-		showWarning: (msg: string) => context.addToast(msg, "warning"),
-		showInfo: (msg: string) => context.addToast(msg, "info"),
-	};
+	const { addToast } = context;
+	return useMemo(
+		() => ({
+			showSuccess: (msg: string) => addToast(msg, "success"),
+			showError: (msg: string) => addToast(msg, "error"),
+			showWarning: (msg: string) => addToast(msg, "warning"),
+			showInfo: (msg: string) => addToast(msg, "info"),
+		}),
+		[addToast],
+	);
 };
 
 const ToastContainer: FC<{ toasts: Toast[]; onRemove: (id: string) => void }> = ({
