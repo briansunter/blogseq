@@ -1,3 +1,18 @@
+# [1.3.0](https://github.com/briansunter/blogseq/compare/v1.2.0...v1.3.0) (2026-10-01)
+
+
+### Bug Fixes
+
+* **ci:** emit valid Bun cache directory output ([123c277](https://github.com/briansunter/blogseq/commit/123c2777786e5ab45224a20c66d771a99090e183))
+* **ui:** stabilize notifications and cover export interactions ([de93e69](https://github.com/briansunter/blogseq/commit/de93e6905332a6858c89c1cc8dca8d6c6c105863))
+
+
+### Features
+
+* add code block support for markdown export ([a04a5c6](https://github.com/briansunter/blogseq/commit/a04a5c623a0d2044cc507440a55728dd9b0ebcc1))
+* add quote block support for markdown export ([594d6d2](https://github.com/briansunter/blogseq/commit/594d6d26ba974529872b9858a05a068820a1a216))
+* improve focused block export and property resolution ([a4d0b2f](https://github.com/briansunter/blogseq/commit/a4d0b2fbd2cf077c4c5e6b470a327edbad82afa6))
+
 # [1.2.0](https://github.com/briansunter/blogseq/compare/v1.1.0...v1.2.0) (2025-12-29)
 
 
