@@ -120,8 +120,8 @@ jobs:
           ls -la dist/
           echo "::endgroup::"
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: dist
-          path: dist/
+      - name: Report build output
+        run: |
+          echo "::group::Build Directory"
+          ls -la dist/
+          echo "::endgroup::"
