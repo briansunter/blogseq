@@ -123,5 +123,5 @@ jobs:
       - name: Report build output
         run: |
           echo "::group::Build Directory"
-          ls -la dist/
+          ls -la dist/ 2>/dev/null || true
           echo "::endgroup::"
